@@ -42,7 +42,7 @@ const Index = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="w-screen relative left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-3 flex items-center justify-center text-sm font-semibold tracking-wide mb-8">
+          <div className="w-screen relative left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-3 text-[32px] font-semibold tracking-wide mb-8">
             Product Portfolio
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
