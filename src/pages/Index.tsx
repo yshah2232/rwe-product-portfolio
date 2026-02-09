@@ -49,50 +49,26 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background flex flex-col">
       {/* Full-width red banner */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full bg-primary text-primary-foreground px-6 md:px-10 py-3 text-[32px] font-semibold tracking-wide"
+        className="w-full bg-primary text-primary-foreground px-6 md:px-10 py-3 text-[28px] md:text-[32px] font-semibold tracking-wide"
       >
         Product Portfolio
       </motion.div>
 
-      <div className="px-6 md:px-10 py-10 md:py-14 max-w-5xl">
-        <motion.header
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <h1 className="text-[32px] md:text-[40px] font-bold text-foreground leading-tight">
-            Real-World Evidence & Healthcare Analytics
-          </h1>
-          <p className="mt-4 text-[16px] md:text-[18px] leading-relaxed text-muted-foreground max-w-3xl">
-            A hands-on analytics platform showcasing how real-world healthcare data can be transformed into decision-ready insights across patients, payers, brands, and providers.
-          </p>
-        </motion.header>
-
-        <motion.section
-          className="mt-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <h2 className="text-[26px] md:text-[32px] font-semibold text-foreground mb-6">
-            Analytics Modules
-          </h2>
-
-          <motion.div
-            className="space-y-4"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: 0.08 } },
-            }}
-          >
+      {/* Horizontal module cards row */}
+      <motion.div
+        className="w-full border-b border-border bg-card"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.15 }}
+      >
+        <div className="px-4 md:px-10 py-4 overflow-x-auto">
+          <div className="flex gap-3 md:gap-4 min-w-0">
             {modules.map((mod, i) => (
               <ModuleCard
                 key={mod.title}
@@ -101,8 +77,24 @@ const Index = () => {
                 onExplore={() => navigate('/dashboard')}
               />
             ))}
-          </motion.div>
-        </motion.section>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Content area */}
+      <div className="flex-1 px-6 md:px-10 py-10 md:py-14 max-w-5xl">
+        <motion.header
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <h1 className="text-[32px] md:text-[40px] font-bold text-foreground leading-tight">
+            Real-World Evidence & Healthcare Analytics
+          </h1>
+          <p className="mt-4 text-[16px] md:text-[18px] leading-relaxed text-muted-foreground max-w-3xl">
+            A hands-on analytics platform showcasing how real-world healthcare data can be transformed into decision-ready insights across patients, payers, brands, and providers.
+          </p>
+        </motion.header>
       </div>
     </main>
   );
