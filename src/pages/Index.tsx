@@ -83,7 +83,7 @@ const Index = () => {
         className="px-6 md:px-10 lg:px-16 pt-8 pb-4"
       >
         <p className="text-[16px] md:text-[18px] leading-relaxed text-muted-foreground max-w-3xl">
-          Explore interactive modules that transform claims-level healthcare data into actionable insights — spanning patient behavior, payer dynamics, provider trends, and therapeutic outcomes.
+          Explore interactive modules that transform claims-level healthcare data into actionable insights spanning patient behavior, payer dynamics, provider trends, and therapeutic outcomes.
         </p>
       </motion.div>
 
