@@ -46,7 +46,7 @@ const Index = () => {
             Product Portfolio
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
-            Healthcare Product Portfolio
+            Real-World Evidence & Life Sciences Analytics
           </h1>
           <p className="mt-3 text-lg text-muted-foreground max-w-xl">
             Interactive analytics prototypes built to demonstrate healthcare product thinking.
