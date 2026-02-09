@@ -49,7 +49,7 @@ const Index = () => {
             Real-World Evidence & Healthcare Analytics
           </h1>
           <p className="mt-3 text-lg text-muted-foreground max-w-xl">
-            Interactive analytics prototypes built to demonstrate healthcare product thinking.
+            Longitudinal analytics prototypes leveraging synthetic RWD to surface actionable insights across patient persistency, payer dynamics, and brand performance.
           </p>
         </motion.header>
 
