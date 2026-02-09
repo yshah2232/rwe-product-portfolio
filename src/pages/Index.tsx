@@ -45,7 +45,7 @@ const Index = () => {
           <div className="w-screen relative left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-3 text-[32px] font-semibold tracking-wide mb-8">
             Product Portfolio
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground whitespace-nowrap">
+          <h1 className="w-screen relative left-1/2 -translate-x-1/2 px-4 text-[28px] md:text-[36px] font-bold text-foreground whitespace-nowrap">
             Real-World Evidence & Life Sciences Analytics
           </h1>
           <p className="mt-3 text-lg text-muted-foreground max-w-xl">
