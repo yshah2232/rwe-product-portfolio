@@ -50,52 +50,73 @@ const Index = () => {
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      {/* Full-width red banner */}
+      {/* Hero Banner - Modern gradient inspired by Apple/Duolingo */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full bg-primary text-primary-foreground px-6 md:px-10 py-3 text-[28px] md:text-[32px] font-semibold tracking-wide"
-      >
-        Product Portfolio
-      </motion.div>
-
-      {/* Horizontal module cards row */}
-      <motion.div
-        className="w-full border-b border-border bg-card"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.15 }}
+        transition={{ duration: 0.6 }}
+        className="w-full relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, hsl(0 72% 48%) 0%, hsl(350 80% 42%) 40%, hsl(340 70% 35%) 70%, hsl(330 60% 28%) 100%)',
+        }}
       >
-        <div className="px-4 md:px-10 py-4 overflow-x-auto">
-          <div className="flex gap-3 md:gap-4 min-w-0">
-            {modules.map((mod, i) => (
-              <ModuleCard
-                key={mod.title}
-                {...mod}
-                index={i}
-                onExplore={() => navigate('/dashboard')}
-              />
-            ))}
-          </div>
+        <div className="px-6 md:px-10 lg:px-16 py-10 md:py-14 lg:py-16 relative z-10">
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="text-[36px] md:text-[48px] lg:text-[56px] font-bold text-white leading-[1.1] tracking-tight max-w-4xl"
+          >
+            Real-World Evidence &<br className="hidden md:block" /> Healthcare Analytics
+          </motion.h1>
+        </div>
+        {/* Subtle decorative gradient orbs */}
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, hsl(0 80% 70%), transparent 70%)' }} />
+        <div className="absolute bottom-0 left-1/3 w-[300px] h-[300px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, hsl(350 90% 65%), transparent 70%)' }} />
+      </motion.div>
+
+      {/* Subtitle section */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.25 }}
+        className="px-6 md:px-10 lg:px-16 pt-8 pb-4"
+      >
+        <p className="text-[16px] md:text-[18px] leading-relaxed text-muted-foreground max-w-3xl">
+          Explore interactive modules that transform claims-level healthcare data into actionable insights — spanning patient behavior, payer dynamics, provider trends, and therapeutic outcomes.
+        </p>
+      </motion.div>
+
+      {/* Module cards - spacious grid */}
+      <motion.div
+        className="flex-1 px-6 md:px-10 lg:px-16 py-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.35 }}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 md:gap-6">
+          {modules.map((mod, i) => (
+            <ModuleCard
+              key={mod.title}
+              {...mod}
+              index={i}
+              onExplore={() => navigate('/dashboard')}
+            />
+          ))}
         </div>
       </motion.div>
 
-      {/* Content area */}
-      <div className="flex-1 px-6 md:px-10 py-10 md:py-14 max-w-5xl">
-        <motion.header
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <h1 className="text-[32px] md:text-[40px] font-bold text-foreground leading-tight">
-            Real-World Evidence & Healthcare Analytics
-          </h1>
-          <p className="mt-4 text-[16px] md:text-[18px] leading-relaxed text-muted-foreground max-w-3xl">
-            A hands-on analytics platform showcasing how real-world healthcare data can be transformed into decision-ready insights across patients, payers, brands, and providers.
-          </p>
-        </motion.header>
-      </div>
+      {/* Product Portfolio — low-key footer badge */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.5 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+        className="px-6 md:px-10 lg:px-16 pb-6 flex justify-end"
+      >
+        <span className="text-[11px] tracking-widest uppercase text-muted-foreground/60 font-medium">
+          Product Portfolio
+        </span>
+      </motion.div>
     </main>
   );
 };
