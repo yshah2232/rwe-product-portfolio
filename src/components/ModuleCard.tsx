@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { Info } from 'lucide-react';
+import { Info, ArrowRight } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -17,62 +17,75 @@ interface ModuleCardProps {
   onExplore?: () => void;
 }
 
-const ModuleCard = ({ title, status, description, tooltip, onExplore }: ModuleCardProps) => {
+const ModuleCard = ({ title, status, description, tooltip, index, onExplore }: ModuleCardProps) => {
   const isActive = status === 'active';
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.05 * (0) }}
-      onClick={isActive ? onExplore : undefined}
+      transition={{ duration: 0.35, delay: 0.08 * index }}
       className={`
-        relative flex-shrink-0 w-[140px] md:w-[160px] aspect-square rounded-lg border-2 p-3 md:p-4
-        flex flex-col justify-between transition-all duration-200
+        relative rounded-xl border p-5 md:p-6 flex flex-col justify-between min-h-[220px] transition-all duration-200
         ${isActive
-          ? 'bg-primary border-primary text-primary-foreground cursor-pointer hover:shadow-lg hover:scale-[1.03]'
-          : 'bg-muted/40 border-border/60 cursor-default'
+          ? 'bg-primary border-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-[1.02] cursor-pointer'
+          : 'bg-muted/30 border-border/50'
         }
       `}
+      onClick={isActive ? onExplore : undefined}
     >
       <div>
         <Badge
-          variant={isActive ? 'secondary' : 'secondary'}
-          className={`text-[10px] px-1.5 py-0 mb-2 ${
+          variant="secondary"
+          className={`text-[10px] px-2 py-0.5 mb-3 ${
             isActive
-              ? 'bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30'
-              : 'text-muted-foreground/70'
+              ? 'bg-white/20 text-white border-white/30'
+              : 'text-muted-foreground/60 bg-muted/50'
           }`}
         >
           {isActive ? 'ACTIVE' : 'ROADMAP'}
         </Badge>
         <h3
-          className={`text-[13px] md:text-[14px] font-semibold leading-tight ${
-            isActive ? 'text-primary-foreground' : 'text-muted-foreground'
+          className={`text-[20px] md:text-[22px] font-semibold leading-snug mb-2 ${
+            isActive ? 'text-white' : 'text-muted-foreground'
           }`}
         >
           {title}
         </h3>
+        <p
+          className={`text-[13px] md:text-[14px] leading-relaxed ${
+            isActive ? 'text-white/80' : 'text-muted-foreground/60'
+          }`}
+        >
+          {description}
+        </p>
       </div>
 
-      {tooltip && (
-        <TooltipProvider delayDuration={200}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info
-                className={`absolute bottom-3 right-3 h-3.5 w-3.5 cursor-help ${
-                  isActive ? 'text-primary-foreground/60' : 'text-muted-foreground/40'
-                }`}
-              />
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs text-[14px] leading-relaxed">
-              <p className="font-medium mb-1">{title}</p>
-              <p className="text-muted-foreground">{description}</p>
-              <p className="mt-2 text-[13px]">{tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
+      <div className="flex items-center justify-between mt-4">
+        {isActive && (
+          <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-white/90">
+            Explore module <ArrowRight className="h-3.5 w-3.5" />
+          </span>
+        )}
+
+        {tooltip && (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info
+                  className={`h-4 w-4 cursor-help ml-auto ${
+                    isActive ? 'text-white/50' : 'text-muted-foreground/30'
+                  }`}
+                />
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs text-[14px] leading-relaxed">
+                <p className="font-medium mb-1">{title}</p>
+                <p className="text-muted-foreground">{tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
     </motion.div>
   );
 };
