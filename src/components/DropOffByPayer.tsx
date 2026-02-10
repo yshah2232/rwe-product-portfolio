@@ -16,6 +16,8 @@ import ChartWrapper from './ChartWrapper';
 
 interface DropOffByPayerProps {
   data: DailySnapshot;
+  selectedPayer?: string | null;
+  onPayerClick?: (payer: string) => void;
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -27,6 +29,7 @@ const CustomTooltip = ({ active, payload }: any) => {
       <p className="text-sm font-semibold mt-1" style={{ color: entry.color }}>
         {payload[0].value.toFixed(1)}% stopped therapy
       </p>
+      <p className="text-[10px] text-muted-foreground mt-1">Click to filter all charts</p>
     </div>
   );
 };
@@ -42,7 +45,7 @@ function generateInsight(data: DailySnapshot): string {
   return `${highest.name} patients show the highest discontinuation rate at ${(highest.rate * 100).toFixed(0)}%, while ${lowest.name} patients are most likely to stay on therapy at ${((1 - lowest.rate) * 100).toFixed(0)}% persistence. This ${(highest.rate * 100 - lowest.rate * 100).toFixed(0)} percentage-point gap suggests that coverage and cost barriers significantly influence treatment continuity.`;
 }
 
-const DropOffByPayer = ({ data }: DropOffByPayerProps) => {
+const DropOffByPayer = ({ data, selectedPayer, onPayerClick }: DropOffByPayerProps) => {
   const chartData = PAYERS.map((payer) => ({
     name: payer,
     dropOffRate: +(data.byPayer[payer].dropOffRate * 100).toFixed(1),
@@ -70,7 +73,16 @@ const DropOffByPayer = ({ data }: DropOffByPayerProps) => {
       csvData={csvData}
     >
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData} margin={{ top: 15, right: 10, bottom: 5, left: -10 }}>
+        <BarChart
+          data={chartData}
+          margin={{ top: 15, right: 10, bottom: 5, left: -10 }}
+          onClick={(state) => {
+            if (state?.activePayload?.[0]?.payload?.name && onPayerClick) {
+              onPayerClick(state.activePayload[0].payload.name);
+            }
+          }}
+          style={{ cursor: onPayerClick ? 'pointer' : undefined }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" />
           <XAxis dataKey="name" stroke="hsl(220, 9%, 46%)" fontSize={12} tickLine={false} />
           <YAxis
@@ -86,7 +98,13 @@ const DropOffByPayer = ({ data }: DropOffByPayerProps) => {
           <Bar dataKey="dropOffRate" radius={[6, 6, 0, 0]} maxBarSize={56}>
             <LabelList dataKey="dropOffRate" position="top" fontSize={11} formatter={(v: number) => `${v}%`} fill="hsl(220, 9%, 46%)" />
             {chartData.map((entry, i) => (
-              <Cell key={i} fill={entry.color} />
+              <Cell
+                key={i}
+                fill={entry.color}
+                opacity={selectedPayer && selectedPayer !== entry.name ? 0.25 : 1}
+                stroke={selectedPayer === entry.name ? entry.color : 'none'}
+                strokeWidth={selectedPayer === entry.name ? 2 : 0}
+              />
             ))}
           </Bar>
         </BarChart>

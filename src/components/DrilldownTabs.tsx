@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   LineChart,
@@ -12,6 +12,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import type { DailySnapshot } from '@/data/syntheticData';
+import type { ActiveFilter } from '@/data/syntheticData';
 import {
   BRANDS,
   PAYERS,
@@ -24,6 +25,7 @@ import ChartWrapper from './ChartWrapper';
 
 interface DrilldownTabsProps {
   data: DailySnapshot[];
+  activeFilter?: ActiveFilter | null;
 }
 
 const MONTH_TICKS = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 365];
@@ -76,8 +78,15 @@ const TAB_INSIGHTS: Record<TabType, (data: DailySnapshot[]) => string> = {
   },
 };
 
-const DrilldownTabs = ({ data }: DrilldownTabsProps) => {
+const DrilldownTabs = ({ data, activeFilter }: DrilldownTabsProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('payer');
+
+  // Auto-switch tab to match active filter type
+  useEffect(() => {
+    if (activeFilter) {
+      setActiveTab(activeFilter.type as TabType);
+    }
+  }, [activeFilter]);
 
   const payerData = useMemo(
     () =>
@@ -114,46 +123,52 @@ const DrilldownTabs = ({ data }: DrilldownTabsProps) => {
 
   const insight = TAB_INSIGHTS[activeTab](data);
 
-  const renderChart = (chartData: any[], lines: { key: string; color: string }[]) => (
-    <ResponsiveContainer width="100%" height={350}>
-      <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 20, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" />
-        <XAxis
-          dataKey="day"
-          ticks={MONTH_TICKS}
-          tickFormatter={formatDay}
-          stroke="hsl(220, 9%, 46%)"
-          fontSize={11}
-          tickLine={false}
-          label={{ value: 'Time since first prescription', position: 'insideBottom', offset: -12, fontSize: 11, fill: 'hsl(220, 9%, 46%)' }}
-        />
-        <YAxis
-          domain={[0, 100]}
-          tickFormatter={(v: number) => `${v}%`}
-          stroke="hsl(220, 9%, 46%)"
-          fontSize={11}
-          tickLine={false}
-          axisLine={false}
-          label={{ value: 'Patients still on therapy', angle: -90, position: 'insideLeft', offset: 15, fontSize: 11, fill: 'hsl(220, 9%, 46%)' }}
-        />
-        <Tooltip content={<CustomTooltip />} />
-        <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }} iconType="line" />
-        <ReferenceLine x={90} stroke="hsl(220, 9%, 80%)" strokeDasharray="4 4" />
-        {lines.map((line) => (
-          <Line
-            key={line.key}
-            type="monotone"
-            dataKey={line.key}
-            name={line.key}
-            stroke={line.color}
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4 }}
+  const renderChart = (chartData: any[], lines: { key: string; color: string }[]) => {
+    // Determine which line is highlighted based on active filter
+    const highlightedKey = activeFilter?.type === activeTab ? activeFilter.value : null;
+
+    return (
+      <ResponsiveContainer width="100%" height={350}>
+        <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 20, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" />
+          <XAxis
+            dataKey="day"
+            ticks={MONTH_TICKS}
+            tickFormatter={formatDay}
+            stroke="hsl(220, 9%, 46%)"
+            fontSize={11}
+            tickLine={false}
+            label={{ value: 'Time since first prescription', position: 'insideBottom', offset: -12, fontSize: 11, fill: 'hsl(220, 9%, 46%)' }}
           />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
-  );
+          <YAxis
+            domain={[0, 100]}
+            tickFormatter={(v: number) => `${v}%`}
+            stroke="hsl(220, 9%, 46%)"
+            fontSize={11}
+            tickLine={false}
+            axisLine={false}
+            label={{ value: 'Patients still on therapy', angle: -90, position: 'insideLeft', offset: 15, fontSize: 11, fill: 'hsl(220, 9%, 46%)' }}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }} iconType="line" />
+          <ReferenceLine x={90} stroke="hsl(220, 9%, 80%)" strokeDasharray="4 4" />
+          {lines.map((line) => (
+            <Line
+              key={line.key}
+              type="monotone"
+              dataKey={line.key}
+              name={line.key}
+              stroke={line.color}
+              strokeWidth={highlightedKey === line.key ? 3 : highlightedKey ? 1 : 2}
+              strokeOpacity={highlightedKey && highlightedKey !== line.key ? 0.3 : 1}
+              dot={false}
+              activeDot={{ r: 4 }}
+            />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  };
 
   return (
     <ChartWrapper

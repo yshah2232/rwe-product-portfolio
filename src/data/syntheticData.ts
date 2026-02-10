@@ -218,6 +218,42 @@ export function getKPIs(data: DailySnapshot[], endDay: number): KPIData {
   };
 }
 
+export type FilterType = 'payer' | 'brand' | 'indication';
+
+export interface ActiveFilter {
+  type: FilterType;
+  value: string;
+}
+
+export function getFilteredKPIs(data: DailySnapshot[], endDay: number, filter: ActiveFilter): KPIData {
+  const snapshot = data[Math.min(endDay, data.length - 1)];
+  if (filter.type === 'payer') {
+    const seg = snapshot.byPayer[filter.value];
+    return {
+      totalPatients: seg.patients,
+      activeRate: seg.activeRate,
+      dropOffRate: seg.dropOffRate,
+      medianRefillGap: snapshot.overall.medianRefillGap,
+    };
+  }
+  if (filter.type === 'brand') {
+    const seg = snapshot.byBrand[filter.value];
+    return {
+      totalPatients: seg.patients,
+      activeRate: seg.activeRate,
+      dropOffRate: 1 - seg.activeRate,
+      medianRefillGap: snapshot.overall.medianRefillGap,
+    };
+  }
+  const seg = snapshot.byIndication[filter.value];
+  return {
+    totalPatients: seg.patients,
+    activeRate: seg.activeRate,
+    dropOffRate: 1 - seg.activeRate,
+    medianRefillGap: snapshot.overall.medianRefillGap,
+  };
+}
+
 // Chart color constants — distinct, accessible palette
 export const CHART_COLORS = {
   primary: '#DC2626',
