@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import GlobalControls from '@/components/GlobalControls';
 import KPICard from '@/components/KPICard';
@@ -16,14 +16,17 @@ import {
   getDailyData,
   aggregateData,
   getKPIs,
+  getFilteredKPIs,
   dateToDayNumber,
   type Granularity,
+  type ActiveFilter,
 } from '@/data/syntheticData';
 
 const Dashboard = () => {
   const [startDate, setStartDate] = useState('2024-01-01');
   const [endDate, setEndDate] = useState('2024-12-31');
   const [granularity, setGranularity] = useState<Granularity>('weekly');
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter | null>(null);
 
   const allData = useMemo(() => getDailyData(), []);
 
@@ -39,12 +42,21 @@ const Dashboard = () => {
   );
 
   const kpis = useMemo(
-    () => getKPIs(allData, effectiveEndDay),
-    [allData, effectiveEndDay],
+    () =>
+      activeFilter
+        ? getFilteredKPIs(allData, effectiveEndDay, activeFilter)
+        : getKPIs(allData, effectiveEndDay),
+    [allData, effectiveEndDay, activeFilter],
   );
 
   const lastDataPoint =
     chartData.length > 0 ? chartData[chartData.length - 1] : allData[allData.length - 1];
+
+  const handleSegmentClick = (type: ActiveFilter['type'], value: string) => {
+    setActiveFilter((prev) =>
+      prev?.type === type && prev?.value === value ? null : { type, value },
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,6 +99,25 @@ const Dashboard = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
+        {/* Active filter badge */}
+        {activeFilter && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2"
+          >
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Filtered by:</span>
+            <button
+              onClick={() => setActiveFilter(null)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors"
+            >
+              {activeFilter.value}
+              <X className="h-3.5 w-3.5" />
+            </button>
+            <span className="text-xs text-muted-foreground">Click again or press × to clear</span>
+          </motion.div>
+        )}
+
         {/* KPI row */}
         <section id="kpi-section" className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <KPICard
@@ -126,21 +157,29 @@ const Dashboard = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Hero chart */}
             <div id="persistence-curve">
-              <PersistencyCurve data={chartData} />
+              <PersistencyCurve data={chartData} activeFilter={activeFilter} />
             </div>
 
             {/* Secondary charts */}
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div id="payer-chart">
-                <DropOffByPayer data={lastDataPoint} />
+                <DropOffByPayer
+                  data={lastDataPoint}
+                  selectedPayer={activeFilter?.type === 'payer' ? activeFilter.value : null}
+                  onPayerClick={(payer) => handleSegmentClick('payer', payer)}
+                />
               </div>
               <div id="brand-chart">
-                <BrandPersistency data={lastDataPoint} />
+                <BrandPersistency
+                  data={lastDataPoint}
+                  selectedBrand={activeFilter?.type === 'brand' ? activeFilter.value : null}
+                  onBrandClick={(brand) => handleSegmentClick('brand', brand)}
+                />
               </div>
             </section>
 
             {/* Drilldown */}
-            <DrilldownTabs data={chartData} />
+            <DrilldownTabs data={chartData} activeFilter={activeFilter} />
           </div>
 
           {/* AI Insights sidebar */}

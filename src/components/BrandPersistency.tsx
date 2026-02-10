@@ -16,6 +16,8 @@ import ChartWrapper from './ChartWrapper';
 
 interface BrandPersistencyProps {
   data: DailySnapshot;
+  selectedBrand?: string | null;
+  onBrandClick?: (brand: string) => void;
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -27,6 +29,7 @@ const CustomTooltip = ({ active, payload }: any) => {
       <p className="text-sm font-semibold mt-1" style={{ color: entry.color }}>
         {payload[0].value.toFixed(1)}% still on therapy
       </p>
+      <p className="text-[10px] text-muted-foreground mt-1">Click to filter all charts</p>
     </div>
   );
 };
@@ -42,7 +45,7 @@ function generateInsight(data: DailySnapshot): string {
   return `${best.name} leads in persistence at ${(best.rate * 100).toFixed(0)}%, while ${worst.name} shows the lowest at ${(worst.rate * 100).toFixed(0)}%. The ${(best.rate * 100 - worst.rate * 100).toFixed(0)} percentage-point spread across brands may reflect differences in dosing convenience, side-effect profiles, or payer coverage.`;
 }
 
-const BrandPersistency = ({ data }: BrandPersistencyProps) => {
+const BrandPersistency = ({ data, selectedBrand, onBrandClick }: BrandPersistencyProps) => {
   const chartData = BRANDS.map((brand) => ({
     name: brand,
     activeRate: +(data.byBrand[brand].activeRate * 100).toFixed(1),
@@ -70,7 +73,17 @@ const BrandPersistency = ({ data }: BrandPersistencyProps) => {
       csvData={csvData}
     >
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, bottom: 5, left: 10 }}>
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ top: 5, right: 30, bottom: 5, left: 10 }}
+          onClick={(state) => {
+            if (state?.activePayload?.[0]?.payload?.name && onBrandClick) {
+              onBrandClick(state.activePayload[0].payload.name);
+            }
+          }}
+          style={{ cursor: onBrandClick ? 'pointer' : undefined }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" horizontal={false} />
           <XAxis
             type="number"
@@ -94,7 +107,13 @@ const BrandPersistency = ({ data }: BrandPersistencyProps) => {
           <Bar dataKey="activeRate" radius={[0, 6, 6, 0]} maxBarSize={32}>
             <LabelList dataKey="activeRate" position="right" fontSize={11} formatter={(v: number) => `${v}%`} fill="hsl(220, 9%, 46%)" />
             {chartData.map((entry, i) => (
-              <Cell key={i} fill={entry.color} />
+              <Cell
+                key={i}
+                fill={entry.color}
+                opacity={selectedBrand && selectedBrand !== entry.name ? 0.25 : 1}
+                stroke={selectedBrand === entry.name ? entry.color : 'none'}
+                strokeWidth={selectedBrand === entry.name ? 2 : 0}
+              />
             ))}
           </Bar>
         </BarChart>
