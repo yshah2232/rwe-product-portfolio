@@ -367,7 +367,7 @@ const PatientMap = ({ cohort }: PatientMapProps) => {
               const s = 50 + t * 22;
               const l = 80 - t * 50;
               return (
-                <Marker key={z.zip3} coordinates={[z.lng, z.lat]}>
+                <Marker key={`${z.state}-${z.zip3}`} coordinates={[z.lng, z.lat]}>
                   <circle
                     r={radius}
                     fill={`hsl(0, ${s}%, ${l}%)`}
