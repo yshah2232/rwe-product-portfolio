@@ -1,14 +1,15 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, BookOpen } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import GlobalControls from '@/components/GlobalControls';
 import KPICard from '@/components/KPICard';
 import PersistencyCurve from '@/components/PersistencyCurve';
 import DropOffByPayer from '@/components/DropOffByPayer';
 import BrandPersistency from '@/components/BrandPersistency';
 import DrilldownTabs from '@/components/DrilldownTabs';
+import GuidedTour from '@/components/GuidedTour';
+import InfoPanel from '@/components/InfoPanel';
 import {
   getDailyData,
   aggregateData,
@@ -45,17 +46,26 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Sticky header & controls */}
+      {/* Sticky header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-muted transition-colors"
-            aria-label="Back to portfolio"
-          >
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </Link>
-          <h1 className="text-xl font-bold text-foreground">GLP-1 Pharma Insights</h1>
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-muted transition-colors"
+              aria-label="Back to portfolio"
+            >
+              <ArrowLeft className="h-5 w-5 text-foreground" />
+            </Link>
+            <div>
+              <h1 className="text-lg font-bold text-foreground">GLP-1 Patient Insights</h1>
+              <p className="text-xs text-muted-foreground">Real-world therapy persistence analysis</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <GuidedTour />
+            <InfoPanel />
+          </div>
         </div>
         <GlobalControls
           startDate={startDate}
@@ -69,7 +79,7 @@ const Dashboard = () => {
 
       {/* Main content */}
       <motion.div
-        className="max-w-6xl mx-auto px-4 py-6 space-y-6"
+        className="max-w-7xl mx-auto px-4 py-6 space-y-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -77,25 +87,29 @@ const Dashboard = () => {
         {/* KPI row */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <KPICard
-            title="Total GLP-1 Patients"
+            title="Patients Analyzed"
             value={kpis.totalPatients.toLocaleString()}
-            definition="Unique patients in selected time window"
+            description="Number of unique patients included in this view."
+            detail="These are patients with at least one GLP-1 claim in the selected time window. The cohort is defined by the Patient Time Window filter above."
           />
           <KPICard
-            title="Active Rate"
+            title="Still on Therapy"
             value={`${(kpis.activeRate * 100).toFixed(1)}%`}
-            definition="Percentage of patients still active in selected window"
+            description="Percentage of patients who are still taking their GLP-1 medication."
+            detail="A patient is considered active if they refill within the expected treatment window. This typically means a new fill within 30-90 days of the previous one, depending on the medication."
           />
           <KPICard
-            title="Drop Off Rate"
+            title="Stopped Therapy"
             value={`${(kpis.dropOffRate * 100).toFixed(1)}%`}
-            definition="Percentage of patients discontinued in selected window"
+            description="Percentage of patients who discontinued treatment."
+            detail="Patients with no refill after the expected refill window are considered discontinued. This is the inverse of the 'Still on Therapy' rate."
           />
           <KPICard
-            title="Median Refill Gap"
+            title="Typical Refill Delay"
             value={kpis.medianRefillGap.toFixed(1)}
             suffix=" days"
-            definition="Median days between expected and actual refill"
+            description="How late patients usually refill their medication."
+            detail="This shows the median number of days between the expected refill date and the actual refill date. Higher values indicate patients are stretching their supply or delaying treatment."
           />
         </section>
 
@@ -111,14 +125,11 @@ const Dashboard = () => {
         {/* Drilldown */}
         <DrilldownTabs data={chartData} />
 
-        {/* Footer link */}
-        <div className="border-t pt-6 pb-8 flex justify-center">
-          <Link to="/methodology">
-            <Button variant="outline" size="lg" className="gap-2">
-              <BookOpen className="h-4 w-4" />
-              View Methodology &amp; Assumptions
-            </Button>
-          </Link>
+        {/* Footer */}
+        <div className="border-t pt-6 pb-8 text-center">
+          <p className="text-xs text-muted-foreground">
+            Built with synthetic claims data · 100K patient cohort · Not real patient data
+          </p>
         </div>
       </motion.div>
     </div>

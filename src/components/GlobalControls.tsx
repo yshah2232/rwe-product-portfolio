@@ -7,6 +7,13 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { HelpCircle } from 'lucide-react';
 import type { Granularity } from '@/data/syntheticData';
 
 interface GlobalControlsProps {
@@ -18,6 +25,19 @@ interface GlobalControlsProps {
   onGranularityChange: (g: Granularity) => void;
 }
 
+const HelpTip = ({ text }: { text: string }) => (
+  <TooltipProvider delayDuration={200}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help" />
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-[240px] text-xs leading-relaxed">
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
+
 const GlobalControls = ({
   startDate,
   endDate,
@@ -27,47 +47,53 @@ const GlobalControls = ({
   onGranularityChange,
 }: GlobalControlsProps) => {
   return (
-    <div className="border-b bg-muted/30 px-4 py-3">
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row flex-wrap gap-4 items-start sm:items-center">
-        <div className="flex items-center gap-2">
-          <Label htmlFor="from-date" className="text-sm font-medium whitespace-nowrap">
-            From
-          </Label>
-          <Input
-            id="from-date"
-            type="date"
-            value={startDate}
-            onChange={(e) => onStartDateChange(e.target.value)}
-            className="w-[155px] text-sm"
-            min="2024-01-01"
-            max="2024-12-31"
-          />
+    <div className="border-b bg-muted/20 px-4 py-3">
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row flex-wrap gap-5 items-start sm:items-end">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="from-date" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Patient Time Window
+            </Label>
+            <HelpTip text="Controls which patients are included in the analysis. Adjusting this recalculates all metrics and charts." />
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              id="from-date"
+              type="date"
+              value={startDate}
+              onChange={(e) => onStartDateChange(e.target.value)}
+              className="w-[150px] text-sm h-9"
+              min="2024-01-01"
+              max="2024-12-31"
+            />
+            <span className="text-xs text-muted-foreground">to</span>
+            <Input
+              id="to-date"
+              type="date"
+              value={endDate}
+              onChange={(e) => onEndDateChange(e.target.value)}
+              className="w-[150px] text-sm h-9"
+              min="2024-01-01"
+              max="2024-12-31"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="to-date" className="text-sm font-medium whitespace-nowrap">
-            To
-          </Label>
-          <Input
-            id="to-date"
-            type="date"
-            value={endDate}
-            onChange={(e) => onEndDateChange(e.target.value)}
-            className="w-[155px] text-sm"
-            min="2024-01-01"
-            max="2024-12-31"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Label className="text-sm font-medium whitespace-nowrap">Granularity</Label>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-1.5">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              View By
+            </Label>
+            <HelpTip text="Controls how patient activity is grouped over time. Daily shows detailed behavior, Monthly shows long-term trends, and custom intervals align to refill cycles." />
+          </div>
           <Select value={granularity} onValueChange={(v) => onGranularityChange(v as Granularity)}>
-            <SelectTrigger className="w-[130px]">
+            <SelectTrigger className="w-[160px] h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-popover">
               <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="36days">36 Days</SelectItem>
-              <SelectItem value="72days">72 Days</SelectItem>
+              <SelectItem value="weekly">Monthly</SelectItem>
+              <SelectItem value="36days">36-Day Cycle</SelectItem>
+              <SelectItem value="72days">72-Day Cycle</SelectItem>
             </SelectContent>
           </Select>
         </div>
