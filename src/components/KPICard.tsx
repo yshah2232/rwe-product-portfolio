@@ -8,9 +8,10 @@ interface KPICardProps {
   description: string;
   detail: string;
   suffix?: string;
+  highlight?: boolean;
 }
 
-const KPICard = ({ title, value, description, detail, suffix }: KPICardProps) => {
+const KPICard = ({ title, value, description, detail, suffix, highlight }: KPICardProps) => {
   const [showDetail, setShowDetail] = useState(false);
 
   return (
@@ -18,7 +19,7 @@ const KPICard = ({ title, value, description, detail, suffix }: KPICardProps) =>
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="relative rounded-xl border bg-card p-4 md:p-5 shadow-sm"
+      className={`relative rounded-xl border bg-card p-4 md:p-5 shadow-sm ${highlight ? 'border-primary/30' : ''}`}
     >
       <div className="flex items-start justify-between">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider pr-6">
@@ -32,7 +33,7 @@ const KPICard = ({ title, value, description, detail, suffix }: KPICardProps) =>
           {showDetail ? <X className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
         </button>
       </div>
-      <p className="mt-2 text-2xl md:text-3xl font-bold text-foreground">
+      <p className={`mt-2 text-2xl md:text-3xl font-bold ${highlight ? 'text-primary' : 'text-foreground'}`}>
         {value}
         {suffix && (
           <span className="text-base font-normal text-muted-foreground">{suffix}</span>

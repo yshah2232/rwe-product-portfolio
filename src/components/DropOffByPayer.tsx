@@ -7,6 +7,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
+  Legend,
+  LabelList,
 } from 'recharts';
 import type { DailySnapshot } from '@/data/syntheticData';
 import { PAYERS, PAYER_COLORS } from '@/data/syntheticData';
@@ -49,14 +51,26 @@ const DropOffByPayer = ({ data }: DropOffByPayerProps) => {
 
   const insight = generateInsight(data);
 
+  const csvData = {
+    headers: ['Payer Type', 'Discontinuation Rate (%)'],
+    rows: chartData.map((d) => [d.name, d.dropOffRate] as (string | number)[]),
+  };
+
+  const legendPayload = chartData.map((d) => ({
+    value: d.name,
+    type: 'square' as const,
+    color: d.color,
+  }));
+
   return (
     <ChartWrapper
       title="Discontinuation by Payer Type"
       subtitle="Which payer groups see the most drop-off"
       insight={insight}
+      csvData={csvData}
     >
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={chartData} margin={{ top: 15, right: 10, bottom: 5, left: -10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" />
           <XAxis dataKey="name" stroke="hsl(220, 9%, 46%)" fontSize={12} tickLine={false} />
           <YAxis
@@ -68,7 +82,9 @@ const DropOffByPayer = ({ data }: DropOffByPayerProps) => {
             axisLine={false}
           />
           <Tooltip content={<CustomTooltip />} />
+          <Legend payload={legendPayload} wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }} />
           <Bar dataKey="dropOffRate" radius={[6, 6, 0, 0]} maxBarSize={56}>
+            <LabelList dataKey="dropOffRate" position="top" fontSize={11} formatter={(v: number) => `${v}%`} fill="hsl(220, 9%, 46%)" />
             {chartData.map((entry, i) => (
               <Cell key={i} fill={entry.color} />
             ))}
