@@ -111,11 +111,21 @@ const DrilldownTabs = ({ cohort, activeFilter }: DrilldownTabsProps) => {
     );
   };
 
+  const csvExportData = useMemo(() => {
+    const data = activeTab === 'payer' ? payerData : brandData;
+    const segments = activeTab === 'payer' ? payers : brands;
+    return {
+      headers: ['Day', ...segments],
+      rows: data.map((row) => [row.day, ...segments.map((s) => (row as any)[s])] as (string | number)[]),
+    };
+  }, [activeTab, payerData, brandData, payers, brands]);
+
   return (
     <ChartWrapper
       title="Segmented Persistence Analysis"
       subtitle="Compare how different patient groups stay on therapy over time"
       insight={getInsight(activeTab)}
+      csvData={csvExportData}
     >
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabType)}>
         <TabsList className="mb-4">

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Sparkles, ChevronDown, ChevronUp, Star, ExternalLink } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Sparkles, ChevronDown, ChevronUp, Star, ExternalLink, Download, RotateCcw, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { KPIData, SegmentSnapshot, CohortResult } from '@/data/csvDataService';
 
@@ -69,15 +69,61 @@ const priorityStyles = {
   medium: 'border-l-4 border-l-rose-400 bg-rose-50',
 };
 
+function formatTimestamp(date: Date): string {
+  return date.toLocaleString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  });
+}
+
 const AIInsights = ({ kpis, segmentSnapshot }: AIInsightsProps) => {
   const [expanded, setExpanded] = useState(true);
+  const [timestamp, setTimestamp] = useState(() => new Date());
   const summary = generateExecutiveSummary(kpis);
   const recommendations = generateRecommendations(kpis, segmentSnapshot);
 
-  const handleEvidenceClick = (sectionId: string) => {
+  const handleRefresh = useCallback(() => {
+    setTimestamp(new Date());
+  }, []);
+
+  const handleEvidenceClick = useCallback((sectionId: string) => {
     const el = document.getElementById(sectionId);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
+    if (!el) return;
+
+    // Remove any existing spotlight
+    document.querySelectorAll('.ai-spotlight').forEach((e) => e.classList.remove('ai-spotlight'));
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Add spotlight class after scroll
+    setTimeout(() => {
+      el.classList.add('ai-spotlight');
+      setTimeout(() => el.classList.remove('ai-spotlight'), 2500);
+    }, 400);
+  }, []);
+
+  const handleDownload = useCallback(() => {
+    const lines: string[] = [];
+    lines.push('GLP-1 AI-Powered Insights Report');
+    lines.push(`Generated: ${formatTimestamp(timestamp)}`);
+    lines.push('');
+    lines.push('=== Executive Summary ===');
+    lines.push(summary);
+    lines.push('');
+    lines.push('=== Recommended Actions ===');
+    recommendations.forEach((rec, i) => {
+      lines.push(`${i + 1}. [${rec.priority.toUpperCase()}] ${rec.title}`);
+      lines.push(`   ${rec.description}`);
+      lines.push(`   Evidence: ${rec.evidence}`);
+      lines.push('');
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.download = `ai-insights-${timestamp.toISOString().slice(0, 10)}.txt`;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, [timestamp, summary, recommendations]);
 
   return (
     <div className="rounded-xl border-2 border-primary/20 bg-card shadow-sm overflow-hidden">
@@ -103,6 +149,32 @@ const AIInsights = ({ kpis, segmentSnapshot }: AIInsightsProps) => {
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
             <div className="px-5 pb-5 space-y-5">
+              {/* Toolbar: timestamp + actions */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>{formatTimestamp(timestamp)}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleRefresh(); }}
+                    className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground/50 hover:text-muted-foreground"
+                    aria-label="Refresh insights"
+                    title="Reset to default / Refresh"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDownload(); }}
+                    className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground/50 hover:text-muted-foreground"
+                    aria-label="Download insights"
+                    title="Download as text file"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
               <div className="rounded-lg bg-muted/40 border border-border/50 px-4 py-3">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Executive Summary</p>
                 <p className="text-sm text-foreground leading-relaxed">{summary}</p>
