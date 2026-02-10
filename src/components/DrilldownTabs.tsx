@@ -111,6 +111,35 @@ const DrilldownTabs = ({ cohort, activeFilter }: DrilldownTabsProps) => {
     );
   };
 
+  const tableView = useMemo(() => {
+    const data = activeTab === 'payer' ? payerData : brandData;
+    const segments = activeTab === 'payer' ? payers : brands;
+    return (
+      <div className="max-h-[350px] overflow-auto">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-card">
+            <tr className="border-b">
+              <th className="text-left py-2 px-2 font-medium text-muted-foreground">Day</th>
+              {segments.map((s) => (
+                <th key={s} className="text-right py-2 px-2 font-medium text-muted-foreground">{s} (%)</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, i) => (
+              <tr key={i} className="border-b border-border/30 hover:bg-muted/30">
+                <td className="py-1.5 px-2">{formatDay(row.day)}</td>
+                {segments.map((s) => (
+                  <td key={s} className="py-1.5 px-2 text-right font-medium">{((row as any)[s] as number).toFixed(1)}%</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }, [activeTab, payerData, brandData, payers, brands]);
+
   const csvExportData = useMemo(() => {
     const data = activeTab === 'payer' ? payerData : brandData;
     const segments = activeTab === 'payer' ? payers : brands;
@@ -126,6 +155,7 @@ const DrilldownTabs = ({ cohort, activeFilter }: DrilldownTabsProps) => {
       subtitle="Compare how different patient groups stay on therapy over time"
       insight={getInsight(activeTab)}
       csvData={csvExportData}
+      tableView={tableView}
     >
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabType)}>
         <TabsList className="mb-4">

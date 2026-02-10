@@ -5,50 +5,57 @@ import {
   Geography,
   Marker,
 } from 'react-simple-maps';
+import { Slider } from '@/components/ui/slider';
+import { RotateCcw } from 'lucide-react';
 import ChartWrapper from './ChartWrapper';
 import type { CohortResult } from '@/data/csvDataService';
 import {
   distributePatientsByState,
   generateZIP3Data,
   type StatePatientData,
-  type ZIP3Data,
 } from '@/data/geoDistribution';
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
+
+type MapViewMode = 'region' | 'state' | 'zip3';
 
 interface PatientMapProps {
   cohort: CohortResult;
 }
 
-// Red gradient scale: light → medium → dark
+// Red gradient scale
 function getDensityColor(value: number, min: number, max: number): string {
   if (max === min) return 'hsl(0, 60%, 85%)';
   const t = Math.min(1, Math.max(0, (value - min) / (max - min)));
-  // HSL: hue=0 (red), saturation 50→72%, lightness 92→25%
   const s = 50 + t * 22;
   const l = 92 - t * 67;
   return `hsl(0, ${s}%, ${l}%)`;
 }
 
-function getZIP3Color(patients: number, max: number): string {
-  if (max === 0) return 'hsl(0, 60%, 85%)';
-  const t = Math.min(1, patients / max);
+const REGION_FILL: Record<string, { base: string; label: string }> = {
+  Northeast: { base: 'hsl(0, 55%, 75%)', label: 'Northeast' },
+  Midwest: { base: 'hsl(0, 60%, 60%)', label: 'Midwest' },
+  South: { base: 'hsl(0, 65%, 45%)', label: 'South' },
+  West: { base: 'hsl(0, 70%, 35%)', label: 'West' },
+};
+
+function getRegionColor(region: string, patients: number, minP: number, maxP: number): string {
+  if (maxP === minP) return REGION_FILL[region]?.base || 'hsl(0, 50%, 85%)';
+  const t = Math.min(1, Math.max(0, (patients - minP) / (maxP - minP)));
   const s = 50 + t * 22;
-  const l = 92 - t * 67;
+  const l = 88 - t * 60;
   return `hsl(0, ${s}%, ${l}%)`;
 }
 
 const PatientMap = ({ cohort }: PatientMapProps) => {
-  const [viewMode, setViewMode] = useState<'state' | 'zip3'>('state');
+  const [viewMode, setViewMode] = useState<MapViewMode>('state');
   const [hoveredState, setHoveredState] = useState<StatePatientData | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [threshold, setThreshold] = useState(0);
 
-  // Build region counts from cohort
   const regionCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    cohort.byRegion.forEach((seg) => {
-      counts[seg.name] = seg.patients;
-    });
+    cohort.byRegion.forEach((seg) => { counts[seg.name] = seg.patients; });
     return counts;
   }, [cohort]);
 
@@ -61,67 +68,129 @@ const PatientMap = ({ cohort }: PatientMapProps) => {
     return map;
   }, [stateData]);
 
-  const { minPatients, maxPatients } = useMemo(() => {
-    const pts = stateData.map((s) => s.patients);
-    return { minPatients: Math.min(...pts), maxPatients: Math.max(...pts) };
-  }, [stateData]);
+  // Compute min/max for slider
+  const { globalMin, globalMax } = useMemo(() => {
+    if (viewMode === 'region') {
+      const vals = cohort.byRegion.map((r) => r.patients);
+      return { globalMin: Math.min(...vals), globalMax: Math.max(...vals) };
+    }
+    if (viewMode === 'zip3') {
+      const vals = zip3Data.map((z) => z.patients);
+      return { globalMin: Math.min(...vals), globalMax: Math.max(...vals) };
+    }
+    const vals = stateData.map((s) => s.patients);
+    return { globalMin: Math.min(...vals), globalMax: Math.max(...vals) };
+  }, [viewMode, stateData, zip3Data, cohort]);
 
-  const maxZip3 = useMemo(() => Math.max(...zip3Data.map((z) => z.patients)), [zip3Data]);
+  // Filtered data based on threshold
+  const filteredStates = useMemo(
+    () => stateData.filter((s) => s.patients >= threshold),
+    [stateData, threshold],
+  );
+  const filteredZip3 = useMemo(
+    () => zip3Data.filter((z) => z.patients >= threshold),
+    [zip3Data, threshold],
+  );
+
+  // Dynamic color scale min/max (above threshold)
+  const { scaleMin, scaleMax } = useMemo(() => {
+    if (viewMode === 'region') {
+      const vals = cohort.byRegion.filter((r) => r.patients >= threshold).map((r) => r.patients);
+      if (vals.length === 0) return { scaleMin: 0, scaleMax: 1 };
+      return { scaleMin: Math.min(...vals), scaleMax: Math.max(...vals) };
+    }
+    if (viewMode === 'zip3') {
+      const vals = filteredZip3.map((z) => z.patients);
+      if (vals.length === 0) return { scaleMin: 0, scaleMax: 1 };
+      return { scaleMin: Math.min(...vals), scaleMax: Math.max(...vals) };
+    }
+    const vals = filteredStates.map((s) => s.patients);
+    if (vals.length === 0) return { scaleMin: 0, scaleMax: 1 };
+    return { scaleMin: Math.min(...vals), scaleMax: Math.max(...vals) };
+  }, [viewMode, filteredStates, filteredZip3, cohort, threshold]);
+
+  const filteredStateSet = useMemo(
+    () => new Set(filteredStates.map((s) => s.fips)),
+    [filteredStates],
+  );
+
+  const regionPatientMap = useMemo(() => {
+    const m: Record<string, number> = {};
+    cohort.byRegion.forEach((r) => { m[r.name] = r.patients; });
+    return m;
+  }, [cohort]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     setTooltipPos({ x: e.clientX, y: e.clientY });
   }, []);
 
-  // Generate insight
+  const handleReset = useCallback(() => {
+    setViewMode('state');
+    setThreshold(0);
+  }, []);
+
+  // Insight
   const insight = useMemo(() => {
     const sorted = [...stateData].sort((a, b) => b.patients - a.patients);
     const top3 = sorted.slice(0, 3);
-    const regionTotals = cohort.byRegion
-      .slice()
-      .sort((a, b) => b.patients - a.patients);
+    const regionTotals = cohort.byRegion.slice().sort((a, b) => b.patients - a.patients);
     const topRegion = regionTotals[0];
-    return `The ${topRegion?.name} region accounts for the highest patient concentration with ${topRegion?.patients.toLocaleString()} patients (${((topRegion?.share ?? 0) * 100).toFixed(0)}% of cohort). At the state level, ${top3[0]?.name} (${top3[0]?.patients.toLocaleString()}), ${top3[1]?.name} (${top3[1]?.patients.toLocaleString()}), and ${top3[2]?.name} (${top3[2]?.patients.toLocaleString()}) are the top contributors. This distribution aligns with population density and GLP-1 prescribing patterns in metro areas.`;
+    return `The ${topRegion?.name} region accounts for the highest patient concentration with ${topRegion?.patients.toLocaleString()} patients (${((topRegion?.share ?? 0) * 100).toFixed(0)}% of cohort). At the state level, ${top3[0]?.name} (${top3[0]?.patients.toLocaleString()}), ${top3[1]?.name} (${top3[1]?.patients.toLocaleString()}), and ${top3[2]?.name} (${top3[2]?.patients.toLocaleString()}) are the top contributors.`;
   }, [stateData, cohort]);
 
   // CSV data
   const csvData = useMemo(() => {
-    if (viewMode === 'state') {
+    if (viewMode === 'region') {
       return {
-        headers: ['State', 'Abbreviation', 'Region', 'Patients'],
-        rows: stateData
-          .sort((a, b) => b.patients - a.patients)
-          .map((s) => [s.name, s.abbr, s.region, s.patients] as (string | number)[]),
+        headers: ['Region', 'Patients', 'Share (%)'],
+        rows: cohort.byRegion.sort((a, b) => b.patients - a.patients)
+          .map((r) => [r.name, r.patients, +(r.share * 100).toFixed(1)] as (string | number)[]),
+      };
+    }
+    if (viewMode === 'zip3') {
+      return {
+        headers: ['ZIP3', 'State', 'Region', 'Patients'],
+        rows: filteredZip3.sort((a, b) => b.patients - a.patients)
+          .map((z) => [z.zip3, z.state, z.region, z.patients] as (string | number)[]),
       };
     }
     return {
-      headers: ['ZIP3', 'State', 'Region', 'Patients'],
-      rows: zip3Data
-        .sort((a, b) => b.patients - a.patients)
-        .map((z) => [z.zip3, z.state, z.region, z.patients] as (string | number)[]),
+      headers: ['State', 'Abbreviation', 'Region', 'Patients'],
+      rows: filteredStates.sort((a, b) => b.patients - a.patients)
+        .map((s) => [s.name, s.abbr, s.region, s.patients] as (string | number)[]),
     };
-  }, [viewMode, stateData, zip3Data]);
+  }, [viewMode, filteredStates, filteredZip3, cohort]);
 
   // Table view
   const tableView = useMemo(() => {
-    const rows = viewMode === 'state'
-      ? stateData.sort((a, b) => b.patients - a.patients).map((s) => ({
-          label: `${s.name} (${s.abbr})`,
-          region: s.region,
-          patients: s.patients,
-        }))
-      : zip3Data.sort((a, b) => b.patients - a.patients).slice(0, 50).map((z) => ({
-          label: `ZIP3: ${z.zip3}`,
-          region: `${z.state} — ${z.region}`,
-          patients: z.patients,
-        }));
+    let rows: { label: string; region: string; patients: number }[];
+    if (viewMode === 'region') {
+      rows = cohort.byRegion.sort((a, b) => b.patients - a.patients).map((r) => ({
+        label: r.name,
+        region: `${(r.share * 100).toFixed(1)}% share`,
+        patients: r.patients,
+      }));
+    } else if (viewMode === 'zip3') {
+      rows = filteredZip3.sort((a, b) => b.patients - a.patients).slice(0, 50).map((z) => ({
+        label: `ZIP3: ${z.zip3}`,
+        region: `${z.state} — ${z.region}`,
+        patients: z.patients,
+      }));
+    } else {
+      rows = filteredStates.sort((a, b) => b.patients - a.patients).map((s) => ({
+        label: `${s.name} (${s.abbr})`,
+        region: s.region,
+        patients: s.patients,
+      }));
+    }
 
     return (
       <div className="max-h-[400px] overflow-auto">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-card">
             <tr className="border-b">
-              <th className="text-left py-2 px-2 font-medium text-muted-foreground">{viewMode === 'state' ? 'State' : 'ZIP3'}</th>
-              <th className="text-left py-2 px-2 font-medium text-muted-foreground">Region</th>
+              <th className="text-left py-2 px-2 font-medium text-muted-foreground">{viewMode === 'zip3' ? 'ZIP3' : viewMode === 'region' ? 'Region' : 'State'}</th>
+              <th className="text-left py-2 px-2 font-medium text-muted-foreground">{viewMode === 'region' ? 'Share' : 'Region'}</th>
               <th className="text-right py-2 px-2 font-medium text-muted-foreground">Patients</th>
             </tr>
           </thead>
@@ -137,35 +206,68 @@ const PatientMap = ({ cohort }: PatientMapProps) => {
         </table>
       </div>
     );
-  }, [viewMode, stateData, zip3Data]);
+  }, [viewMode, filteredStates, filteredZip3, cohort]);
 
   return (
     <ChartWrapper
       title="Patient Geographic Distribution"
-      subtitle="Simulated state-level distribution based on Census region data"
+      subtitle="Simulated distribution based on Census region data"
       insight={insight}
       csvData={csvData}
       tableView={tableView}
     >
-      {/* Toggle */}
-      <div className="flex items-center gap-2 mb-3">
+      {/* Controls row */}
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        {/* View tabs */}
         <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/30">
-          <button
-            onClick={() => setViewMode('state')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${viewMode === 'state' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            State View
-          </button>
-          <button
-            onClick={() => setViewMode('zip3')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${viewMode === 'zip3' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            ZIP3 View
-          </button>
+          {(['region', 'state', 'zip3'] as MapViewMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${viewMode === mode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              {mode === 'zip3' ? 'ZIP3' : mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
         </div>
+
+        {/* Reset */}
+        <button
+          onClick={handleReset}
+          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground/50 hover:text-muted-foreground"
+          aria-label="Reset map"
+          title="Reset to default"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+        </button>
+
         <span className="text-[10px] text-muted-foreground italic">
-          Distribution simulated from region-level data using population weights
+          Distribution simulated from region-level data
         </span>
+      </div>
+
+      {/* Population slider */}
+      <div className="mb-3 px-1">
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+            Min. Patient Threshold
+          </label>
+          <span className="text-xs font-medium text-foreground">
+            {threshold > 0 ? `≥ ${threshold.toLocaleString()}` : 'All'}
+          </span>
+        </div>
+        <Slider
+          value={[threshold]}
+          onValueChange={([v]) => setThreshold(v)}
+          min={0}
+          max={globalMax}
+          step={Math.max(1, Math.floor(globalMax / 100))}
+          className="w-full"
+        />
+        <div className="flex justify-between mt-1">
+          <span className="text-[10px] text-muted-foreground">Min: {globalMin.toLocaleString()}</span>
+          <span className="text-[10px] text-muted-foreground">Max: {globalMax.toLocaleString()}</span>
+        </div>
       </div>
 
       <div className="relative" onMouseMove={handleMouseMove}>
@@ -181,9 +283,16 @@ const PatientMap = ({ cohort }: PatientMapProps) => {
               geographies.map((geo) => {
                 const fips = geo.id;
                 const stateInfo = stateMap[fips];
-                const fill = stateInfo
-                  ? getDensityColor(stateInfo.patients, minPatients, maxPatients)
-                  : '#f5f5f5';
+
+                let fill = '#f0f0f0';
+                if (viewMode === 'region' && stateInfo) {
+                  const regionPts = regionPatientMap[stateInfo.region] || 0;
+                  if (regionPts >= threshold) {
+                    fill = getRegionColor(stateInfo.region, regionPts, scaleMin, scaleMax);
+                  }
+                } else if (stateInfo && filteredStateSet.has(fips)) {
+                  fill = getDensityColor(stateInfo.patients, scaleMin, scaleMax);
+                }
 
                 return (
                   <Geography
@@ -191,7 +300,7 @@ const PatientMap = ({ cohort }: PatientMapProps) => {
                     geography={geo}
                     fill={fill}
                     stroke="#ffffff"
-                    strokeWidth={0.5}
+                    strokeWidth={viewMode === 'region' ? 0.3 : 0.5}
                     style={{
                       default: { outline: 'none' },
                       hover: { outline: 'none', strokeWidth: 1.5, stroke: '#333' },
@@ -205,22 +314,33 @@ const PatientMap = ({ cohort }: PatientMapProps) => {
             }
           </Geographies>
 
-          {/* ZIP3 markers */}
+          {/* ZIP3 heatmap overlay */}
           {viewMode === 'zip3' &&
-            zip3Data.map((z) => (
-              <Marker key={z.zip3} coordinates={[z.lng, z.lat]}>
-                <circle
-                  r={Math.max(3, Math.min(12, (z.patients / maxZip3) * 14))}
-                  fill={getZIP3Color(z.patients, maxZip3)}
-                  stroke="#fff"
-                  strokeWidth={0.8}
-                  opacity={0.85}
-                />
-              </Marker>
-            ))}
+            filteredZip3.map((z) => {
+              const t = scaleMax > 0 ? Math.min(1, (z.patients - scaleMin) / (scaleMax - scaleMin || 1)) : 0;
+              const radius = Math.max(6, Math.min(22, t * 24));
+              const s = 50 + t * 22;
+              const l = 80 - t * 50;
+              return (
+                <Marker key={z.zip3} coordinates={[z.lng, z.lat]}>
+                  <circle
+                    r={radius}
+                    fill={`hsl(0, ${s}%, ${l}%)`}
+                    stroke="none"
+                    opacity={0.55 + t * 0.3}
+                  />
+                  <circle
+                    r={radius * 0.5}
+                    fill={`hsl(0, ${s + 5}%, ${l - 15}%)`}
+                    stroke="none"
+                    opacity={0.7 + t * 0.2}
+                  />
+                </Marker>
+              );
+            })}
         </ComposableMap>
 
-        {/* Custom tooltip */}
+        {/* Tooltip */}
         {hoveredState && (
           <div
             className="fixed z-50 pointer-events-none rounded-lg border bg-card p-3 shadow-lg text-card-foreground"
@@ -234,7 +354,7 @@ const PatientMap = ({ cohort }: PatientMapProps) => {
           </div>
         )}
 
-        {/* Gradient legend */}
+        {/* Legend */}
         <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-card/90 backdrop-blur-sm rounded-lg border px-3 py-2">
           <span className="text-[10px] text-muted-foreground font-medium">Low</span>
           <div

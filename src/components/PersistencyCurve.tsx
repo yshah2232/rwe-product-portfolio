@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -71,9 +72,34 @@ const PersistencyCurve = ({ data, activeFilter }: PersistencyCurveProps) => {
     ),
   };
 
+  const tableView = useMemo(() => (
+    <div className="max-h-[380px] overflow-auto">
+      <table className="w-full text-sm">
+        <thead className="sticky top-0 bg-card">
+          <tr className="border-b">
+            <th className="text-left py-2 px-2 font-medium text-muted-foreground">Day</th>
+            <th className="text-left py-2 px-2 font-medium text-muted-foreground">Time</th>
+            <th className="text-right py-2 px-2 font-medium text-muted-foreground">Active Rate (%)</th>
+            {hasFilter && <th className="text-right py-2 px-2 font-medium text-muted-foreground">{activeFilter!.value} (%)</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((d, i) => (
+            <tr key={i} className="border-b border-border/30 hover:bg-muted/30">
+              <td className="py-1.5 px-2">{d.day}</td>
+              <td className="py-1.5 px-2 text-muted-foreground">{formatDay(d.day)}</td>
+              <td className="py-1.5 px-2 text-right font-medium">{d.activeRate.toFixed(1)}%</td>
+              {hasFilter && <td className="py-1.5 px-2 text-right font-medium">{(d.filteredRate ?? 0).toFixed(1)}%</td>}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ), [data, hasFilter, activeFilter]);
+
   if (hasFilter) {
     return (
-      <ChartWrapper title="Patient Persistence Over Time" subtitle={subtitle} insight={insight} csvData={csvData}>
+      <ChartWrapper title="Patient Persistence Over Time" subtitle={subtitle} insight={insight} csvData={csvData} tableView={tableView}>
         <ResponsiveContainer width="100%" height={380}>
           <LineChart data={data} margin={{ top: 5, right: 10, bottom: 20, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" />
@@ -93,7 +119,7 @@ const PersistencyCurve = ({ data, activeFilter }: PersistencyCurveProps) => {
   }
 
   return (
-    <ChartWrapper title="Patient Persistence Over Time" subtitle={subtitle} insight={insight} csvData={csvData}>
+    <ChartWrapper title="Patient Persistence Over Time" subtitle={subtitle} insight={insight} csvData={csvData} tableView={tableView}>
       <ResponsiveContainer width="100%" height={380}>
         <AreaChart data={data} margin={{ top: 5, right: 10, bottom: 20, left: 0 }}>
           <defs>

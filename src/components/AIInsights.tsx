@@ -1,12 +1,16 @@
 import { useState, useCallback } from 'react';
-import { Sparkles, ChevronDown, ChevronUp, Star, ExternalLink, Download, RotateCcw, Clock } from 'lucide-react';
+import { Sparkles, ChevronDown, ChevronUp, Star, ExternalLink, Download, RotateCcw, Clock, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { KPIData, SegmentSnapshot, CohortResult } from '@/data/csvDataService';
+import AIChat from './AIChat';
 
 interface AIInsightsProps {
   kpis: KPIData;
   segmentSnapshot: SegmentSnapshot;
   cohort: CohortResult;
+  startDate?: string;
+  endDate?: string;
+  onChatMessagesChange?: (count: number) => void;
 }
 
 function generateExecutiveSummary(kpis: KPIData): string {
@@ -61,8 +65,6 @@ function generateRecommendations(kpis: KPIData, snapshot: SegmentSnapshot) {
     sectionId: 'kpi-section',
   });
 
-  // Geographic insight
-  const regionEntries = Object.entries(snapshot.byPayer); // we'll use cohort regions below
   recs.push({
     title: 'Focus Field Efforts on High-Density Regions',
     description: `Patient concentration varies significantly across Census regions. Align field team deployment and pharmacy partnerships with the geographic density map to maximize reach in high-volume states.`,
@@ -86,9 +88,10 @@ function formatTimestamp(date: Date): string {
   });
 }
 
-const AIInsights = ({ kpis, segmentSnapshot }: AIInsightsProps) => {
+const AIInsights = ({ kpis, segmentSnapshot, cohort, startDate = '2024-01-01', endDate = '2024-12-31', onChatMessagesChange }: AIInsightsProps) => {
   const [expanded, setExpanded] = useState(true);
   const [timestamp, setTimestamp] = useState(() => new Date());
+  const [showChat, setShowChat] = useState(false);
   const summary = generateExecutiveSummary(kpis);
   const recommendations = generateRecommendations(kpis, segmentSnapshot);
 
@@ -99,13 +102,8 @@ const AIInsights = ({ kpis, segmentSnapshot }: AIInsightsProps) => {
   const handleEvidenceClick = useCallback((sectionId: string) => {
     const el = document.getElementById(sectionId);
     if (!el) return;
-
-    // Remove any existing spotlight
     document.querySelectorAll('.ai-spotlight').forEach((e) => e.classList.remove('ai-spotlight'));
-
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // Add spotlight class after scroll
     setTimeout(() => {
       el.classList.add('ai-spotlight');
       setTimeout(() => el.classList.remove('ai-spotlight'), 2500);
@@ -159,7 +157,7 @@ const AIInsights = ({ kpis, segmentSnapshot }: AIInsightsProps) => {
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
             <div className="px-5 pb-5 space-y-5">
-              {/* Toolbar: timestamp + actions */}
+              {/* Toolbar */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Clock className="h-3 w-3" />
@@ -167,9 +165,17 @@ const AIInsights = ({ kpis, segmentSnapshot }: AIInsightsProps) => {
                 </div>
                 <div className="flex items-center gap-1">
                   <button
+                    onClick={(e) => { e.stopPropagation(); setShowChat(!showChat); }}
+                    className={`p-1.5 rounded-md hover:bg-muted transition-colors ${showChat ? 'text-primary bg-primary/10' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}
+                    aria-label="Ask AI"
+                    title="Ask AI a question"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                  </button>
+                  <button
                     onClick={(e) => { e.stopPropagation(); handleRefresh(); }}
                     className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground/50 hover:text-muted-foreground"
-                    aria-label="Refresh insights"
+                    aria-label="Reset to default"
                     title="Reset to default / Refresh"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
@@ -184,6 +190,22 @@ const AIInsights = ({ kpis, segmentSnapshot }: AIInsightsProps) => {
                   </button>
                 </div>
               </div>
+
+              {/* AI Chat */}
+              <AnimatePresence>
+                {showChat && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <AIChat
+                      kpis={kpis}
+                      segmentSnapshot={segmentSnapshot}
+                      cohort={cohort}
+                      startDate={startDate}
+                      endDate={endDate}
+                      onMessagesChange={onChatMessagesChange}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className="rounded-lg bg-muted/40 border border-border/50 px-4 py-3">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Executive Summary</p>

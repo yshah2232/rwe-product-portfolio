@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -61,8 +62,34 @@ const BrandPersistency = ({ data, selectedBrand, onBrandClick }: BrandPersistenc
     color: d.color,
   }));
 
+  const tableView = useMemo(() => (
+    <div className="max-h-[300px] overflow-auto">
+      <table className="w-full text-sm">
+        <thead className="sticky top-0 bg-card">
+          <tr className="border-b">
+            <th className="text-left py-2 px-2 font-medium text-muted-foreground">Brand</th>
+            <th className="text-right py-2 px-2 font-medium text-muted-foreground">Persistence (%)</th>
+            <th className="text-right py-2 px-2 font-medium text-muted-foreground">Patients</th>
+          </tr>
+        </thead>
+        <tbody>
+          {chartData.map((d, i) => (
+            <tr key={i} className="border-b border-border/30 hover:bg-muted/30">
+              <td className="py-1.5 px-2 flex items-center gap-2">
+                <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: d.color }} />
+                {d.name}
+              </td>
+              <td className="py-1.5 px-2 text-right font-medium">{d.activeRate.toFixed(1)}%</td>
+              <td className="py-1.5 px-2 text-right">{d.patients.toLocaleString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ), [chartData]);
+
   return (
-    <ChartWrapper title="Persistence by Brand" subtitle="Which GLP-1 brands retain patients best" insight={insight} csvData={csvData}>
+    <ChartWrapper title="Persistence by Brand" subtitle="Which GLP-1 brands retain patients best" insight={insight} csvData={csvData} tableView={tableView}>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, bottom: 5, left: 10 }}
           onClick={(state) => {
