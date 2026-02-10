@@ -13,6 +13,7 @@ import InfoPanel from '@/components/InfoPanel';
 import AIInsights from '@/components/AIInsights';
 import TicketDialog from '@/components/TicketDialog';
 import ExportPPT from '@/components/ExportPPT';
+import PatientMap from '@/components/PatientMap';
 import {
   loadPatientCohort,
   loadPersistenceSummary,
@@ -223,6 +224,11 @@ const Dashboard = () => {
                 />
               </div>
             </section>
+
+            {/* Geographic distribution map */}
+            <div id="geo-map">
+              <PatientMap cohort={cohort} />
+            </div>
 
             {/* Drilldown */}
             <DrilldownTabs cohort={cohort} activeFilter={activeFilter} />
