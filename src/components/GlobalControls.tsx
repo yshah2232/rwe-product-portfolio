@@ -47,7 +47,7 @@ const GlobalControls = ({
   onGranularityChange,
 }: GlobalControlsProps) => {
   return (
-    <div className="border-b bg-muted/20 px-4 py-3">
+    <div className="bg-muted/20 px-4 py-3">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row flex-wrap gap-5 items-start sm:items-end">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5">

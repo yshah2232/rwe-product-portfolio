@@ -37,10 +37,10 @@ const GuidedTour = () => {
   if (!open) {
     return (
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={() => { setOpen(true); setStep(0); }}
-        className="gap-1.5 text-xs"
+        className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
       >
         <Compass className="h-3.5 w-3.5" />
         Take a Tour

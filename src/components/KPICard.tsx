@@ -9,10 +9,19 @@ interface KPICardProps {
   detail: string;
   suffix?: string;
   highlight?: boolean;
+  sentiment?: 'positive' | 'negative';
 }
 
-const KPICard = ({ title, value, description, detail, suffix, highlight }: KPICardProps) => {
+const KPICard = ({ title, value, description, detail, suffix, highlight, sentiment }: KPICardProps) => {
   const [showDetail, setShowDetail] = useState(false);
+
+  const sentimentColor = sentiment === 'positive'
+    ? 'text-emerald-600'
+    : sentiment === 'negative'
+      ? 'text-rose-600'
+      : highlight
+        ? 'text-primary'
+        : 'text-foreground';
 
   return (
     <motion.div
@@ -33,7 +42,7 @@ const KPICard = ({ title, value, description, detail, suffix, highlight }: KPICa
           {showDetail ? <X className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
         </button>
       </div>
-      <p className={`mt-2 text-2xl md:text-3xl font-bold ${highlight ? 'text-primary' : 'text-foreground'}`}>
+      <p className={`mt-2 text-2xl md:text-3xl font-bold ${sentimentColor}`}>
         {value}
         {suffix && (
           <span className="text-base font-normal text-muted-foreground">{suffix}</span>

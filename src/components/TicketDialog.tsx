@@ -48,8 +48,8 @@ const TicketDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-          <MessageSquarePlus className="h-3.5 w-3.5" />
+        <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+          <MessageSquarePlus className="h-4 w-4" />
           Raise Ticket
         </Button>
       </DialogTrigger>
