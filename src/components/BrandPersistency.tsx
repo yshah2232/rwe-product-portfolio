@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import type { DailySnapshot } from '@/data/syntheticData';
 import { BRANDS, BRAND_COLORS } from '@/data/syntheticData';
+import ChartWrapper from './ChartWrapper';
 
 interface BrandPersistencyProps {
   data: DailySnapshot;
@@ -22,11 +23,22 @@ const CustomTooltip = ({ active, payload }: any) => {
     <div className="rounded-lg border bg-card p-3 shadow-lg text-card-foreground">
       <p className="text-sm font-medium">{entry.name}</p>
       <p className="text-sm font-semibold mt-1" style={{ color: entry.color }}>
-        {payload[0].value.toFixed(1)}% Active
+        {payload[0].value.toFixed(1)}% still on therapy
       </p>
     </div>
   );
 };
+
+function generateInsight(data: DailySnapshot): string {
+  const rates = BRANDS.map((b) => ({
+    name: b,
+    rate: data.byBrand[b].activeRate,
+  }));
+  rates.sort((a, b) => b.rate - a.rate);
+  const best = rates[0];
+  const worst = rates[rates.length - 1];
+  return `${best.name} leads in persistence at ${(best.rate * 100).toFixed(0)}%, while ${worst.name} shows the lowest at ${(worst.rate * 100).toFixed(0)}%. The ${(best.rate * 100 - worst.rate * 100).toFixed(0)} percentage-point spread across brands may reflect differences in dosing convenience, side-effect profiles, or payer coverage.`;
+}
 
 const BrandPersistency = ({ data }: BrandPersistencyProps) => {
   const chartData = BRANDS.map((brand) => ({
@@ -35,10 +47,14 @@ const BrandPersistency = ({ data }: BrandPersistencyProps) => {
     color: BRAND_COLORS[brand],
   }));
 
+  const insight = generateInsight(data);
+
   return (
-    <div className="rounded-xl border bg-card p-4 md:p-6 shadow-sm">
-      <h3 className="text-lg font-semibold text-foreground mb-0.5">Brand Level Persistency</h3>
-      <p className="text-sm text-muted-foreground mb-4">Active rate by GLP-1 brand</p>
+    <ChartWrapper
+      title="Persistence by Brand"
+      subtitle="Which GLP-1 brands retain patients best"
+      insight={insight}
+    >
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" horizontal={false} />
@@ -67,7 +83,7 @@ const BrandPersistency = ({ data }: BrandPersistencyProps) => {
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </ChartWrapper>
   );
 };
 
