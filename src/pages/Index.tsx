@@ -67,7 +67,7 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="text-[36px] md:text-[48px] lg:text-[56px] font-bold text-white leading-[1.1] tracking-tight max-w-4xl"
           >
-            Real-World Evidence &<br className="hidden md:block" /> Healthcare Analytics
+            Real-World Evidence & Healthcare Analytics
           </motion.h1>
         </div>
         {/* Subtle decorative gradient orbs */}
