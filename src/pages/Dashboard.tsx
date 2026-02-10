@@ -49,7 +49,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Sticky header */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
         <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
@@ -59,16 +59,16 @@ const Dashboard = () => {
             >
               <ArrowLeft className="h-5 w-5 text-foreground" />
             </Link>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">GLP-1 Patient Insights</h1>
-              <p className="text-xs text-muted-foreground">Real-world therapy persistence analysis</p>
-            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">GLP-1 Patient Insights</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <TicketDialog />
             <GuidedTour />
             <InfoPanel />
           </div>
+        </div>
+        <div className="max-w-[1400px] mx-auto px-4 md:px-6">
+          <div className="border-t border-border/40" />
         </div>
         <GlobalControls
           startDate={startDate}
@@ -101,6 +101,7 @@ const Dashboard = () => {
             description="Percentage of patients who are still taking their GLP-1 medication."
             detail="A patient is considered active if they refill within the expected treatment window. This typically means a new fill within 30-90 days of the previous one, depending on the medication."
             highlight
+            sentiment="positive"
           />
           <KPICard
             title="Stopped Therapy"
@@ -108,6 +109,7 @@ const Dashboard = () => {
             description="Percentage of patients who discontinued treatment."
             detail="Patients with no refill after the expected refill window are considered discontinued. This is the inverse of the 'Still on Therapy' rate."
             highlight
+            sentiment="negative"
           />
           <KPICard
             title="Typical Refill Delay"
