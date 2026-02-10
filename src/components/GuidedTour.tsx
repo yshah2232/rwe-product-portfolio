@@ -61,7 +61,7 @@ const GuidedTour = () => {
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-card border rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6"
+          className="bg-card border rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 my-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between mb-4">
