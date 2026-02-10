@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, type ReactNode } from 'react';
-import { Maximize2, Minimize2, Download, TableIcon, BarChart3 } from 'lucide-react';
+import { Maximize2, Minimize2, Download, TableIcon, BarChart3, FileSpreadsheet } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -12,9 +12,10 @@ interface ChartWrapperProps {
   insight?: string;
   children: ReactNode;
   tableView?: ReactNode;
+  csvData?: { headers: string[]; rows: (string | number)[][] };
 }
 
-const ChartWrapper = ({ title, subtitle, insight, children, tableView }: ChartWrapperProps) => {
+const ChartWrapper = ({ title, subtitle, insight, children, tableView, csvData }: ChartWrapperProps) => {
   const [fullscreen, setFullscreen] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
@@ -39,6 +40,20 @@ const ChartWrapper = ({ title, subtitle, insight, children, tableView }: ChartWr
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
   }, [title]);
 
+  const handleDownloadCSV = useCallback(() => {
+    if (!csvData) return;
+    const csvContent = [
+      csvData.headers.join(','),
+      ...csvData.rows.map((row) => row.join(',')),
+    ].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.download = `${title.replace(/\s+/g, '-').toLowerCase()}.csv`;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, [title, csvData]);
+
   const toolbarIcons = (
     <div className="flex items-center gap-1">
       {tableView && (
@@ -48,6 +63,16 @@ const ChartWrapper = ({ title, subtitle, insight, children, tableView }: ChartWr
           aria-label={showTable ? 'Chart view' : 'Table view'}
         >
           {showTable ? <BarChart3 className="h-4 w-4" /> : <TableIcon className="h-4 w-4" />}
+        </button>
+      )}
+      {csvData && (
+        <button
+          onClick={handleDownloadCSV}
+          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground/50 hover:text-muted-foreground"
+          aria-label="Download CSV"
+          title="Download as CSV"
+        >
+          <FileSpreadsheet className="h-4 w-4" />
         </button>
       )}
       <button

@@ -3,6 +3,13 @@ import { Info, X, BookOpen, Database, FileText, Layers, ChevronRight } from 'luc
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 type SectionKey = 'methodology' | 'dataSources' | 'references' | 'architecture';
 
@@ -72,7 +79,6 @@ const SECTIONS: {
 ];
 
 const InfoPanel = () => {
-  const [open, setOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<SectionKey | null>(null);
 
   const toggleSection = (key: SectionKey) => {
@@ -80,101 +86,75 @@ const InfoPanel = () => {
   };
 
   return (
-    <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen(true)}
-        className="gap-1.5 text-xs"
-      >
-        <Info className="h-3.5 w-3.5" />
-        Info
-      </Button>
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+          <Info className="h-3.5 w-3.5" />
+          Info
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="w-full max-w-lg p-0 overflow-y-auto">
+        <SheetHeader className="sticky top-0 bg-card border-b px-6 py-4 z-10">
+          <SheetTitle className="text-lg font-semibold text-foreground">
+            Information & References
+          </SheetTitle>
+        </SheetHeader>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-start justify-end bg-black/30 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          >
-            <motion.div
-              initial={{ x: 400 }}
-              animate={{ x: 0 }}
-              exit={{ x: 400 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="bg-card border-l shadow-2xl h-full w-full max-w-lg overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="sticky top-0 bg-card border-b px-6 py-4 flex items-center justify-between z-10">
-                <h2 className="text-lg font-semibold text-foreground">Information & References</h2>
-                <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
-                  <X className="h-5 w-5" />
+        <div className="px-6 py-6 space-y-3">
+          {SECTIONS.map((section) => {
+            const Icon = section.icon;
+            const isExpanded = expandedSection === section.key;
+
+            return (
+              <div key={section.key} className="rounded-xl border bg-card overflow-hidden">
+                <button
+                  onClick={() => toggleSection(section.key)}
+                  className="w-full px-4 py-4 flex items-center gap-3 hover:bg-muted/30 transition-colors text-left"
+                >
+                  <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground">{section.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{section.summary}</p>
+                  </div>
+                  <ChevronRight
+                    className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+                  />
                 </button>
-              </div>
 
-              <div className="px-6 py-6 space-y-3">
-                {SECTIONS.map((section) => {
-                  const Icon = section.icon;
-                  const isExpanded = expandedSection === section.key;
-
-                  return (
-                    <div key={section.key} className="rounded-xl border bg-card overflow-hidden">
-                      <button
-                        onClick={() => toggleSection(section.key)}
-                        className="w-full px-4 py-4 flex items-center gap-3 hover:bg-muted/30 transition-colors text-left"
-                      >
-                        <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
-                          <Icon className="h-4 w-4 text-primary" />
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 space-y-3">
+                        <Separator />
+                        <div className="rounded-lg bg-muted/40 border border-border/50 px-3 py-2.5">
+                          <p className="text-xs text-foreground leading-relaxed">{section.detail}</p>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground">{section.label}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{section.summary}</p>
-                        </div>
-                        <ChevronRight
-                          className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
-                        />
-                      </button>
-
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="px-4 pb-4 space-y-3">
-                              <Separator />
-                              {/* Detailed explanation */}
-                              <div className="rounded-lg bg-muted/40 border border-border/50 px-3 py-2.5">
-                                <p className="text-xs text-foreground leading-relaxed">{section.detail}</p>
-                              </div>
-                              {/* Items */}
-                              <ul className="space-y-2">
-                                {section.items.map((item, i) => (
-                                  <li key={i} className="flex gap-2.5 text-sm text-muted-foreground leading-relaxed">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                                    {item}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
+                        <ul className="space-y-2">
+                          {section.items.map((item, i) => (
+                            <li key={i} className="flex gap-2.5 text-sm text-muted-foreground leading-relaxed">
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+            );
+          })}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 

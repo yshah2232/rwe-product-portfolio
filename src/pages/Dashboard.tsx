@@ -11,6 +11,7 @@ import DrilldownTabs from '@/components/DrilldownTabs';
 import GuidedTour from '@/components/GuidedTour';
 import InfoPanel from '@/components/InfoPanel';
 import AIInsights from '@/components/AIInsights';
+import TicketDialog from '@/components/TicketDialog';
 import {
   getDailyData,
   aggregateData,
@@ -64,6 +65,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <TicketDialog />
             <GuidedTour />
             <InfoPanel />
           </div>
@@ -86,7 +88,7 @@ const Dashboard = () => {
         transition={{ duration: 0.3 }}
       >
         {/* KPI row */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <section id="kpi-section" className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <KPICard
             title="Patients Analyzed"
             value={kpis.totalPatients.toLocaleString()}
@@ -98,12 +100,14 @@ const Dashboard = () => {
             value={`${(kpis.activeRate * 100).toFixed(1)}%`}
             description="Percentage of patients who are still taking their GLP-1 medication."
             detail="A patient is considered active if they refill within the expected treatment window. This typically means a new fill within 30-90 days of the previous one, depending on the medication."
+            highlight
           />
           <KPICard
             title="Stopped Therapy"
             value={`${(kpis.dropOffRate * 100).toFixed(1)}%`}
             description="Percentage of patients who discontinued treatment."
             detail="Patients with no refill after the expected refill window are considered discontinued. This is the inverse of the 'Still on Therapy' rate."
+            highlight
           />
           <KPICard
             title="Typical Refill Delay"
@@ -114,20 +118,36 @@ const Dashboard = () => {
           />
         </section>
 
-        {/* AI Insights */}
-        <AIInsights kpis={kpis} lastDataPoint={lastDataPoint} />
+        {/* Two-column: Charts + AI Insights sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Charts column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Hero chart */}
+            <div id="persistence-curve">
+              <PersistencyCurve data={chartData} />
+            </div>
 
-        {/* Hero chart */}
-        <PersistencyCurve data={chartData} />
+            {/* Secondary charts */}
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div id="payer-chart">
+                <DropOffByPayer data={lastDataPoint} />
+              </div>
+              <div id="brand-chart">
+                <BrandPersistency data={lastDataPoint} />
+              </div>
+            </section>
 
-        {/* Secondary charts */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <DropOffByPayer data={lastDataPoint} />
-          <BrandPersistency data={lastDataPoint} />
-        </section>
+            {/* Drilldown */}
+            <DrilldownTabs data={chartData} />
+          </div>
 
-        {/* Drilldown */}
-        <DrilldownTabs data={chartData} />
+          {/* AI Insights sidebar */}
+          <div className="lg:col-span-1">
+            <div className="lg:sticky lg:top-[160px]">
+              <AIInsights kpis={kpis} lastDataPoint={lastDataPoint} />
+            </div>
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="border-t pt-6 pb-8 text-center">

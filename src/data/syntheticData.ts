@@ -38,8 +38,6 @@ const INDICATION_DIST: Record<string, number> = {
   Cardiovascular: 0.10,
 };
 
-// Modified Weibull survival parameters
-// S(t) = pInf + (1 - pInf) * exp(-(t/lambda)^k)
 interface WeibullParams {
   pInf: number;
   lambda: number;
@@ -78,7 +76,6 @@ function addNoise(value: number): number {
   return Math.max(0, Math.min(1, value + noise));
 }
 
-// Data interfaces
 export interface DailySnapshot {
   day: number;
   date: string;
@@ -159,7 +156,6 @@ function generateDailyData(): DailySnapshot[] {
   return data;
 }
 
-// Pre-generate data once at module load
 const DAILY_DATA = generateDailyData();
 
 export function getDailyData(): DailySnapshot[] {
@@ -197,7 +193,6 @@ export function aggregateData(
     result.push(filtered[endIdx]);
   }
 
-  // Ensure last point is always included
   const lastFiltered = filtered[filtered.length - 1];
   if (result.length > 0 && result[result.length - 1].day !== lastFiltered.day) {
     result.push(lastFiltered);
@@ -223,31 +218,31 @@ export function getKPIs(data: DailySnapshot[], endDay: number): KPIData {
   };
 }
 
-// Chart color constants — red, maroon, pink hues
+// Chart color constants — distinct, accessible palette
 export const CHART_COLORS = {
   primary: '#DC2626',
-  maroon: '#7F1D1D',
-  rose: '#E11D48',
-  pink: '#EC4899',
-  coral: '#F87171',
+  blue: '#2563EB',
+  emerald: '#059669',
+  amber: '#D97706',
+  purple: '#7C3AED',
 };
 
 export const BRAND_COLORS: Record<string, string> = {
-  Ozempic: CHART_COLORS.primary,
-  Wegovy: CHART_COLORS.maroon,
-  Mounjaro: CHART_COLORS.rose,
-  Zepbound: CHART_COLORS.pink,
+  Ozempic: '#DC2626',
+  Wegovy: '#2563EB',
+  Mounjaro: '#059669',
+  Zepbound: '#D97706',
 };
 
 export const PAYER_COLORS: Record<string, string> = {
-  Commercial: CHART_COLORS.primary,
-  Medicare: CHART_COLORS.maroon,
-  Medicaid: CHART_COLORS.rose,
-  Cash: CHART_COLORS.coral,
+  Commercial: '#2563EB',
+  Medicare: '#059669',
+  Medicaid: '#D97706',
+  Cash: '#DC2626',
 };
 
 export const INDICATION_COLORS: Record<string, string> = {
-  'Type 2 Diabetes': CHART_COLORS.primary,
-  'Weight Management': CHART_COLORS.rose,
-  Cardiovascular: CHART_COLORS.maroon,
+  'Type 2 Diabetes': '#DC2626',
+  'Weight Management': '#2563EB',
+  Cardiovascular: '#059669',
 };

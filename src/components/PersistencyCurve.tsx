@@ -57,11 +57,17 @@ const PersistencyCurve = ({ data }: PersistencyCurveProps) => {
 
   const insight = generateInsight(data);
 
+  const csvData = {
+    headers: ['Day', 'Active Rate (%)'],
+    rows: chartData.map((d) => [d.day, d.activeRate] as (string | number)[]),
+  };
+
   return (
     <ChartWrapper
       title="Patient Persistence Over Time"
       subtitle="How many patients remain on therapy as time passes"
       insight={insight}
+      csvData={csvData}
     >
       <ResponsiveContainer width="100%" height={380}>
         <AreaChart data={chartData} margin={{ top: 5, right: 10, bottom: 20, left: 0 }}>
