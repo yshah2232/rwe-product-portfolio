@@ -1,0 +1,5 @@
+view_by,median_refill_gap_days,p75_refill_gap_days,p90_refill_gap_days
+Daily,12.3,18,26
+Monthly,11.8,17,25
+36d,12.0,19,28
+72d,12.6,20,30
