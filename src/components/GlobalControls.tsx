@@ -14,15 +14,15 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { HelpCircle } from 'lucide-react';
-import type { Granularity } from '@/data/syntheticData';
+import type { ViewBy } from '@/data/csvDataService';
 
 interface GlobalControlsProps {
   startDate: string;
   endDate: string;
-  granularity: Granularity;
+  viewBy: ViewBy;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
-  onGranularityChange: (g: Granularity) => void;
+  onViewByChange: (v: ViewBy) => void;
 }
 
 const HelpTip = ({ text }: { text: string }) => (
@@ -41,10 +41,10 @@ const HelpTip = ({ text }: { text: string }) => (
 const GlobalControls = ({
   startDate,
   endDate,
-  granularity,
+  viewBy,
   onStartDateChange,
   onEndDateChange,
-  onGranularityChange,
+  onViewByChange,
 }: GlobalControlsProps) => {
   return (
     <div className="bg-muted/20 px-4 py-3">
@@ -54,7 +54,7 @@ const GlobalControls = ({
             <Label htmlFor="from-date" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Patient Time Window
             </Label>
-            <HelpTip text="Controls which patients are included in the analysis. Adjusting this recalculates all metrics and charts." />
+            <HelpTip text="Controls which patients are included. Only patients whose first GLP-1 claim (index_date) falls within this range are analyzed. Changing this rebuilds the entire cohort." />
           </div>
           <div className="flex items-center gap-2">
             <Input
@@ -83,17 +83,17 @@ const GlobalControls = ({
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               View By
             </Label>
-            <HelpTip text="Controls how patient activity is grouped over time. Daily shows detailed behavior, Monthly shows long-term trends, and custom intervals align to refill cycles." />
+            <HelpTip text="Controls how patient activity is summarized over time. Does NOT change which patients are included — only changes the time resolution of charts and metrics." />
           </div>
-          <Select value={granularity} onValueChange={(v) => onGranularityChange(v as Granularity)}>
+          <Select value={viewBy} onValueChange={(v) => onViewByChange(v as ViewBy)}>
             <SelectTrigger className="w-[160px] h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-popover">
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Monthly</SelectItem>
-              <SelectItem value="36days">36-Day Cycle</SelectItem>
-              <SelectItem value="72days">72-Day Cycle</SelectItem>
+              <SelectItem value="Daily">Daily</SelectItem>
+              <SelectItem value="Monthly">Monthly</SelectItem>
+              <SelectItem value="36d">36-Day Cycle</SelectItem>
+              <SelectItem value="72d">72-Day Cycle</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft, X, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import GlobalControls from '@/components/GlobalControls';
 import KPICard from '@/components/KPICard';
@@ -13,50 +13,94 @@ import InfoPanel from '@/components/InfoPanel';
 import AIInsights from '@/components/AIInsights';
 import TicketDialog from '@/components/TicketDialog';
 import {
-  getDailyData,
-  aggregateData,
-  getKPIs,
-  getFilteredKPIs,
-  dateToDayNumber,
-  type Granularity,
+  loadPatientCohort,
+  loadPersistenceSummary,
+  loadRefillMetrics,
+  filterCohort,
+  computeKPIs,
+  getPersistenceCurveData,
+  getSegmentSnapshot,
+  type ViewBy,
   type ActiveFilter,
-} from '@/data/syntheticData';
+  type PatientRecord,
+  type PersistenceRow,
+  type RefillRow,
+} from '@/data/csvDataService';
 
 const Dashboard = () => {
   const [startDate, setStartDate] = useState('2024-01-01');
   const [endDate, setEndDate] = useState('2024-12-31');
-  const [granularity, setGranularity] = useState<Granularity>('weekly');
+  const [viewBy, setViewBy] = useState<ViewBy>('Daily');
   const [activeFilter, setActiveFilter] = useState<ActiveFilter | null>(null);
 
-  const allData = useMemo(() => getDailyData(), []);
+  // Raw CSV data
+  const [patients, setPatients] = useState<PatientRecord[]>([]);
+  const [persistence, setPersistence] = useState<PersistenceRow[]>([]);
+  const [refill, setRefill] = useState<RefillRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const startDay = useMemo(() => dateToDayNumber(startDate), [startDate]);
-  const endDay = useMemo(() => dateToDayNumber(endDate), [endDate]);
+  useEffect(() => {
+    Promise.all([loadPatientCohort(), loadPersistenceSummary(), loadRefillMetrics()])
+      .then(([p, pers, ref]) => {
+        setPatients(p);
+        setPersistence(pers);
+        setRefill(ref);
+        setLoading(false);
+      });
+  }, []);
 
-  const effectiveStartDay = Math.min(startDay, endDay);
-  const effectiveEndDay = Math.max(startDay, endDay);
-
-  const chartData = useMemo(
-    () => aggregateData(allData, effectiveStartDay, effectiveEndDay, granularity),
-    [allData, effectiveStartDay, effectiveEndDay, granularity],
+  // Filtered cohort based on date window
+  const cohort = useMemo(
+    () => filterCohort(patients, startDate, endDate),
+    [patients, startDate, endDate],
   );
 
+  // KPIs
   const kpis = useMemo(
-    () =>
-      activeFilter
-        ? getFilteredKPIs(allData, effectiveStartDay, effectiveEndDay, activeFilter)
-        : getKPIs(allData, effectiveStartDay, effectiveEndDay),
-    [allData, effectiveStartDay, effectiveEndDay, activeFilter],
+    () => computeKPIs(cohort, persistence, refill, viewBy),
+    [cohort, persistence, refill, viewBy],
   );
 
-  const lastDataPoint =
-    chartData.length > 0 ? chartData[chartData.length - 1] : allData[allData.length - 1];
+  // Filtered KPIs when a segment is active
+  const displayKPIs = useMemo(() => {
+    if (!activeFilter) return kpis;
+    const segments = activeFilter.type === 'payer' ? cohort.byPayer : cohort.byBrand;
+    const seg = segments.find((s) => s.name === activeFilter.value);
+    if (!seg) return kpis;
+    return {
+      ...kpis,
+      totalPatients: seg.patients,
+    };
+  }, [kpis, activeFilter, cohort]);
+
+  // Persistence curve data
+  const curveData = useMemo(
+    () => getPersistenceCurveData(persistence, viewBy, activeFilter),
+    [persistence, viewBy, activeFilter],
+  );
+
+  // Segment snapshot for bar charts
+  const segmentSnapshot = useMemo(
+    () => getSegmentSnapshot(cohort),
+    [cohort],
+  );
 
   const handleSegmentClick = (type: ActiveFilter['type'], value: string) => {
     setActiveFilter((prev) =>
       prev?.type === type && prev?.value === value ? null : { type, value },
     );
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span className="text-sm font-medium">Loading patient data…</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,10 +129,10 @@ const Dashboard = () => {
         <GlobalControls
           startDate={startDate}
           endDate={endDate}
-          granularity={granularity}
+          viewBy={viewBy}
           onStartDateChange={setStartDate}
           onEndDateChange={setEndDate}
-          onGranularityChange={setGranularity}
+          onViewByChange={setViewBy}
         />
       </div>
 
@@ -122,32 +166,32 @@ const Dashboard = () => {
         <section id="kpi-section" className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <KPICard
             title="Patients Analyzed"
-            value={kpis.totalPatients.toLocaleString()}
-            description="Number of unique patients included in this view."
-            detail="These are patients with at least one GLP-1 claim in the selected time window. The cohort is defined by the Patient Time Window filter above."
+            value={displayKPIs.totalPatients.toLocaleString()}
+            description="Unique patients with index_date in the selected time window."
+            detail="A patient is included only if their first GLP-1 claim (index_date) falls within the Patient Time Window. Changing the date range rebuilds the entire cohort."
           />
           <KPICard
             title="Still on Therapy"
-            value={`${(kpis.activeRate * 100).toFixed(1)}%`}
-            description="Percentage of patients who are still taking their GLP-1 medication."
-            detail="A patient is considered active if they refill within the expected treatment window. This typically means a new fill within 30-90 days of the previous one, depending on the medication."
+            value={`${(displayKPIs.activeRate * 100).toFixed(1)}%`}
+            description="Percentage of patients still active at the latest observed time point."
+            detail="Derived from persistence_summary.csv: the active_rate at the last time_since_index_days row for the selected View By."
             highlight
             sentiment="positive"
           />
           <KPICard
             title="Stopped Therapy"
-            value={`${(kpis.dropOffRate * 100).toFixed(1)}%`}
+            value={`${(displayKPIs.dropOffRate * 100).toFixed(1)}%`}
             description="Percentage of patients who discontinued treatment."
-            detail="Patients with no refill after the expected refill window are considered discontinued. This is the inverse of the 'Still on Therapy' rate."
+            detail="Calculated as 100% minus Still on Therapy. Reflects patients who did not refill within the expected treatment window."
             highlight
             sentiment="negative"
           />
           <KPICard
             title="Typical Refill Delay"
-            value={kpis.medianRefillGap.toFixed(1)}
+            value={displayKPIs.medianRefillGap.toFixed(1)}
             suffix=" days"
-            description="How late patients usually refill their medication."
-            detail="This shows the median number of days between the expected refill date and the actual refill date. Higher values indicate patients are stretching their supply or delaying treatment."
+            description="Median number of days patients delay their refill."
+            detail="Sourced from refill_metrics.csv: the median_refill_gap_days for the selected View By granularity."
           />
         </section>
 
@@ -157,21 +201,21 @@ const Dashboard = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Hero chart */}
             <div id="persistence-curve">
-              <PersistencyCurve data={chartData} activeFilter={activeFilter} />
+              <PersistencyCurve data={curveData} activeFilter={activeFilter} />
             </div>
 
             {/* Secondary charts */}
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div id="payer-chart">
                 <DropOffByPayer
-                  data={lastDataPoint}
+                  data={segmentSnapshot}
                   selectedPayer={activeFilter?.type === 'payer' ? activeFilter.value : null}
                   onPayerClick={(payer) => handleSegmentClick('payer', payer)}
                 />
               </div>
               <div id="brand-chart">
                 <BrandPersistency
-                  data={lastDataPoint}
+                  data={segmentSnapshot}
                   selectedBrand={activeFilter?.type === 'brand' ? activeFilter.value : null}
                   onBrandClick={(brand) => handleSegmentClick('brand', brand)}
                 />
@@ -179,13 +223,13 @@ const Dashboard = () => {
             </section>
 
             {/* Drilldown */}
-            <DrilldownTabs data={chartData} activeFilter={activeFilter} />
+            <DrilldownTabs cohort={cohort} activeFilter={activeFilter} />
           </div>
 
           {/* AI Insights sidebar */}
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-[160px]">
-              <AIInsights kpis={kpis} lastDataPoint={lastDataPoint} />
+              <AIInsights kpis={displayKPIs} segmentSnapshot={segmentSnapshot} cohort={cohort} />
             </div>
           </div>
         </div>
@@ -193,7 +237,7 @@ const Dashboard = () => {
         {/* Footer */}
         <div className="border-t pt-6 pb-8 text-center">
           <p className="text-xs text-muted-foreground">
-            Built with synthetic claims data · 100K patient cohort · Not real patient data
+            Built with synthetic claims data · {cohort.total.toLocaleString()} patient cohort · Not real patient data
           </p>
         </div>
       </motion.div>
