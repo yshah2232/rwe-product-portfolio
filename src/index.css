@@ -60,3 +60,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* AI Insights spotlight animation */
+@keyframes spotlight-pulse {
+  0% { box-shadow: 0 0 0 0 hsl(0 72% 51% / 0.3); }
+  50% { box-shadow: 0 0 0 8px hsl(0 72% 51% / 0.15); }
+  100% { box-shadow: 0 0 0 0 hsl(0 72% 51% / 0); }
+}
+
+.ai-spotlight {
+  animation: spotlight-pulse 0.8s ease-in-out 3;
+  outline: 2px solid hsl(0 72% 51% / 0.4);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
