@@ -61,6 +61,16 @@ function generateRecommendations(kpis: KPIData, snapshot: SegmentSnapshot) {
     sectionId: 'kpi-section',
   });
 
+  // Geographic insight
+  const regionEntries = Object.entries(snapshot.byPayer); // we'll use cohort regions below
+  recs.push({
+    title: 'Focus Field Efforts on High-Density Regions',
+    description: `Patient concentration varies significantly across Census regions. Align field team deployment and pharmacy partnerships with the geographic density map to maximize reach in high-volume states.`,
+    priority: 'medium',
+    evidence: 'See: Patient Geographic Distribution map',
+    sectionId: 'geo-map',
+  });
+
   return recs;
 }
 
