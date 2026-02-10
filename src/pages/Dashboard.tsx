@@ -44,9 +44,9 @@ const Dashboard = () => {
   const kpis = useMemo(
     () =>
       activeFilter
-        ? getFilteredKPIs(allData, effectiveEndDay, activeFilter)
-        : getKPIs(allData, effectiveEndDay),
-    [allData, effectiveEndDay, activeFilter],
+        ? getFilteredKPIs(allData, effectiveStartDay, effectiveEndDay, activeFilter)
+        : getKPIs(allData, effectiveStartDay, effectiveEndDay),
+    [allData, effectiveStartDay, effectiveEndDay, activeFilter],
   );
 
   const lastDataPoint =

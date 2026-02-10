@@ -208,13 +208,17 @@ export interface KPIData {
   medianRefillGap: number;
 }
 
-export function getKPIs(data: DailySnapshot[], endDay: number): KPIData {
-  const snapshot = data[Math.min(endDay, data.length - 1)];
+export function getKPIs(data: DailySnapshot[], startDay: number, endDay: number): KPIData {
+  const startSnapshot = data[Math.min(startDay, data.length - 1)];
+  const endSnapshot = data[Math.min(endDay, data.length - 1)];
+  const cohortPatients = Math.round(startSnapshot.overall.totalPatients * startSnapshot.overall.activeRate);
+  const endActive = endSnapshot.overall.activePatients;
+  const conditionalRate = cohortPatients > 0 ? endActive / cohortPatients : 0;
   return {
-    totalPatients: snapshot.overall.totalPatients,
-    activeRate: snapshot.overall.activeRate,
-    dropOffRate: snapshot.overall.dropOffRate,
-    medianRefillGap: snapshot.overall.medianRefillGap,
+    totalPatients: cohortPatients,
+    activeRate: Math.min(1, conditionalRate),
+    dropOffRate: 1 - Math.min(1, conditionalRate),
+    medianRefillGap: endSnapshot.overall.medianRefillGap,
   };
 }
 
@@ -225,32 +229,27 @@ export interface ActiveFilter {
   value: string;
 }
 
-export function getFilteredKPIs(data: DailySnapshot[], endDay: number, filter: ActiveFilter): KPIData {
-  const snapshot = data[Math.min(endDay, data.length - 1)];
-  if (filter.type === 'payer') {
-    const seg = snapshot.byPayer[filter.value];
-    return {
-      totalPatients: seg.patients,
-      activeRate: seg.activeRate,
-      dropOffRate: seg.dropOffRate,
-      medianRefillGap: snapshot.overall.medianRefillGap,
-    };
-  }
-  if (filter.type === 'brand') {
-    const seg = snapshot.byBrand[filter.value];
-    return {
-      totalPatients: seg.patients,
-      activeRate: seg.activeRate,
-      dropOffRate: 1 - seg.activeRate,
-      medianRefillGap: snapshot.overall.medianRefillGap,
-    };
-  }
-  const seg = snapshot.byIndication[filter.value];
+export function getFilteredKPIs(data: DailySnapshot[], startDay: number, endDay: number, filter: ActiveFilter): KPIData {
+  const startSnapshot = data[Math.min(startDay, data.length - 1)];
+  const endSnapshot = data[Math.min(endDay, data.length - 1)];
+
+  const getSegData = (snap: DailySnapshot) => {
+    if (filter.type === 'payer') return snap.byPayer[filter.value];
+    if (filter.type === 'brand') return snap.byBrand[filter.value];
+    return snap.byIndication[filter.value];
+  };
+
+  const startSeg = getSegData(startSnapshot);
+  const endSeg = getSegData(endSnapshot);
+  const cohort = startSeg.activePatients;
+  const endActive = endSeg.activePatients;
+  const conditionalRate = cohort > 0 ? endActive / cohort : 0;
+
   return {
-    totalPatients: seg.patients,
-    activeRate: seg.activeRate,
-    dropOffRate: 1 - seg.activeRate,
-    medianRefillGap: snapshot.overall.medianRefillGap,
+    totalPatients: cohort,
+    activeRate: Math.min(1, conditionalRate),
+    dropOffRate: 1 - Math.min(1, conditionalRate),
+    medianRefillGap: endSnapshot.overall.medianRefillGap,
   };
 }
 
