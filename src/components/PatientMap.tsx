@@ -223,10 +223,18 @@ const PatientMap = ({ cohort }: PatientMapProps) => {
           {(['region', 'state', 'zip3'] as MapViewMode[]).map((mode) => (
             <button
               key={mode}
-              onClick={() => setViewMode(mode)}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${viewMode === mode ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => mode !== 'zip3' && setViewMode(mode)}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                mode === 'zip3'
+                  ? 'text-muted-foreground/40 cursor-not-allowed'
+                  : viewMode === mode
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+              }`}
+              disabled={mode === 'zip3'}
+              title={mode === 'zip3' ? 'ZIP3 boundary view — Work in Progress' : undefined}
             >
-              {mode === 'zip3' ? 'ZIP3' : mode.charAt(0).toUpperCase() + mode.slice(1)}
+              {mode === 'zip3' ? 'ZIP3 (WIP)' : mode.charAt(0).toUpperCase() + mode.slice(1)}
             </button>
           ))}
         </div>
@@ -246,28 +254,65 @@ const PatientMap = ({ cohort }: PatientMapProps) => {
         </span>
       </div>
 
-      {/* Population slider */}
-      <div className="mb-3 px-1">
-        <div className="flex items-center justify-between mb-1.5">
-          <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-            Min. Patient Threshold
+      {/* Merged color index + slider */}
+      <div className="mb-3 px-1 rounded-lg border border-border/40 bg-muted/20 p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Patient Density Index
           </label>
           <span className="text-xs font-medium text-foreground">
-            {threshold > 0 ? `≥ ${threshold.toLocaleString()}` : 'All'}
+            {threshold > 0 ? `Showing ≥ ${threshold.toLocaleString()}` : 'Showing all'}
           </span>
         </div>
-        <Slider
-          value={[threshold]}
-          onValueChange={([v]) => setThreshold(v)}
-          min={0}
-          max={globalMax}
-          step={Math.max(1, Math.floor(globalMax / 100))}
-          className="w-full"
-        />
-        <div className="flex justify-between mt-1">
-          <span className="text-[10px] text-muted-foreground">Min: {globalMin.toLocaleString()}</span>
-          <span className="text-[10px] text-muted-foreground">Max: {globalMax.toLocaleString()}</span>
+
+        {/* Color gradient bar with min/max labels */}
+        <div>
+          <div
+            className="w-full h-3 rounded-full"
+            style={{
+              background: 'linear-gradient(to right, hsl(0, 50%, 92%), hsl(0, 60%, 70%), hsl(0, 65%, 50%), hsl(0, 72%, 25%))',
+            }}
+          />
+          <div className="flex justify-between mt-0.5">
+            <span className="text-[10px] font-medium text-muted-foreground">{scaleMin.toLocaleString()} patients</span>
+            <span className="text-[10px] font-medium text-muted-foreground">{scaleMax.toLocaleString()} patients</span>
+          </div>
         </div>
+
+        {/* Slider on the gradient */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-muted-foreground">Filter threshold</span>
+          </div>
+          <Slider
+            value={[threshold]}
+            onValueChange={([v]) => setThreshold(v)}
+            min={0}
+            max={globalMax}
+            step={Math.max(1, Math.floor(globalMax / 100))}
+            className="w-full"
+          />
+          <div className="flex justify-between mt-0.5">
+            <span className="text-[10px] text-muted-foreground">0</span>
+            <span className="text-[10px] text-muted-foreground">{globalMax.toLocaleString()}</span>
+          </div>
+        </div>
+
+        {/* Region color key (visible in region mode) */}
+        {viewMode === 'region' && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 border-t border-border/30">
+            {cohort.byRegion.sort((a, b) => b.patients - a.patients).map((r) => (
+              <div key={r.name} className="flex items-center gap-1.5">
+                <div
+                  className="w-3 h-3 rounded-sm border border-border/40"
+                  style={{ backgroundColor: getRegionColor(r.name, r.patients, scaleMin, scaleMax) }}
+                />
+                <span className="text-[10px] text-foreground font-medium">{r.name}</span>
+                <span className="text-[10px] text-muted-foreground">({r.patients.toLocaleString()})</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="relative" onMouseMove={handleMouseMove}>
@@ -353,18 +398,6 @@ const PatientMap = ({ cohort }: PatientMapProps) => {
             </p>
           </div>
         )}
-
-        {/* Legend */}
-        <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-card/90 backdrop-blur-sm rounded-lg border px-3 py-2">
-          <span className="text-[10px] text-muted-foreground font-medium">Low</span>
-          <div
-            className="w-24 h-3 rounded-full"
-            style={{
-              background: 'linear-gradient(to right, hsl(0, 50%, 92%), hsl(0, 60%, 60%), hsl(0, 72%, 25%))',
-            }}
-          />
-          <span className="text-[10px] text-muted-foreground font-medium">High</span>
-        </div>
       </div>
     </ChartWrapper>
   );

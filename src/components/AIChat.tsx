@@ -91,8 +91,8 @@ function generateResponse(
     } patients show the highest discontinuation rate, suggesting cost-related barriers.`;
   }
 
-  // Fallback
-  return `I can answer questions about the **${kpis.totalPatients.toLocaleString()}-patient cohort** within the selected time window (${startDate} to ${endDate}). Try asking about:\n\n- Patient persistence or drop-off rates\n- Brand comparisons (Ozempic, Wegovy, etc.)\n- Payer-level analysis\n- Refill gap trends\n- Geographic distribution\n- Overall summary\n\n⚠️ My analysis is limited to the cohort data and metrics displayed on this dashboard.`;
+  // Fallback — specific about what IS and ISN'T supported
+  return `⚠️ **I couldn't find an answer for that question.**\n\nI can **only** analyze the **${kpis.totalPatients.toLocaleString()}-patient GLP-1 cohort** within the current time window (${startDate} to ${endDate}). My responses are derived strictly from the metrics displayed on this dashboard.\n\n**✅ What I can answer:**\n- How many patients are in the cohort?\n- What is the persistence / drop-off rate?\n- Compare brands (Ozempic, Wegovy, Mounjaro, Zepbound)\n- Payer-level analysis (Commercial, Medicare, Medicaid, Cash)\n- Refill gap / delay trends\n- Regional geographic distribution\n- Overall cohort summary\n\n**❌ What I cannot answer:**\n- Questions about specific cities, hospitals, or metropolitan areas\n- Anything outside the selected date range\n- Clinical outcomes, diagnoses, or adverse events\n- Individual patient-level data\n- External market or competitor data\n\nTry rephrasing your question using the topics above.`;
 }
 
 const AIChat = ({ kpis, segmentSnapshot, cohort, startDate, endDate, onMessagesChange }: AIChatProps) => {
