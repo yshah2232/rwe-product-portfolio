@@ -223,31 +223,31 @@ export function getKPIs(data: DailySnapshot[], endDay: number): KPIData {
   };
 }
 
-// Chart color constants (hex for Recharts)
+// Chart color constants — red, maroon, pink hues
 export const CHART_COLORS = {
   primary: '#DC2626',
-  blue: '#2563EB',
-  green: '#16A34A',
-  amber: '#D97706',
-  teal: '#0D9488',
+  maroon: '#7F1D1D',
+  rose: '#E11D48',
+  pink: '#EC4899',
+  coral: '#F87171',
 };
 
 export const BRAND_COLORS: Record<string, string> = {
   Ozempic: CHART_COLORS.primary,
-  Wegovy: CHART_COLORS.blue,
-  Mounjaro: CHART_COLORS.green,
-  Zepbound: CHART_COLORS.amber,
+  Wegovy: CHART_COLORS.maroon,
+  Mounjaro: CHART_COLORS.rose,
+  Zepbound: CHART_COLORS.pink,
 };
 
 export const PAYER_COLORS: Record<string, string> = {
   Commercial: CHART_COLORS.primary,
-  Medicare: CHART_COLORS.blue,
-  Medicaid: CHART_COLORS.green,
-  Cash: CHART_COLORS.amber,
+  Medicare: CHART_COLORS.maroon,
+  Medicaid: CHART_COLORS.rose,
+  Cash: CHART_COLORS.coral,
 };
 
 export const INDICATION_COLORS: Record<string, string> = {
   'Type 2 Diabetes': CHART_COLORS.primary,
-  'Weight Management': CHART_COLORS.blue,
-  Cardiovascular: CHART_COLORS.green,
+  'Weight Management': CHART_COLORS.rose,
+  Cardiovascular: CHART_COLORS.maroon,
 };

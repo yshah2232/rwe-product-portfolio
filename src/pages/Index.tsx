@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { Linkedin } from 'lucide-react';
 import ModuleCard from '@/components/ModuleCard';
 
 const modules = [
@@ -60,15 +61,24 @@ const Index = () => {
           background: 'linear-gradient(135deg, hsl(0 72% 48%) 0%, hsl(350 80% 42%) 40%, hsl(340 70% 35%) 70%, hsl(330 60% 28%) 100%)',
         }}
       >
-        <div className="px-6 md:px-10 lg:px-16 py-10 md:py-14 lg:py-16 relative z-10">
+        <div className="px-6 md:px-10 lg:px-16 py-8 md:py-10 relative z-10 flex items-center justify-between">
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="text-[36px] md:text-[48px] lg:text-[56px] font-bold text-white leading-[1.1] tracking-tight max-w-4xl"
+            className="text-[28px] md:text-[40px] lg:text-[48px] font-bold text-white leading-[1.1] tracking-tight whitespace-nowrap"
           >
             Real-World Evidence & Healthcare Analytics
           </motion.h1>
+          <a
+            href="https://www.linkedin.com/in/yashshah2232"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 ml-4 p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
+            aria-label="Connect on LinkedIn"
+          >
+            <Linkedin className="h-5 w-5 text-white" />
+          </a>
         </div>
         {/* Subtle decorative gradient orbs */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, hsl(0 80% 70%), transparent 70%)' }} />
@@ -82,7 +92,7 @@ const Index = () => {
         transition={{ duration: 0.5, delay: 0.25 }}
         className="px-6 md:px-10 lg:px-16 pt-8 pb-4"
       >
-        <p className="text-[16px] md:text-[18px] leading-relaxed text-muted-foreground max-w-3xl">
+        <p className="text-[16px] md:text-[18px] leading-relaxed text-muted-foreground">
           Explore interactive modules that transform claims-level healthcare data into actionable insights spanning patient behavior, payer dynamics, provider trends, and therapeutic outcomes.
         </p>
       </motion.div>
@@ -113,7 +123,7 @@ const Index = () => {
         transition={{ duration: 0.6, delay: 0.6 }}
         className="px-6 md:px-10 lg:px-16 pb-6 flex justify-end"
       >
-        <span className="text-sm tracking-widest uppercase text-primary font-bold">
+        <span className="text-lg md:text-xl tracking-widest uppercase font-bold" style={{ color: 'hsl(0 50% 35% / 0.45)' }}>
           Product Portfolio
         </span>
       </motion.div>
