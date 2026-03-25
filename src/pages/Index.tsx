@@ -1,227 +1,194 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
-  Github,
-  Linkedin,
-  Lock,
-  Brain,
-  Map,
   BarChart3,
   Sparkles,
+  Map,
   Users,
-  MessageCircle,
-  X,
-  Send,
+  Brain,
+  Lock,
+  Shield,
+  FileText,
+  Layers,
+  Activity,
+  Target,
+  Eye,
+  TrendingUp,
+  Stethoscope,
+  FlaskConical,
   ExternalLink,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import AgentChatbot from '@/components/AgentChatbot';
 
-const pmSkills = [
+const pillars = [
   {
     icon: BarChart3,
-    label: 'Data Driven Decisions',
-    detail: 'Built KPIs, persistence curves, and payer analytics from 100K patient synthetic claims',
+    title: 'Measure what happened',
+    desc: 'Claims data tells you who filled, who stopped, and when. This is the receipt, not the full story, but it is the most scalable starting point.',
   },
   {
-    icon: Sparkles,
-    label: 'AI Product Integration',
-    detail: 'Embedded a rule based AI Q&A module trained on live cohort metrics with context awareness',
+    icon: Activity,
+    title: 'Detect risk early',
+    desc: 'Refill gaps, payer switches, and geographic cold spots are proxies for patient struggle. Catching them early changes outcomes.',
   },
   {
-    icon: Map,
-    label: 'Roadmapping',
-    detail: 'Defined a modular product roadmap spanning patient journey, market access, and HCP intelligence',
-  },
-  {
-    icon: Users,
-    label: 'Stakeholder Empathy',
-    detail: 'Designed for brand managers, medical affairs leads, and payer strategists as primary users',
-  },
-  {
-    icon: Brain,
-    label: 'Technical Fluency',
-    detail: 'End to end build using React, TypeScript, Recharts, and synthetic data pipelines',
+    icon: Eye,
+    title: 'Explain what is known vs inferred',
+    desc: 'Healthcare data is incomplete by design. Every metric should tell you whether it was observed directly or estimated, and how confident you should be.',
   },
 ];
 
-const roadmap = [
+const pmSkills = [
+  { icon: BarChart3, label: 'Data Driven Decisions', detail: 'KPIs, persistence curves, and payer analytics from 100K patient synthetic claims' },
+  { icon: Sparkles, label: 'AI Product Integration', detail: 'Rule based AI Q&A module trained on live cohort metrics with context awareness' },
+  { icon: Map, label: 'Roadmapping', detail: 'Modular product roadmap spanning patient journey, market access, and HCP intelligence' },
+  { icon: Users, label: 'Stakeholder Empathy', detail: 'Designed for brand managers, medical affairs leads, and payer strategists' },
+  { icon: Brain, label: 'Technical Fluency', detail: 'End to end build using React, TypeScript, Recharts, and synthetic data pipelines' },
+];
+
+const modules = [
   {
-    title: 'Patient Journey Analytics',
-    desc: 'Map how patients move from diagnosis through treatment milestones, highlighting where they stall or drop out of care.',
+    title: 'GLP 1 Patient Insights Dashboard',
+    status: 'live' as const,
+    outcome: 'Monitor adoption, persistence, drop off, and payer mix across a 100K patient cohort',
+    user: 'Brand Manager, Medical Affairs Lead',
+    metric: 'Persistence rate at 6 and 12 months',
+    icon: BarChart3,
   },
   {
-    title: 'Market Access & Coverage',
-    desc: 'See how payer rules and coverage restrictions translate into treatment drop off and uneven adoption.',
+    title: 'Patient Journey Analytics',
+    status: 'roadmap' as const,
+    outcome: 'Show friction, stability, acceleration, and drop off risk across the treatment lifecycle',
+    user: 'Patient Outcomes Lead',
+    metric: 'Time to therapy initiation',
+    icon: TrendingUp,
+  },
+  {
+    title: 'Market Access & Coverage Impact',
+    status: 'roadmap' as const,
+    outcome: 'Quantify access barriers by payer and policy, showing impact on time to start and abandonment',
+    user: 'Payer Strategist',
+    metric: 'Formulary coverage to fill rate',
+    icon: Shield,
   },
   {
     title: 'HCP Prescribing Intelligence',
-    desc: 'Explore how prescribing behavior varies across providers, geographies, and practice settings.',
+    status: 'roadmap' as const,
+    outcome: 'Show who is driving prescribing change and where treatment escalates faster',
+    user: 'Commercial Lead',
+    metric: 'Prescriber concentration index',
+    icon: Stethoscope,
   },
   {
-    title: 'Clinical Trials & Signals',
-    desc: 'Connect trial activity and conference signals to downstream real world adoption and market dynamics.',
+    title: 'Clinical Trials & Conference Signals',
+    status: 'roadmap' as const,
+    outcome: 'Connect trial activity and conference signals to downstream utilization shifts',
+    user: 'Medical Affairs, Strategy',
+    metric: 'Signal to utilization lag',
+    icon: FlaskConical,
+  },
+  {
+    title: 'Data Trust Layer',
+    status: 'roadmap' as const,
+    outcome: 'Explain why healthcare data breaks and how the product handles it transparently',
+    user: 'All stakeholders',
+    metric: 'Data completeness and confidence score',
+    icon: Layers,
   },
 ];
+
+const artifacts = [
+  { title: 'PRD Snapshot', desc: 'Problem, users, success metrics, and scope for the GLP 1 module' },
+  { title: 'Metric Tree', desc: 'North star metric decomposed into leading and lagging indicators' },
+  { title: 'Event Taxonomy', desc: 'Structured events for cohort filtering, persistence tracking, and exports' },
+  { title: 'Data Model', desc: 'Entity relationships across patients, claims, brands, and payer segments' },
+  { title: 'Experiment Plan', desc: 'Hypothesis, test design, and guardrail metrics for AI summary confidence' },
+  { title: 'Release Notes', desc: 'Versioned changelog with feature flags and rollback criteria' },
+];
+
+const anim = (delay: number) => ({
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay, duration: 0.4 },
+});
 
 const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <main className="min-h-screen bg-background">
-      {/* ─── Top bar ─── */}
-      <motion.nav
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="flex items-center justify-between px-6 md:px-10 lg:px-16 py-5"
-      >
-        <span className="text-xs font-semibold tracking-[0.25em] uppercase text-muted-foreground">
-          Yash Shah
-        </span>
-        <div className="flex items-center gap-3">
-          <a
-            href="https://www.linkedin.com/in/yashshah2232"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative inline-flex items-center justify-center w-10 h-10 rounded-xl bg-muted/60 border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300"
-            aria-label="LinkedIn"
-          >
-            <Linkedin className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            <span className="absolute -bottom-6 text-[9px] font-medium text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-              LinkedIn
-            </span>
-          </a>
-          <a
-            href="https://github.com/yshah2232"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative inline-flex items-center justify-center w-10 h-10 rounded-xl bg-muted/60 border border-border/50 hover:border-foreground/30 hover:bg-foreground/5 transition-all duration-300"
-            aria-label="GitHub"
-          >
-            <Github className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-            <span className="absolute -bottom-6 text-[9px] font-medium text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-              GitHub
-            </span>
-          </a>
-        </div>
-      </motion.nav>
-
-      {/* ─── Hero ─── */}
-      <section className="px-6 md:px-10 lg:px-16 pt-8 md:pt-16 pb-12 md:pb-20">
+    <div>
+      {/* Hero */}
+      <section className="px-6 md:px-10 lg:px-16 pt-16 md:pt-24 pb-16 md:pb-24">
         <div className="max-w-4xl">
-          <motion.p
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15 }}
-            className="text-xs font-semibold tracking-[0.3em] uppercase mb-4"
-            style={{ color: 'hsl(var(--warm-700))' }}
-          >
-            Portfolio
+          <motion.p {...anim(0.1)} className="text-xs font-semibold tracking-[0.3em] uppercase mb-5 text-primary">
+            Real World Evidence Portfolio
           </motion.p>
-
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.5 }}
-            className="text-[36px] md:text-[56px] lg:text-[68px] font-extrabold leading-[1.05] tracking-tight text-foreground"
+            {...anim(0.2)}
+            className="text-[36px] md:text-[52px] lg:text-[64px] font-extrabold leading-[1.08] tracking-tight text-foreground"
           >
-            I build tools that turn
-            <span className="text-primary"> patient data </span>
+            I build evidence products that turn
+            <span className="text-primary"> fragmented healthcare data </span>
             into decisions.
           </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="mt-6 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl"
-          >
-            This is not a slide deck or a wireframe. It is a working analytics product built end to end,
-            showing how I think about transforming longitudinal healthcare claims data into something
-            a brand manager, medical affairs lead, or payer strategist would actually open every Monday morning.
+          <motion.p {...anim(0.3)} className="mt-6 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
+            Real world evidence means using data generated during routine care, not clinical trials, to understand how treatments actually perform. Claims data are the receipts of healthcare: who filled what, when they stopped, and what they paid. They are not the full story, but they are the most scalable starting point for building products that change decisions.
           </motion.p>
         </div>
       </section>
 
-      {/* ─── PM Skills Strip ─── */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="px-6 md:px-10 lg:px-16 pb-14"
-      >
-        <div className="flex items-baseline gap-3 mb-6">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Skills demonstrated</h2>
-          <div className="flex-1 border-t border-border/40" />
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {pmSkills.map((skill, i) => (
-            <TooltipProvider key={skill.label} delayDuration={150}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.45 + i * 0.06 }}
-                    className="group flex flex-col items-center gap-2.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-accent/40 hover:border-primary/20 p-4 transition-all duration-300 cursor-default"
-                  >
-                    <div
-                      className="flex items-center justify-center w-10 h-10 rounded-lg transition-colors duration-300"
-                      style={{ background: `hsl(var(--warm-${i === 0 ? '500' : i === 1 ? '700' : i === 2 ? '900' : '500'}) / 0.1)` }}
-                    >
-                      <skill.icon
-                        className="h-5 w-5 transition-colors duration-300"
-                        style={{ color: `hsl(var(--warm-${i === 0 ? '500' : i === 1 ? '700' : i === 2 ? '900' : '500'}))` }}
-                      />
-                    </div>
-                    <span className="text-xs font-semibold text-center text-foreground/80 leading-tight">{skill.label}</span>
-                  </motion.div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs text-sm">
-                  <p className="font-medium mb-1">{skill.label}</p>
-                  <p className="text-muted-foreground">{skill.detail}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+      {/* What I Build */}
+      <section className="px-6 md:px-10 lg:px-16 pb-20">
+        <motion.div {...anim(0.35)} className="flex items-baseline gap-4 mb-10">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">What I build</h2>
+          <div className="flex-1 border-t border-border/50" />
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {pillars.map((p, i) => (
+            <motion.div
+              key={p.title}
+              {...anim(0.4 + i * 0.08)}
+              className="rounded-2xl border border-border/50 bg-card p-6 md:p-8 space-y-4"
+            >
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-accent">
+                <p.icon className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">{p.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
+            </motion.div>
           ))}
         </div>
-      </motion.section>
+      </section>
 
-      {/* ─── Live Module: GLP 1 ─── */}
-      <motion.section
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.55, duration: 0.5 }}
-        className="px-6 md:px-10 lg:px-16 pb-16"
-      >
-        <div
-          className="relative rounded-2xl overflow-hidden cursor-pointer group"
+      {/* Proof not Promises */}
+      <section className="px-6 md:px-10 lg:px-16 pb-20">
+        <motion.div {...anim(0.5)} className="flex items-baseline gap-4 mb-10">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">Proof, not promises</h2>
+          <div className="flex-1 border-t border-border/50" />
+        </motion.div>
+
+        {/* Live module CTA */}
+        <motion.div
+          {...anim(0.55)}
+          className="relative rounded-2xl overflow-hidden cursor-pointer group mb-6"
           onClick={() => navigate('/dashboard')}
           style={{
-            background: 'linear-gradient(135deg, hsl(0 72% 48%) 0%, hsl(350 80% 40%) 50%, hsl(340 60% 30%) 100%)',
+            background: 'linear-gradient(135deg, hsl(262 70% 45%) 0%, hsl(262 60% 35%) 50%, hsl(262 50% 25%) 100%)',
           }}
         >
           <div className="relative z-10 px-6 md:px-10 py-8 md:py-12 flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
             <div className="flex-1 space-y-3">
               <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/15 text-white/90 text-[11px] font-semibold tracking-wider uppercase">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Live Module
+                Live
               </div>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight">
+              <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight">
                 GLP 1 Patient Insights Dashboard
-              </h2>
+              </h3>
               <p className="text-white/70 text-sm md:text-base leading-relaxed max-w-lg">
-                Filter by date, payer, and brand. Explore persistence curves, geographic heatmaps,
-                AI generated insights, and exportable reports. All driven by a 100K patient synthetic cohort.
+                Monitor adoption, persistence, drop off, payer mix, and geography across a 100K patient synthetic cohort. Filter by date, payer, and brand.
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
                 {['Persistence Curves', 'Payer & Brand Mix', 'US Heatmap', 'AI Q&A', 'PPT Export'].map((tag) => (
@@ -230,40 +197,79 @@ const Index = () => {
                   </span>
                 ))}
               </div>
+              <div className="pt-2 text-xs text-white/50 space-y-0.5">
+                <p><span className="text-white/70 font-medium">Primary user:</span> Brand Manager, Medical Affairs Lead</p>
+                <p><span className="text-white/70 font-medium">Key metric improved:</span> Persistence rate at 6 and 12 months</p>
+              </div>
             </div>
             <Button
               size="lg"
-              variant="secondary"
               className="shrink-0 gap-2 text-sm font-bold shadow-lg group-hover:scale-105 transition-transform bg-white text-foreground hover:bg-white/90"
             >
               Explore Dashboard <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
-          <div className="absolute top-0 right-0 w-[350px] h-[350px] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, hsl(0 80% 70%), transparent 70%)' }} />
+          <div className="absolute top-0 right-0 w-[350px] h-[350px] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, hsl(262 80% 70%), transparent 70%)' }} />
           <div className="absolute bottom-0 left-1/4 w-[250px] h-[250px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, hsl(30 90% 65%), transparent 70%)' }} />
-        </div>
-      </motion.section>
+        </motion.div>
 
-      {/* ─── How the Data Was Created ─── */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.65 }}
-        className="px-6 md:px-10 lg:px-16 pb-16"
-      >
-        <div className="flex items-baseline gap-3 mb-8">
+        {/* Roadmap cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {modules.filter(m => m.status === 'roadmap').map((mod, i) => (
+            <motion.div
+              key={mod.title}
+              {...anim(0.6 + i * 0.05)}
+              className="rounded-xl border border-border/40 bg-muted/20 p-5 space-y-2 opacity-70"
+            >
+              <div className="flex items-center gap-2">
+                <Lock className="h-3.5 w-3.5 text-muted-foreground/50" />
+                <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground/60">
+                  {mod.title === 'Data Trust Layer' ? 'Trust Layer' : 'Roadmap'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <mod.icon className="h-4 w-4 text-muted-foreground/60" />
+                <h4 className="text-sm font-semibold text-muted-foreground">{mod.title}</h4>
+              </div>
+              <p className="text-xs text-muted-foreground/60 leading-relaxed">{mod.outcome}</p>
+              <p className="text-[10px] text-muted-foreground/40"><span className="font-medium">User:</span> {mod.user}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* PM Skills */}
+      <section className="px-6 md:px-10 lg:px-16 pb-20">
+        <motion.div {...anim(0.65)} className="flex items-baseline gap-4 mb-10">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">Skills demonstrated</h2>
+          <div className="flex-1 border-t border-border/50" />
+        </motion.div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          {pmSkills.map((skill, i) => (
+            <motion.div
+              key={skill.label}
+              {...anim(0.7 + i * 0.05)}
+              className="rounded-xl border border-border/40 bg-card p-4 space-y-3 hover:border-primary/30 hover:bg-accent/30 transition-all duration-200"
+            >
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent">
+                <skill.icon className="h-5 w-5 text-primary" />
+              </div>
+              <h4 className="text-xs font-bold text-foreground">{skill.label}</h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">{skill.detail}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Data Provenance */}
+      <section className="px-6 md:px-10 lg:px-16 pb-20">
+        <motion.div {...anim(0.75)} className="flex items-baseline gap-4 mb-10">
           <h2 className="text-xl md:text-2xl font-bold text-foreground">How the data was created</h2>
-          <div className="flex-1 border-t border-border/60" />
-        </div>
+          <div className="flex-1 border-t border-border/50" />
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* AI Generation Process */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="rounded-xl border border-primary/20 bg-accent/30 p-6 space-y-4"
-          >
+        <motion.div {...anim(0.8)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="rounded-2xl border border-primary/20 bg-accent/30 p-6 md:p-8 space-y-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
                 <Sparkles className="h-5 w-5 text-primary" />
@@ -274,25 +280,25 @@ const Index = () => {
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              The entire 100K patient cohort was synthetically modeled using AI driven statistical generation.
-              No real patient data exists anywhere in this product. Discontinuation patterns follow
-              <strong className="text-foreground"> modified Weibull survival curves</strong> calibrated against
-              12 month adherence benchmarks from published clinical studies.
+              The entire 100K patient cohort was synthetically modeled using AI driven statistical generation. Discontinuation patterns follow
+              <strong className="text-foreground"> modified Weibull survival curves</strong> calibrated against 12 month adherence benchmarks. No real patient data exists anywhere in this product.
             </p>
-            <div className="flex flex-wrap gap-2">
-              <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">Weibull Curves</span>
-              <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">100K Patients</span>
-              <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">Zero PHI</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+              {[
+                { value: '100K', label: 'Patients' },
+                { value: '5', label: 'GLP 1 brands' },
+                { value: '4', label: 'Payer segments' },
+                { value: '50', label: 'US states' },
+              ].map((stat) => (
+                <div key={stat.label} className="text-center py-2 rounded-lg bg-primary/5 border border-primary/10">
+                  <span className="block text-lg font-extrabold text-primary">{stat.value}</span>
+                  <span className="text-[10px] text-muted-foreground">{stat.label}</span>
+                </div>
+              ))}
             </div>
-          </motion.div>
+          </div>
 
-          {/* Data Sources & References */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.75 }}
-            className="rounded-xl border border-border/50 bg-muted/20 p-6 space-y-4"
-          >
+          <div className="rounded-2xl border border-border/50 bg-card p-6 md:p-8 space-y-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted">
                 <ExternalLink className="h-5 w-5 text-muted-foreground" />
@@ -302,142 +308,54 @@ const Index = () => {
                 <p className="text-[11px] text-muted-foreground">Published, peer reviewed data</p>
               </div>
             </div>
-            <ul className="space-y-2.5">
-              <li className="text-sm">
-                <a
-                  href="https://pubmed.ncbi.nlm.nih.gov/31415751/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-medium"
-                >
-                  Trujillo et al. (2020)
-                </a>
-                <span className="text-muted-foreground"> — GLP 1 RA persistence patterns over 12 months</span>
-              </li>
-              <li className="text-sm">
-                <a
-                  href="https://pubmed.ncbi.nlm.nih.gov/29907969/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-medium"
-                >
-                  Blonde et al. (2018)
-                </a>
-                <span className="text-muted-foreground"> — Adherence and discontinuation in Type 2 Diabetes</span>
-              </li>
-              <li className="text-sm">
-                <a
-                  href="https://www.iqvia.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-medium"
-                >
-                  IQVIA Utilization Reports
-                </a>
-                <span className="text-muted-foreground"> — National prescription volume benchmarks</span>
-              </li>
-              <li className="text-sm">
-                <a
-                  href="https://www.cms.gov/data-research"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-medium"
-                >
-                  CMS Open Data
-                </a>
-                <span className="text-muted-foreground"> — Payer mix and geographic distribution baselines</span>
-              </li>
+            <ul className="space-y-3">
+              {[
+                { label: 'Trujillo et al. (2020)', url: 'https://pubmed.ncbi.nlm.nih.gov/31415751/', desc: 'GLP 1 RA persistence patterns over 12 months' },
+                { label: 'Blonde et al. (2018)', url: 'https://pubmed.ncbi.nlm.nih.gov/29907969/', desc: 'Adherence and discontinuation in Type 2 Diabetes' },
+                { label: 'IQVIA Utilization Reports', url: 'https://www.iqvia.com/', desc: 'National prescription volume benchmarks' },
+                { label: 'CMS Open Data', url: 'https://www.cms.gov/data-research', desc: 'Payer mix and geographic distribution baselines' },
+              ].map((ref) => (
+                <li key={ref.label} className="text-sm">
+                  <a href={ref.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">{ref.label}</a>
+                  <span className="text-muted-foreground"> — {ref.desc}</span>
+                </li>
+              ))}
             </ul>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
+      </section>
 
-        {/* Coverage Stats */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3"
-        >
-          {[
-            { value: '100K', label: 'Synthetic patients', color: '--warm-700' },
-            { value: '5', label: 'GLP 1 brands', color: '--warm-500' },
-            { value: '4', label: 'Payer segments', color: '--chart-2' },
-            { value: '50', label: 'US states', color: '--chart-5' },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center py-3 rounded-lg border border-border/30 bg-muted/10">
-              <span className="block text-2xl font-extrabold" style={{ color: `hsl(var(${stat.color}))` }}>
-                {stat.value}
-              </span>
-              <span className="text-[11px] text-muted-foreground">{stat.label}</span>
+      {/* Artifacts */}
+      <section className="px-6 md:px-10 lg:px-16 pb-20">
+        <motion.div {...anim(0.85)} className="flex items-baseline gap-4 mb-10">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">Artifacts</h2>
+          <span className="text-xs text-muted-foreground">Real PM outputs behind this product</span>
+          <div className="flex-1 border-t border-border/50" />
+        </motion.div>
+        <motion.div {...anim(0.9)} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {artifacts.map((a) => (
+            <div key={a.title} className="rounded-xl border border-border/40 bg-card p-4 space-y-2 hover:border-primary/20 transition-colors">
+              <FileText className="h-4 w-4 text-primary/60" />
+              <h4 className="text-xs font-bold text-foreground">{a.title}</h4>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">{a.desc}</p>
             </div>
           ))}
         </motion.div>
-      </motion.section>
+      </section>
 
-      {/* ─── Roadmap ─── */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.85 }}
-        className="px-6 md:px-10 lg:px-16 pb-16"
-      >
-        <div className="flex items-baseline gap-3 mb-8">
-          <h2 className="text-xl md:text-2xl font-bold text-foreground">What comes next</h2>
-          <div className="flex-1 border-t border-border/60" />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {roadmap.map((mod, i) => (
-            <TooltipProvider key={mod.title} delayDuration={200}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.9 + i * 0.06 }}
-                    className="rounded-xl border border-border/40 bg-muted/20 p-5 space-y-2 opacity-60 cursor-default"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-3.5 w-3.5 text-muted-foreground/50" />
-                      <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground/60">
-                        Roadmap
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-semibold text-muted-foreground">{mod.title}</h3>
-                    <p className="text-xs text-muted-foreground/60 leading-relaxed line-clamp-2">{mod.desc}</p>
-                  </motion.div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs text-sm">
-                  <p className="font-medium mb-1">{mod.title}</p>
-                  <p className="text-muted-foreground">{mod.desc}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* ─── Footer ─── */}
-      <motion.footer
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.4 }}
-        transition={{ delay: 1.0 }}
-        className="px-6 md:px-10 lg:px-16 pb-8 flex items-center justify-between"
-      >
-        <span className="text-xs text-muted-foreground">
-          Built with React, TypeScript, and synthetic claims data
-        </span>
-        <span
-          className="text-lg md:text-xl tracking-widest uppercase font-bold"
-          style={{ color: 'hsl(0 50% 35% / 0.35)' }}
+      {/* Why this Matters */}
+      <section className="px-6 md:px-10 lg:px-16 pb-20">
+        <motion.div
+          {...anim(0.95)}
+          className="rounded-2xl border border-primary/15 bg-accent/20 p-8 md:p-12 max-w-3xl"
         >
-          Portfolio
-        </span>
-      </motion.footer>
-
-      {/* ─── Floating Agent Chatbot ─── */}
-      <AgentChatbot />
-    </main>
+          <h2 className="text-xl font-bold text-foreground mb-4">Why this matters</h2>
+          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+            Most healthcare analytics stays locked in spreadsheets, decks, and dashboards nobody opens twice. This portfolio is a working product, not a presentation. It demonstrates the ability to take messy longitudinal data, turn it into something a brand team or payer strategist would actually use weekly, and build the infrastructure to make it trustworthy, maintainable, and scalable. That is the job of a product manager in this space.
+          </p>
+        </motion.div>
+      </section>
+    </div>
   );
 };
 
