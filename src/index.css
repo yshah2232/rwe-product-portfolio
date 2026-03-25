@@ -5,60 +5,72 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 220 15% 10%;
+    --foreground: 250 20% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 10%;
+    --card-foreground: 250 20% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 10%;
+    --popover-foreground: 250 20% 10%;
 
-    --primary: 0 72% 51%;
+    --primary: 262 60% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 15% 20%;
+    --secondary: 250 15% 96%;
+    --secondary-foreground: 250 15% 20%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 250 15% 96%;
+    --muted-foreground: 250 9% 46%;
 
-    --accent: 0 60% 96%;
-    --accent-foreground: 0 72% 40%;
+    --accent: 262 40% 96%;
+    --accent-foreground: 262 60% 40%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 0 72% 51%;
+    --border: 250 13% 91%;
+    --input: 250 13% 91%;
+    --ring: 262 60% 50%;
 
     --radius: 0.75rem;
 
-    --chart-1: 0 72% 51%;
+    --chart-1: 262 60% 50%;
     --chart-2: 221 83% 53%;
     --chart-3: 142 71% 45%;
     --chart-4: 38 92% 50%;
     --chart-5: 173 80% 40%;
 
-    --warm-50: 0 60% 97%;
-    --warm-100: 0 50% 93%;
-    --warm-200: 0 45% 85%;
-    --warm-500: 0 72% 51%;
-    --warm-700: 0 72% 38%;
-    --warm-900: 0 50% 18%;
-    --slate-700: 220 15% 28%;
-    --slate-400: 220 9% 56%;
+    --purple-50: 262 40% 97%;
+    --purple-100: 262 35% 93%;
+    --purple-200: 262 30% 85%;
+    --purple-400: 262 45% 65%;
+    --purple-500: 262 60% 50%;
+    --purple-600: 262 65% 42%;
+    --purple-700: 262 70% 35%;
+    --purple-800: 262 60% 25%;
+    --purple-900: 262 50% 18%;
+
+    --warm-50: 30 60% 97%;
+    --warm-100: 30 50% 93%;
+    --warm-200: 25 45% 85%;
+    --warm-400: 20 80% 62%;
+    --warm-500: 15 85% 55%;
+    --warm-700: 10 72% 38%;
+    --warm-900: 5 50% 18%;
+
+    --slate-700: 250 15% 28%;
+    --slate-400: 250 9% 56%;
     --teal-500: 173 80% 36%;
     --amber-500: 38 92% 50%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 0 72% 51%;
+    --sidebar-primary: 262 60% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 60% 96%;
-    --sidebar-accent-foreground: 0 72% 40%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 0 72% 51%;
+    --sidebar-accent: 262 40% 96%;
+    --sidebar-accent-foreground: 262 60% 40%;
+    --sidebar-border: 250 13% 91%;
+    --sidebar-ring: 262 60% 50%;
   }
 }
 
@@ -74,14 +86,14 @@
 
 /* AI Insights spotlight animation */
 @keyframes spotlight-pulse {
-  0% { box-shadow: 0 0 0 0 hsl(0 72% 51% / 0.3); }
-  50% { box-shadow: 0 0 0 8px hsl(0 72% 51% / 0.15); }
-  100% { box-shadow: 0 0 0 0 hsl(0 72% 51% / 0); }
+  0% { box-shadow: 0 0 0 0 hsl(262 60% 50% / 0.3); }
+  50% { box-shadow: 0 0 0 8px hsl(262 60% 50% / 0.15); }
+  100% { box-shadow: 0 0 0 0 hsl(262 60% 50% / 0); }
 }
 
 .ai-spotlight {
   animation: spotlight-pulse 0.8s ease-in-out 3;
-  outline: 2px solid hsl(0 72% 51% / 0.4);
+  outline: 2px solid hsl(262 60% 50% / 0.4);
   outline-offset: 4px;
   border-radius: 12px;
 }

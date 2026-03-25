@@ -146,7 +146,7 @@ const Dashboard = () => {
             >
               <ArrowLeft className="h-5 w-5 text-foreground" />
             </Link>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">GLP-1 Patient Insights</h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">GLP 1 Patient Insights</h1>
           </div>
           <div className="flex items-center gap-1">
             <ExportPPT kpis={displayKPIs} segmentSnapshot={segmentSnapshot} cohort={cohort} curveData={curveData} startDate={startDate} endDate={endDate} />
