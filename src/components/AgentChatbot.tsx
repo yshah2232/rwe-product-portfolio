@@ -234,7 +234,7 @@ const AgentChatbot = () => {
             {/* Header */}
             <div
               className="flex items-center justify-between px-4 py-3 border-b border-border/40"
-              style={{ background: 'linear-gradient(135deg, hsl(var(--warm-700)) 0%, hsl(var(--primary)) 100%)' }}
+              style={{ background: 'linear-gradient(135deg, hsl(var(--purple-800)) 0%, hsl(var(--primary)) 100%)' }}
             >
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-white" />
