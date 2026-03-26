@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import ArtifactDialog from '@/components/ArtifactDialog';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
