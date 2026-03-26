@@ -5,6 +5,7 @@ const navLinks = [
   { label: 'Home', to: '/' },
   { label: 'Modules', to: '/modules' },
   { label: 'Method', to: '/method' },
+  { label: 'Journeys', to: '/journey-analytics' },
   { label: 'Data', to: '/data-dictionary' },
   { label: 'About', to: '/about' },
 ];
