@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import ArtifactDialog from '@/components/ArtifactDialog';
+import SkillPillarDialog from '@/components/SkillPillarDialog';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
