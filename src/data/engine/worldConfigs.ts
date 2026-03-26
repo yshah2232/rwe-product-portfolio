@@ -32,7 +32,6 @@ export const US_STATES = [
   'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
 ];
 
-// Population-weighted state distribution (approximate)
 export const STATE_WEIGHTS: Record<string, number> = {
   CA: 0.118, TX: 0.087, FL: 0.065, NY: 0.060, PA: 0.039,
   IL: 0.038, OH: 0.035, GA: 0.032, NC: 0.031, MI: 0.030,
@@ -46,133 +45,86 @@ export const STATE_WEIGHTS: Record<string, number> = {
   SD: 0.003, ND: 0.002, AK: 0.002, VT: 0.002, WY: 0.002,
 };
 
-// World-specific specialties
+// World-specific specialties (from Excel data)
 export const SPECIALTIES: Record<TherapeuticWorld, string[]> = {
-  glp1: ['Endocrinology', 'Internal Medicine', 'Family Medicine', 'Cardiology', 'Obesity Medicine'],
-  nsclc: ['Medical Oncology', 'Pulmonology', 'Thoracic Surgery', 'Radiation Oncology', 'Pathology'],
-  alzheimer: ['Neurology', 'Geriatrics', 'Psychiatry', 'Internal Medicine', 'Family Medicine'],
+  glp1: ['Endocrinology', 'PrimaryCare', 'InternalMed', 'Cardiology'],
+  nsclc: ['Oncology', 'Pulmonology', 'Pathology', 'Radiology', 'PrimaryCare'],
+  alzheimer: ['Neurology', 'PrimaryCare', 'Geriatrics', 'Radiology'],
 };
 
-// World-specific drug/treatment codes
-export const DRUG_CODES: Record<TherapeuticWorld, { code: string; label: string }[]> = {
+// World-specific real clinical codes (from CODESETS sheets)
+export const CODESETS: Record<TherapeuticWorld, { codeSystem: string; code: string; description: string; sourceURL: string }[]> = {
   glp1: [
-    { code: 'NDC_SEMA_INJ', label: 'Semaglutide injectable' },
-    { code: 'NDC_SEMA_ORAL', label: 'Semaglutide oral' },
-    { code: 'NDC_TIRZ', label: 'Tirzepatide' },
-    { code: 'NDC_LIRA', label: 'Liraglutide' },
-    { code: 'NDC_DULA', label: 'Dulaglutide' },
-    { code: 'NDC_MET', label: 'Metformin (comparator)' },
-    { code: 'NDC_SGLT2', label: 'SGLT2 inhibitor (comparator)' },
+    { codeSystem: 'ICD10', code: 'E11.9', description: 'Type 2 diabetes mellitus without complications', sourceURL: 'https://icd10coded.com/cm/E11.9/' },
+    { codeSystem: 'ICD10', code: 'E66.9', description: 'Obesity, unspecified', sourceURL: 'https://www.aapc.com/codes/icd-10-codes/E66.9' },
+    { codeSystem: 'ICD10', code: 'I10', description: 'Essential hypertension', sourceURL: 'https://www.icd-codes.org/10-cm/code/I10' },
+    { codeSystem: 'ICD10', code: 'E78.5', description: 'Hyperlipidemia, unspecified', sourceURL: 'https://icd10coded.com/cm/E78.5/' },
+    { codeSystem: 'LOINC', code: '4548-4', description: 'HbA1c', sourceURL: 'https://loinc.org/4548-4' },
+    { codeSystem: 'LOINC', code: '39156-5', description: 'Body mass index (BMI)', sourceURL: 'https://loinc.org/39156-5' },
+    { codeSystem: 'LOINC', code: '13457-7', description: 'LDL cholesterol (calc)', sourceURL: 'https://loinc.org/13457-7' },
+    { codeSystem: 'CPT', code: '99213', description: 'Office visit (established patient)', sourceURL: 'https://www.aapc.com/codes/cpt-codes/99213' },
+    { codeSystem: 'CPT', code: '99214', description: 'Office visit (established patient)', sourceURL: 'https://www.aapc.com/codes/cpt-codes/99214' },
+    { codeSystem: 'CPT', code: '83036', description: 'HbA1c test', sourceURL: 'https://www.aapc.com/codes/cpt-codes/83036' },
+    { codeSystem: 'CPT', code: '80061', description: 'Lipid panel', sourceURL: 'https://www.aapc.com/codes/cpt-codes/80061' },
+    { codeSystem: 'NDC', code: '0169-4132', description: 'Ozempic (semaglutide)', sourceURL: 'https://fda.report/NDC/0169-4132' },
+    { codeSystem: 'NDC', code: '0169-4525', description: 'Wegovy (semaglutide)', sourceURL: 'https://fda.report/NDC/0169-4525' },
+    { codeSystem: 'NDC', code: '0169-2800', description: 'Saxenda (liraglutide)', sourceURL: 'https://fda.report/NDC/0169-2800' },
+    { codeSystem: 'NDC', code: '0002-3002', description: 'Mounjaro (tirzepatide)', sourceURL: 'https://healthprovidersdata.com/hipaa/codes/NDC_0002-3002.aspx' },
   ],
   nsclc: [
-    { code: 'NDC_PEMBRO', label: 'Pembrolizumab' },
-    { code: 'NDC_NIVO', label: 'Nivolumab' },
-    { code: 'NDC_ATEZO', label: 'Atezolizumab' },
-    { code: 'NDC_OSIMER', label: 'Osimertinib' },
-    { code: 'NDC_CARBO', label: 'Carboplatin' },
-    { code: 'NDC_PACLI', label: 'Paclitaxel' },
+    { codeSystem: 'ICD10', code: 'C34.90', description: 'Lung cancer NOS', sourceURL: 'https://www.aapc.com/codes/icd-10-codes/C34.90' },
+    { codeSystem: 'ICD10', code: 'C79.31', description: 'Secondary malignant neoplasm of brain', sourceURL: 'https://icd10coded.com/cm/C79.31/' },
+    { codeSystem: 'ICD10', code: 'C79.51', description: 'Secondary malignant neoplasm of bone', sourceURL: 'https://icd10coded.com/cm/C79.51/' },
+    { codeSystem: 'ICD10', code: 'Z51.11', description: 'Encounter for antineoplastic chemotherapy', sourceURL: 'https://icd10coded.com/cm/Z51.11/' },
+    { codeSystem: 'ICD10', code: 'Z51.12', description: 'Encounter for antineoplastic immunotherapy', sourceURL: 'https://icd10coded.com/cm/z51.12' },
+    { codeSystem: 'CPT', code: '81235', description: 'EGFR gene analysis', sourceURL: 'https://www.aapc.com/codes/cpt-codes/81235' },
+    { codeSystem: 'CPT', code: '81455', description: 'NGS panel, large', sourceURL: 'https://www.aapc.com/codes/cpt-codes/81455' },
+    { codeSystem: 'CPT', code: '88360', description: 'IHC quantification', sourceURL: 'https://www.aapc.com/codes/cpt-codes/88360' },
+    { codeSystem: 'CPT', code: '71260', description: 'CT chest w contrast', sourceURL: 'https://www.aapc.com/codes/cpt-codes/71260' },
+    { codeSystem: 'CPT', code: '70553', description: 'MRI brain w/wo contrast', sourceURL: 'https://www.aapc.com/codes/cpt-codes/70553' },
+    { codeSystem: 'CPT', code: '78815', description: 'PET imaging', sourceURL: 'https://www.aapc.com/codes/cpt-codes/78815' },
+    { codeSystem: 'HCPCS', code: 'J9271', description: 'Pembrolizumab injection, 1 mg', sourceURL: 'https://hcpcs.codes/j-codes/J9271/' },
+    { codeSystem: 'HCPCS', code: 'J9299', description: 'Nivolumab injection, 1 mg', sourceURL: 'https://hcpcs.codes/j-codes/J9299/' },
+    { codeSystem: 'NDC', code: '0310-1350', description: 'Tagrisso (osimertinib)', sourceURL: 'https://www.drugs.com/pro/tagrisso.html' },
   ],
   alzheimer: [
-    { code: 'NDC_LECAN', label: 'Lecanemab' },
-    { code: 'NDC_ADUCA', label: 'Aducanumab' },
-    { code: 'NDC_DONE', label: 'Donepezil' },
-    { code: 'NDC_MEMA', label: 'Memantine' },
-    { code: 'NDC_GALANT', label: 'Galantamine' },
+    { codeSystem: 'ICD10', code: 'G30.9', description: "Alzheimer's disease, unspecified", sourceURL: 'https://www.icd-codes.org/10-cm/code/G30.9' },
+    { codeSystem: 'ICD10', code: 'G31.84', description: 'Mild cognitive impairment', sourceURL: 'https://www.icd-codes.org/10-cm/code/G31.84' },
+    { codeSystem: 'CPT', code: '96116', description: 'Neurobehavioral status exam', sourceURL: 'https://www.aapc.com/codes/cpt-codes/96116' },
+    { codeSystem: 'CPT', code: '70551', description: 'MRI brain w/o contrast', sourceURL: 'https://www.aapc.com/codes/cpt-codes/70551' },
+    { codeSystem: 'CPT', code: '70450', description: 'CT head w/o contrast', sourceURL: 'https://www.aapc.com/codes/cpt-codes/70450' },
+    { codeSystem: 'HCPCS', code: 'J0174', description: 'Lecanemab injection, 1 mg', sourceURL: 'https://hcpcs.codes/j-codes/J0174/' },
+    { codeSystem: 'NDC', code: '33342-028', description: 'Donepezil HCl tablets', sourceURL: 'https://fda.report/NDC/33342-028' },
+    { codeSystem: 'NDC', code: '27241-071', description: 'Memantine HCl tablets', sourceURL: 'https://fda.report/NDC/27241-071' },
   ],
 };
 
-// World-specific diagnosis codes
-export const DIAGNOSIS_CODES: Record<TherapeuticWorld, { code: string; label: string }[]> = {
+// World-specific calibration parameters (from PARAMETERS sheets, anchored to published studies)
+export const CALIBRATION_PARAMS: Record<TherapeuticWorld, { parameter: string; value: string | number; unit: string; notes: string; sourceURL: string }[]> = {
   glp1: [
-    { code: 'DX_T2D', label: 'Type 2 diabetes proxy' },
-    { code: 'DX_OBESITY', label: 'Obesity proxy' },
-    { code: 'DX_CVD', label: 'Cardiovascular disease proxy' },
-    { code: 'DX_NASH', label: 'NASH proxy' },
+    { parameter: 'cohortSize', value: 3000, unit: 'patients', notes: 'Synthetic cohort size', sourceURL: 'internal' },
+    { parameter: 'timelineMonths', value: '2023-01 to 2024-12', unit: 'month', notes: 'Monthly timeline for events', sourceURL: 'internal' },
+    { parameter: 'medianPersistenceMonths', value: 10.7, unit: 'months', notes: 'Median persistence reported in an academic obesity clinic cohort', sourceURL: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC12515774/' },
+    { parameter: 'discontinuationBy12Months', value: 0.5, unit: 'proportion', notes: 'Approx. 50% discontinued by 12 months in the same cohort', sourceURL: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC12515774/' },
   ],
   nsclc: [
-    { code: 'DX_NSCLC', label: 'NSCLC proxy' },
-    { code: 'DX_METS', label: 'Metastatic disease proxy' },
-    { code: 'DX_BRAIN_MET', label: 'Brain metastasis proxy' },
+    { parameter: 'cohortSize', value: 2500, unit: 'patients', notes: 'Synthetic cohort size', sourceURL: 'internal' },
+    { parameter: 'biomarkerTestingWithin90Days_rate', value: 0.67, unit: 'proportion', notes: 'Advanced NSCLC patients with ALK+EGFR+PD-L1 testing within 90 days', sourceURL: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11371103/' },
+    { parameter: 'pembroMedianTimeOnTreatmentMonths', value: 7.4, unit: 'months', notes: 'Real-world time on treatment median in ECOG PS 0-1 cohort', sourceURL: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8870405/' },
+    { parameter: 'pembroOnTreatmentRate_12mo', value: 0.36, unit: 'proportion', notes: 'On-treatment rate at 12 months (PS 0-1)', sourceURL: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8870405/' },
+    { parameter: 'NGS_testing_adoption_2020', value: 0.681, unit: 'proportion', notes: 'NGS-based biomarker testing adoption up to 2020', sourceURL: 'https://www.sciencedirect.com/science/article/pii/S2666364322000601' },
   ],
   alzheimer: [
-    { code: 'DX_ALZ_EARLY', label: 'Early stage Alzheimer proxy' },
-    { code: 'DX_ALZ_MOD', label: 'Moderate Alzheimer proxy' },
-    { code: 'DX_MCI', label: 'Mild cognitive impairment proxy' },
+    { parameter: 'cohortSize', value: 2500, unit: 'patients', notes: 'Synthetic cohort size', sourceURL: 'internal' },
+    { parameter: 'lecanemab_ARIA_rate', value: 0.068, unit: 'proportion', notes: 'ARIA incidence from a single-center real-world study', sourceURL: 'https://www.sciencedirect.com/science/article/pii/S2666245025001394' },
+    { parameter: 'lecanemab_persistence_approx_9mo', value: 0.9, unit: 'proportion', notes: '28 of 31 patients remained on therapy by ~9 months', sourceURL: 'https://www.sciencedirect.com/science/article/pii/S2666245025001394' },
+    { parameter: 'lecanemab_HCPCS_code', value: 'J0174', unit: 'HCPCS', notes: 'Billing code reference for Leqembi', sourceURL: 'https://hcpcs.codes/j-codes/J0174/' },
   ],
 };
 
-// World-specific lab codes
-export const LAB_CODES: Record<TherapeuticWorld, { code: string; label: string }[]> = {
-  glp1: [
-    { code: 'LAB_A1C', label: 'A1c test' },
-    { code: 'LAB_BMI', label: 'BMI measurement proxy' },
-    { code: 'LAB_LIPID', label: 'Lipid panel proxy' },
-    { code: 'LAB_EGFR', label: 'eGFR kidney function' },
-  ],
-  nsclc: [
-    { code: 'LAB_PDL1', label: 'PD L1 expression test' },
-    { code: 'LAB_EGFR_MUT', label: 'EGFR mutation test' },
-    { code: 'LAB_ALK', label: 'ALK rearrangement test' },
-    { code: 'LAB_NGS', label: 'Next gen sequencing panel' },
-  ],
-  alzheimer: [
-    { code: 'LAB_AMYLOID', label: 'Amyloid PET proxy' },
-    { code: 'LAB_TAU', label: 'Tau PET proxy' },
-    { code: 'LAB_CSF', label: 'CSF biomarker proxy' },
-    { code: 'LAB_COGTEST', label: 'Cognitive assessment score' },
-    { code: 'LAB_MRI', label: 'Brain MRI proxy' },
-  ],
-};
-
-// World-specific distribution parameters
-export interface WorldDistribution {
-  ageBandWeights: Record<string, number>;
-  comorbidityMean: number;
-  comorbidityStd: number;
-  avgEventsPerPatient: number;
-  avgLinesPerPatient: number;
-  baseTimeToStartDays: number;
-  basePdc: number;
-  baseRefillGapDays: number;
-  baseSwitchRate: number;
-  baseDiscontinueRate: number;
-}
-
-export const WORLD_DISTRIBUTIONS: Record<TherapeuticWorld, WorldDistribution> = {
-  glp1: {
-    ageBandWeights: { '18_29': 0.05, '30_39': 0.12, '40_49': 0.22, '50_59': 0.28, '60_69': 0.22, '70_79': 0.08, '80_plus': 0.03 },
-    comorbidityMean: 3.5,
-    comorbidityStd: 2.0,
-    avgEventsPerPatient: 18,
-    avgLinesPerPatient: 1.4,
-    baseTimeToStartDays: 14,
-    basePdc: 0.72,
-    baseRefillGapDays: 8,
-    baseSwitchRate: 0.18,
-    baseDiscontinueRate: 0.35,
-  },
-  nsclc: {
-    ageBandWeights: { '18_29': 0.01, '30_39': 0.02, '40_49': 0.08, '50_59': 0.22, '60_69': 0.35, '70_79': 0.25, '80_plus': 0.07 },
-    comorbidityMean: 5.0,
-    comorbidityStd: 2.5,
-    avgEventsPerPatient: 28,
-    avgLinesPerPatient: 2.2,
-    baseTimeToStartDays: 21,
-    basePdc: 0.85,
-    baseRefillGapDays: 3,
-    baseSwitchRate: 0.40,
-    baseDiscontinueRate: 0.25,
-  },
-  alzheimer: {
-    ageBandWeights: { '18_29': 0.00, '30_39': 0.00, '40_49': 0.02, '50_59': 0.08, '60_69': 0.25, '70_79': 0.40, '80_plus': 0.25 },
-    comorbidityMean: 4.2,
-    comorbidityStd: 2.2,
-    avgEventsPerPatient: 14,
-    avgLinesPerPatient: 1.2,
-    baseTimeToStartDays: 45,
-    basePdc: 0.65,
-    baseRefillGapDays: 14,
-    baseSwitchRate: 0.12,
-    baseDiscontinueRate: 0.42,
-  },
+// World-specific org types (from Excel data)
+export const ORG_TYPES: Record<TherapeuticWorld, string[]> = {
+  glp1: ['HealthSystem', 'Independent', 'Clinic'],
+  nsclc: ['HealthSystem', 'CancerCenter', 'Independent'],
+  alzheimer: ['HealthSystem', 'Independent', 'MemoryClinic'],
 };
