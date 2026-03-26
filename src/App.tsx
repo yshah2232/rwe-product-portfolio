@@ -32,6 +32,7 @@ const App = () => (
               <Route path="/data-dictionary" element={<DataDictionary />} />
             </Route>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/journey-analytics" element={<JourneyAnalytics />} />
             <Route path="/methodology" element={<Method />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
