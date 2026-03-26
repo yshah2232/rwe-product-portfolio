@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import ArtifactDialog from '@/components/ArtifactDialog';
+import SkillPillarDialog from '@/components/SkillPillarDialog';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -247,17 +248,19 @@ const Index = () => {
         </motion.div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {pmSkills.map((skill, i) => (
-            <motion.div
-              key={skill.label}
-              {...anim(0.7 + i * 0.05)}
-              className="rounded-xl border border-border/40 bg-card p-4 space-y-3 hover:border-primary/30 hover:bg-accent/30 transition-all duration-200"
-            >
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent">
-                <skill.icon className="h-5 w-5 text-primary" />
-              </div>
-              <h4 className="text-xs font-bold text-foreground">{skill.label}</h4>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">{skill.detail}</p>
-            </motion.div>
+            <SkillPillarDialog key={skill.label} skillLabel={skill.label}>
+              <motion.div
+                {...anim(0.7 + i * 0.05)}
+                className="rounded-xl border border-border/40 bg-card p-4 space-y-3 hover:border-primary/30 hover:bg-accent/30 transition-all duration-200 cursor-pointer group"
+              >
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent">
+                  <skill.icon className="h-5 w-5 text-primary" />
+                </div>
+                <h4 className="text-xs font-bold text-foreground">{skill.label}</h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">{skill.detail}</p>
+                <span className="text-[9px] font-semibold text-primary/50 group-hover:text-primary transition-colors">Click to explore →</span>
+              </motion.div>
+            </SkillPillarDialog>
           ))}
         </div>
       </section>
