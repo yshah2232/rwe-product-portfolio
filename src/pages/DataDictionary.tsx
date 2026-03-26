@@ -10,7 +10,19 @@ import { Badge } from '@/components/ui/badge';
 import { Database, Table, ShieldCheck, Eye, Brain, AlertTriangle } from 'lucide-react';
 
 export default function DataDictionary() {
-  const { dataset } = useWorld();
+  const { dataset, loading } = useWorld();
+
+  if (loading || !dataset) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+          <p className="text-muted-foreground">Loading world data…</p>
+        </div>
+      </div>
+    );
+  }
+
   const stats = getSummaryStats(dataset);
 
   const statCards = [
