@@ -1,4 +1,4 @@
 export * from './types';
 export * from './worldConfigs';
-export { generateWorld } from './generator';
+export { loadWorld, getWorldSync, clearWorldCache } from './dataLoader';
 export * from './aggregations';

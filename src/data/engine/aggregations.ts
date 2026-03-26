@@ -1,6 +1,6 @@
 import type {
   WorldDataset, AggregatedMetric, TrustInfo, MetricKind,
-  PatientEvent, Journey, Patient, PayerSegment, EventType,
+  Journey, Patient,
 } from './types';
 
 // ── Suppression: any count < 11 is suppressed ──
@@ -31,6 +31,16 @@ function makeMetric(label: string, value: number, count: number, trust: TrustInf
   };
 }
 
+// Normalize payer segment strings for consistent grouping
+function normalizePayer(seg: string): string {
+  const lower = seg.toLowerCase();
+  if (lower === 'cashorother' || lower === 'cash') return 'Cash';
+  if (lower === 'commercial') return 'Commercial';
+  if (lower === 'medicare') return 'Medicare';
+  if (lower === 'medicaid') return 'Medicaid';
+  return seg;
+}
+
 // ── Aggregation functions ──
 
 export function getPatientCountByState(ds: WorldDataset): AggregatedMetric[] {
@@ -42,19 +52,19 @@ export function getPatientCountByState(ds: WorldDataset): AggregatedMetric[] {
 }
 
 export function getEventCountsByType(ds: WorldDataset): AggregatedMetric[] {
-  const counts = new Map<EventType, number>();
-  for (const e of ds.events) counts.set(e.eventType, (counts.get(e.eventType) || 0) + 1);
-  return Array.from(counts.entries()).map(([type, count]) =>
-    makeMetric(type, count, count, makeTrust('observed', count, ds.events.length))
+  const byType = ds.eventsSummary.byType;
+  const total = ds.eventsSummary.totalEvents;
+  return Object.entries(byType).map(([type, count]) =>
+    makeMetric(type, count, count, makeTrust('observed', count, total))
   ).sort((a, b) => b.value - a.value);
 }
 
 export function getPersistenceByPayer(ds: WorldDataset): AggregatedMetric[] {
-  const groups = new Map<PayerSegment, { total: number; active: number }>();
+  const groups = new Map<string, { total: number; active: number }>();
   for (const j of ds.journeys) {
     const patient = ds.patients.find(p => p.patientId === j.patientId);
     if (!patient) continue;
-    const seg = patient.payerSegment;
+    const seg = normalizePayer(patient.payerSegment);
     if (!groups.has(seg)) groups.set(seg, { total: 0, active: 0 });
     const g = groups.get(seg)!;
     g.total++;
@@ -67,10 +77,9 @@ export function getPersistenceByPayer(ds: WorldDataset): AggregatedMetric[] {
 }
 
 export function getAvgTimeToStartByPayer(ds: WorldDataset): AggregatedMetric[] {
-  const groups = new Map<PayerSegment, { sum: number; count: number }>();
-  // Build patient lookup
-  const patientPayerMap = new Map<string, PayerSegment>();
-  for (const p of ds.patients) patientPayerMap.set(p.patientId, p.payerSegment);
+  const groups = new Map<string, { sum: number; count: number }>();
+  const patientPayerMap = new Map<string, string>();
+  for (const p of ds.patients) patientPayerMap.set(p.patientId, normalizePayer(p.payerSegment));
 
   for (const j of ds.journeys) {
     if (j.lineNumber !== 1) continue;
@@ -89,23 +98,12 @@ export function getAvgTimeToStartByPayer(ds: WorldDataset): AggregatedMetric[] {
 }
 
 export function getDenialRateByPayer(ds: WorldDataset): AggregatedMetric[] {
-  const groups = new Map<PayerSegment, { denials: number; auths: number }>();
-  const patientPayerMap = new Map<string, PayerSegment>();
-  for (const p of ds.patients) patientPayerMap.set(p.patientId, p.payerSegment);
-
-  for (const e of ds.events) {
-    if (e.eventType !== 'denial' && e.eventType !== 'authorization') continue;
-    const seg = patientPayerMap.get(e.patientId);
-    if (!seg) continue;
-    if (!groups.has(seg)) groups.set(seg, { denials: 0, auths: 0 });
-    const g = groups.get(seg)!;
-    if (e.eventType === 'denial') g.denials++;
-    else g.auths++;
-  }
-  return Array.from(groups.entries()).map(([seg, g]) => {
+  const denialsByPayer = ds.eventsSummary.denialsByPayer;
+  return Object.entries(denialsByPayer).map(([seg, g]) => {
+    const normSeg = normalizePayer(seg);
     const total = g.denials + g.auths;
     const rate = total > 0 ? g.denials / total : 0;
-    return makeMetric(seg, rate, total, makeTrust('observed', total, ds.events.length));
+    return makeMetric(normSeg, rate, total, makeTrust('observed', total, ds.eventsSummary.totalEvents));
   });
 }
 
@@ -125,18 +123,14 @@ export function getSwitchRateByLine(ds: WorldDataset): AggregatedMetric[] {
 }
 
 export function getAvgPdcByAdoption(ds: WorldDataset): AggregatedMetric[] {
-  // Map patients to their providers' adoption segments (simplified: use first journey provider)
   const providerAdoption = new Map<string, string>();
   for (const p of ds.providers) providerAdoption.set(p.providerId, p.adoptionSegment);
 
-  const patientProvider = new Map<string, string>();
-  for (const e of ds.events) {
-    if (!patientProvider.has(e.patientId)) patientProvider.set(e.patientId, e.providerId);
-  }
+  const patientProvider = ds.eventsSummary.patientProviderMap;
 
   const groups = new Map<string, { sum: number; count: number }>();
   for (const j of ds.journeys) {
-    const provId = patientProvider.get(j.patientId);
+    const provId = patientProvider[j.patientId];
     const adoption = provId ? providerAdoption.get(provId) || 'unknown' : 'unknown';
     if (!groups.has(adoption)) groups.set(adoption, { sum: 0, count: 0 });
     const g = groups.get(adoption)!;
@@ -154,7 +148,7 @@ export function getAvgPdcByAdoption(ds: WorldDataset): AggregatedMetric[] {
 
 export function getSummaryStats(ds: WorldDataset) {
   const totalPatients = ds.patients.length;
-  const totalEvents = ds.events.length;
+  const totalEvents = ds.eventsSummary.totalEvents;
   const totalProviders = ds.providers.length;
 
   const avgComorbidity = ds.patients.reduce((s, p) => s + p.comorbidityScore, 0) / totalPatients;
@@ -163,10 +157,12 @@ export function getSummaryStats(ds: WorldDataset) {
   const discontinueRate = totalJourneys > 0 ? discontinuedCount / totalJourneys : 0;
 
   const avgPdc = ds.journeys.reduce((s, j) => s + j.pdcProxy, 0) / totalJourneys;
-  const avgTimeToStart = ds.journeys.filter(j => j.lineNumber === 1).reduce((s, j) => s + j.timeToStartDays, 0) /
-    ds.journeys.filter(j => j.lineNumber === 1).length;
+  const line1Journeys = ds.journeys.filter(j => j.lineNumber === 1);
+  const avgTimeToStart = line1Journeys.length > 0
+    ? line1Journeys.reduce((s, j) => s + j.timeToStartDays, 0) / line1Journeys.length
+    : 0;
 
-  const denials = ds.events.filter(e => e.eventType === 'denial').length;
+  const denials = Object.values(ds.eventsSummary.denialsByPayer).reduce((s, g) => s + g.denials, 0);
   const denialRate = totalEvents > 0 ? denials / totalEvents : 0;
 
   return {
@@ -182,4 +178,28 @@ export function getSummaryStats(ds: WorldDataset) {
       makeTrust('inferred', totalJourneys, totalJourneys, 'Time to start inferred from gap between diagnosis and first treatment event.')),
     denialRate: makeMetric('Denial rate', Math.round(denialRate * 1000) / 1000, totalEvents, makeTrust('observed', denials, totalEvents)),
   };
+}
+
+// ── Referral aggregations ──
+export function getReferralsBySpecialty(ds: WorldDataset): AggregatedMetric[] {
+  const groups = new Map<string, number>();
+  for (const r of ds.referrals) {
+    const key = `${r.fromSpecialty} → ${r.toSpecialty}`;
+    groups.set(key, (groups.get(key) || 0) + r.annualReferralVolumeProxy);
+  }
+  return Array.from(groups.entries()).map(([key, volume]) =>
+    makeMetric(key, volume, volume, makeTrust('observed', volume, ds.referrals.length))
+  ).sort((a, b) => b.value - a.value);
+}
+
+export function getTopReferralHubs(ds: WorldDataset): AggregatedMetric[] {
+  return ds.providers
+    .sort((a, b) => b.referralHubScore - a.referralHubScore)
+    .slice(0, 20)
+    .map(p => makeMetric(
+      `${p.providerId} (${p.specialty})`,
+      p.referralHubScore,
+      1,
+      makeTrust('observed', 1, 1)
+    ));
 }
