@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import ArtifactDialog from '@/components/ArtifactDialog';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -334,11 +335,14 @@ const Index = () => {
         </motion.div>
         <motion.div {...anim(0.9)} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {artifacts.map((a) => (
-            <div key={a.title} className="rounded-xl border border-border/40 bg-card p-4 space-y-2 hover:border-primary/20 transition-colors">
-              <FileText className="h-4 w-4 text-primary/60" />
-              <h4 className="text-xs font-bold text-foreground">{a.title}</h4>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">{a.desc}</p>
-            </div>
+            <ArtifactDialog key={a.title} artifact={a}>
+              <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer group">
+                <FileText className="h-4 w-4 text-primary/60 group-hover:text-primary transition-colors" />
+                <h4 className="text-xs font-bold text-foreground">{a.title}</h4>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">{a.desc}</p>
+                <span className="text-[9px] font-semibold text-primary/50 group-hover:text-primary transition-colors">Click to view →</span>
+              </div>
+            </ArtifactDialog>
           ))}
         </motion.div>
       </section>
