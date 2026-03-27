@@ -43,7 +43,7 @@ const pillars = [
 ];
 
 const pmSkills = [
-  { icon: BarChart3, label: 'Data Driven Decisions', detail: 'KPIs, persistence curves, and payer analytics from 100K patient synthetic claims' },
+  { icon: BarChart3, label: 'Data Driven Decisions', detail: 'KPIs, persistence curves, and payer analytics from 8,000+ patient synthetic claims across 3 TAs' },
   { icon: Sparkles, label: 'AI Product Integration', detail: 'Rule based AI Q&A module trained on live cohort metrics with context awareness' },
   { icon: Map, label: 'Roadmapping', detail: 'Modular product roadmap spanning patient journey, market access, and HCP intelligence' },
   { icon: Users, label: 'Stakeholder Empathy', detail: 'Designed for brand managers, medical affairs leads, and payer strategists' },
