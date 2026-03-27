@@ -52,20 +52,22 @@ const pmSkills = [
 
 const modules = [
   {
-    title: 'GLP 1 Patient Insights Dashboard',
+    title: 'Persistency & Adherence Dashboard',
     status: 'live' as const,
-    outcome: 'Monitor adoption, persistence, drop off, and payer mix across a 100K patient cohort',
+    outcome: 'Monitor adoption, persistence, drop off, and payer mix across calibrated synthetic cohorts',
     user: 'Brand Manager, Medical Affairs Lead',
     metric: 'Persistence rate at 6 and 12 months',
     icon: BarChart3,
+    route: '/dashboard',
   },
   {
     title: 'Patient Journey Analytics',
-    status: 'roadmap' as const,
+    status: 'live' as const,
     outcome: 'Show friction, stability, acceleration, and drop off risk across the treatment lifecycle',
     user: 'Patient Outcomes Lead',
     metric: 'Time to therapy initiation',
     icon: TrendingUp,
+    route: '/journey-analytics',
   },
   {
     title: 'Market Access & Coverage Impact',
