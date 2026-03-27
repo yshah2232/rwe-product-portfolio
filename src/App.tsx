@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WorldProvider } from "@/contexts/WorldContext";
 import SiteLayout from "@/components/SiteLayout";
 import Index from "./pages/Index";
-import Modules from "./pages/Modules";
 import Method from "./pages/Method";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
@@ -26,13 +25,12 @@ const App = () => (
           <Routes>
             <Route element={<SiteLayout />}>
               <Route path="/" element={<Index />} />
-              <Route path="/modules" element={<Modules />} />
               <Route path="/method" element={<Method />} />
               <Route path="/about" element={<About />} />
               <Route path="/data-dictionary" element={<DataDictionary />} />
+              <Route path="/journey-analytics" element={<JourneyAnalytics />} />
             </Route>
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/journey-analytics" element={<JourneyAnalytics />} />
             <Route path="/methodology" element={<Method />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
