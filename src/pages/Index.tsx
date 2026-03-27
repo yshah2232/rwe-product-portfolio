@@ -283,16 +283,16 @@ const Index = () => {
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              The entire 100K patient cohort was synthetically modeled using AI driven statistical generation. Discontinuation patterns follow
-              <strong className="text-foreground"> modified Weibull survival curves</strong> calibrated against 12 month adherence benchmarks. No real patient data exists anywhere in this product.
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-              {[
-                { value: '100K', label: 'Patients' },
-                { value: '5', label: 'GLP 1 brands' },
-                { value: '4', label: 'Payer segments' },
-                { value: '50', label: 'US states' },
-              ].map((stat) => (
+               The patient cohorts were synthetically modeled using AI driven statistical generation calibrated against published RWE studies. Discontinuation patterns follow
+               <strong className="text-foreground"> modified Weibull survival curves</strong> anchored to peer-reviewed benchmarks. No real patient data exists anywhere in this product.
+             </p>
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+               {[
+                 { value: '8K+', label: 'Patients' },
+                 { value: '3', label: 'Therapeutic Areas' },
+                 { value: '143K+', label: 'Events' },
+                 { value: '50', label: 'US States' },
+               ].map((stat) => (
                 <div key={stat.label} className="text-center py-2 rounded-lg bg-primary/5 border border-primary/10">
                   <span className="block text-lg font-extrabold text-primary">{stat.value}</span>
                   <span className="text-[10px] text-muted-foreground">{stat.label}</span>
