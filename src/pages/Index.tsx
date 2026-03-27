@@ -173,56 +173,53 @@ const Index = () => {
           <div className="flex-1 border-t border-border/50" />
         </motion.div>
 
-        {/* Live module CTA */}
-        <motion.div
-          {...anim(0.55)}
-          className="relative rounded-2xl overflow-hidden cursor-pointer group mb-6"
-          onClick={() => navigate('/dashboard')}
-          style={{
-            background: 'linear-gradient(135deg, hsl(262 70% 45%) 0%, hsl(262 60% 35%) 50%, hsl(262 50% 25%) 100%)',
-          }}
-        >
-          <div className="relative z-10 px-6 md:px-10 py-8 md:py-12 flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
-            <div className="flex-1 space-y-3">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/15 text-white/90 text-[11px] font-semibold tracking-wider uppercase">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Live
+        {/* Live module CTAs */}
+        {modules.filter(m => m.status === 'live').map((mod, idx) => (
+          <motion.div
+            key={mod.title}
+            {...anim(0.55 + idx * 0.08)}
+            className="relative rounded-2xl overflow-hidden cursor-pointer group mb-6"
+            onClick={() => navigate(mod.route!)}
+            style={{
+              background: idx === 0
+                ? 'linear-gradient(135deg, hsl(262 70% 45%) 0%, hsl(262 60% 35%) 50%, hsl(262 50% 25%) 100%)'
+                : 'linear-gradient(135deg, hsl(221 70% 45%) 0%, hsl(221 60% 35%) 50%, hsl(221 50% 25%) 100%)',
+            }}
+          >
+            <div className="relative z-10 px-6 md:px-10 py-8 md:py-10 flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
+              <div className="flex-1 space-y-3">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/15 text-white/90 text-[11px] font-semibold tracking-wider uppercase">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                  {mod.title}
+                </h3>
+                <p className="text-white/70 text-sm md:text-base leading-relaxed max-w-lg">
+                  {mod.outcome}. Powered across GLP-1, NSCLC, and Alzheimer therapeutic areas.
+                </p>
+                <div className="pt-2 text-xs text-white/50 space-y-0.5">
+                  <p><span className="text-white/70 font-medium">Primary user:</span> {mod.user}</p>
+                  <p><span className="text-white/70 font-medium">Key metric:</span> {mod.metric}</p>
+                </div>
               </div>
-              <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight">
-                GLP 1 Patient Insights Dashboard
-              </h3>
-              <p className="text-white/70 text-sm md:text-base leading-relaxed max-w-lg">
-                Monitor adoption, persistence, drop off, payer mix, and geography across a 100K patient synthetic cohort. Filter by date, payer, and brand.
-              </p>
-              <div className="flex flex-wrap gap-2 pt-1">
-                {['Persistence Curves', 'Payer & Brand Mix', 'US Heatmap', 'AI Q&A', 'PPT Export'].map((tag) => (
-                  <span key={tag} className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-white/10 text-white/80 tracking-wide">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <div className="pt-2 text-xs text-white/50 space-y-0.5">
-                <p><span className="text-white/70 font-medium">Primary user:</span> Brand Manager, Medical Affairs Lead</p>
-                <p><span className="text-white/70 font-medium">Key metric improved:</span> Persistence rate at 6 and 12 months</p>
-              </div>
+              <Button
+                size="lg"
+                className="shrink-0 gap-2 text-sm font-bold shadow-lg group-hover:scale-105 transition-transform bg-white text-foreground hover:bg-white/90"
+              >
+                Explore <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
-            <Button
-              size="lg"
-              className="shrink-0 gap-2 text-sm font-bold shadow-lg group-hover:scale-105 transition-transform bg-white text-foreground hover:bg-white/90"
-            >
-              Explore Dashboard <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="absolute top-0 right-0 w-[350px] h-[350px] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, hsl(262 80% 70%), transparent 70%)' }} />
-          <div className="absolute bottom-0 left-1/4 w-[250px] h-[250px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, hsl(30 90% 65%), transparent 70%)' }} />
-        </motion.div>
+            <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, hsl(262 80% 70%), transparent 70%)' }} />
+          </motion.div>
+        ))}
 
         {/* Roadmap cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {modules.filter(m => m.status === 'roadmap').map((mod, i) => (
             <motion.div
               key={mod.title}
-              {...anim(0.6 + i * 0.05)}
+              {...anim(0.7 + i * 0.05)}
               className="rounded-xl border border-border/40 bg-muted/20 p-5 space-y-2 opacity-70"
             >
               <div className="flex items-center gap-2">
