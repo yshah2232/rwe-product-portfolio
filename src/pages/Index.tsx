@@ -61,13 +61,13 @@ const modules = [
     route: '/dashboard',
   },
   {
-    title: 'Patient Journey Analytics',
+    title: 'Patient Journey',
     status: 'live' as const,
     outcome: 'Show friction, stability, acceleration, and drop off risk across the treatment lifecycle',
     user: 'Patient Outcomes Lead',
     metric: 'Time to therapy initiation',
     icon: TrendingUp,
-    route: '/journey-analytics',
+    route: '/patient-journey',
   },
   {
     title: 'Market Access & Coverage Impact',
