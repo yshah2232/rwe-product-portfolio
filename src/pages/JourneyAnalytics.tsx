@@ -7,15 +7,22 @@ import { Badge } from '@/components/ui/badge';
 import TrustBadge from '@/components/TrustBadge';
 import WorldSwitcher from '@/components/WorldSwitcher';
 import ChartWrapper from '@/components/ChartWrapper';
-import type { TrustInfo } from '@/data/engine/types';
+import CohortFilterBar, { useFilteredCohort, type CohortFilters } from '@/components/CohortFilterBar';
+import AIInsights from '@/components/AIInsights';
+import ExportPPT from '@/components/ExportPPT';
+import TicketDialog from '@/components/TicketDialog';
+import GuidedTour from '@/components/GuidedTour';
+import InfoPanel from '@/components/InfoPanel';
+import type { TrustInfo, Journey, Patient } from '@/data/engine/types';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, Cell, Legend,
   LineChart, Line, ComposedChart, Area, AreaChart,
   LabelList,
 } from 'recharts';
-import { Activity, Shield, Zap, Waves, Loader2 } from 'lucide-react';
+import { Activity, Shield, Zap, Waves, Loader2, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 // ── Trust configs ──
 const TRUST: Record<string, TrustInfo> = {
@@ -43,7 +50,7 @@ const ChartTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// ── KPI Card (inline, matching dashboard style) ──
+// ── KPI Card ──
 function MiniKPI({ label, value, color = 'text-foreground', sub }: { label: string; value: string; color?: string; sub?: string }) {
   return (
     <motion.div
@@ -62,12 +69,10 @@ function MiniKPI({ label, value, color = 'text-foreground', sub }: { label: stri
 // ═══════════════════════════════════════
 // FLOW TAB
 // ═══════════════════════════════════════
-function FlowTab() {
-  const { dataset } = useWorld();
+function FlowTab({ journeys }: { journeys: Journey[] }) {
   const data = useMemo(() => {
-    if (!dataset) return { sankeyData: [], summary: { total: 0, active: 0, stopped: 0, restarted: 0 } };
+    if (!journeys.length) return { sankeyData: [], summary: { total: 0, active: 0, stopped: 0, restarted: 0 } };
 
-    const journeys = dataset.journeys;
     const lineGroups = new Map<number, { active: number; stopped: number; switched: number; restarted: number }>();
 
     journeys.forEach(j => {
@@ -97,14 +102,12 @@ function FlowTab() {
     const restarted = journeys.filter(j => Number(j.restartFlag) === 1).length;
 
     return { sankeyData, summary: { total, active, stopped, restarted } };
-  }, [dataset]);
-
-  if (!dataset) return null;
+  }, [journeys]);
 
   if (data.sankeyData.length === 0) {
     return (
       <div className="rounded-xl border border-destructive/50 bg-destructive/5 p-6">
-        <p className="text-sm text-destructive font-medium">⚠ JOURNEYS has 0 rows or lineNumber values are missing.</p>
+        <p className="text-sm text-destructive font-medium">⚠ No journey data matches current filters. Adjust cohort filters above.</p>
       </div>
     );
   }
@@ -152,6 +155,11 @@ function FlowTab() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-2">
+        <TrustBadge trust={TRUST.sankey} />
+        <span className="text-[10px] text-muted-foreground">Fields: lineNumber, discontinueFlag, switchFlag, restartFlag</span>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <MiniKPI label="Total Journeys" value={data.summary.total.toLocaleString()} />
         <MiniKPI label="Active (On Therapy)" value={data.summary.active.toLocaleString()} color="text-emerald-600" sub={`${((data.summary.active / data.summary.total) * 100).toFixed(1)}%`} />
@@ -187,7 +195,7 @@ function FlowTab() {
       <ChartWrapper
         title="Discontinuation Rate by Line"
         subtitle="Percentage of patients who discontinued on each therapy line"
-        insight={`Discontinuation rates ${discRateData.length > 1 ? `range from ${Math.min(...discRateData.map(d => d.discRate)).toFixed(0)}% to ${Math.max(...discRateData.map(d => d.discRate)).toFixed(0)}%` : 'shown'} across therapy lines. Higher lines typically show increased discontinuation as patients exhaust treatment options.`}
+        insight={`Discontinuation rates ${discRateData.length > 1 ? `range from ${Math.min(...discRateData.map(d => d.discRate)).toFixed(0)}% to ${Math.max(...discRateData.map(d => d.discRate)).toFixed(0)}%` : 'shown'} across therapy lines.`}
       >
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={discRateData}>
@@ -211,15 +219,13 @@ function FlowTab() {
 // ═══════════════════════════════════════
 // FRICTION TAB
 // ═══════════════════════════════════════
-function FrictionTab() {
-  const { dataset } = useWorld();
+function FrictionTab({ journeys, patients }: { journeys: Journey[]; patients: Patient[] }) {
   const [authOnly, setAuthOnly] = useState(false);
 
   const data = useMemo(() => {
-    if (!dataset) return { byPayer: [], byState: [], histogram: [] };
+    if (!journeys.length) return { byPayer: [], byState: [], histogram: [] };
 
-    const patientMap = new Map(dataset.patients.map(p => [p.patientId, p]));
-    const journeys = dataset.journeys;
+    const patientMap = new Map(patients.map(p => [p.patientId, p]));
 
     const payerBuckets: Record<string, number[]> = {};
     const stateBuckets: Record<string, number[]> = {};
@@ -255,11 +261,7 @@ function FrictionTab() {
       .slice(0, 10)
       .map(([state, vals]) => {
         const sorted = [...vals].sort((a, b) => a - b);
-        return {
-          state,
-          median: sorted[Math.floor(sorted.length / 2)] || 0,
-          count: vals.length,
-        };
+        return { state, median: sorted[Math.floor(sorted.length / 2)] || 0, count: vals.length };
       });
 
     const allTts = journeys.map(j => Number(j.timeToStartDays));
@@ -273,12 +275,10 @@ function FrictionTab() {
       .map(([range, count]) => ({ range, count }));
 
     return { byPayer, byState: topStates, histogram };
-  }, [dataset, authOnly]);
-
-  if (!dataset) return null;
+  }, [journeys, patients, authOnly]);
 
   const payerInsight = data.byPayer.length > 0
-    ? `${data.byPayer[0].payer} shows the highest median time-to-start at ${data.byPayer[0].median} days, suggesting more friction in treatment initiation. ${data.byPayer[data.byPayer.length - 1]?.payer || 'Other'} has the shortest wait at ${data.byPayer[data.byPayer.length - 1]?.median || 0} days.`
+    ? `${data.byPayer[0].payer} shows the highest median time-to-start at ${data.byPayer[0].median} days. ${data.byPayer[data.byPayer.length - 1]?.payer || 'Other'} has the shortest wait at ${data.byPayer[data.byPayer.length - 1]?.median || 0} days.`
     : '';
 
   const payerCsv = {
@@ -311,16 +311,13 @@ function FrictionTab() {
     </div>
   );
 
-  const PAYER_COLORS: Record<string, string> = {
-    Commercial: 'hsl(221, 83%, 53%)',
-    Medicare: 'hsl(142, 71%, 45%)',
-    Medicaid: 'hsl(38, 92%, 50%)',
-    Cash: 'hsl(0, 84%, 60%)',
-    CashOrOther: 'hsl(0, 84%, 60%)',
-  };
-
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-2">
+        <TrustBadge trust={TRUST.friction} />
+        <span className="text-[10px] text-muted-foreground">Fields: timeToStartDays, payerSegment, state</span>
+      </div>
+
       <div className="flex items-center gap-3 rounded-lg bg-muted/30 border border-border/40 px-4 py-3">
         <Switch id="auth-filter" checked={authOnly} onCheckedChange={setAuthOnly} />
         <Label htmlFor="auth-filter" className="text-sm text-muted-foreground">
@@ -390,13 +387,10 @@ function FrictionTab() {
 // ═══════════════════════════════════════
 // STABILITY TAB
 // ═══════════════════════════════════════
-function StabilityTab() {
-  const { dataset } = useWorld();
-
+function StabilityTab({ journeys }: { journeys: Journey[] }) {
   const data = useMemo(() => {
-    if (!dataset) return { pdcHist: [], gapHist: [], unstableCount: 0, stableCount: 0, avgPdc: 0, avgGap: 0 };
+    if (!journeys.length) return { pdcHist: [], gapHist: [], unstableCount: 0, stableCount: 0, avgPdc: 0, avgGap: 0 };
 
-    const journeys = dataset.journeys;
     const unstableCount = journeys.filter(j => Number(j.refillGapDays) >= 90).length;
     const stableCount = journeys.length - unstableCount;
 
@@ -431,15 +425,18 @@ function StabilityTab() {
     const avgGap = journeys.reduce((s, j) => s + Number(j.refillGapDays), 0) / journeys.length;
 
     return { pdcHist, gapHist, unstableCount, stableCount, avgPdc, avgGap };
-  }, [dataset]);
-
-  if (!dataset) return null;
+  }, [journeys]);
 
   const pdcInsight = `Average PDC is ${(data.avgPdc * 100).toFixed(0)}%. Patients with PDC ≥ 80% are considered adherent. ${data.pdcHist.filter(d => d.pdcVal >= 0.8).reduce((s, d) => s + d.count, 0).toLocaleString()} patients meet this threshold.`;
   const gapInsight = `${data.unstableCount.toLocaleString()} patients (${((data.unstableCount / (data.unstableCount + data.stableCount)) * 100).toFixed(1)}%) have refill gaps ≥ 90 days, flagged as unstable. Average refill gap is ${data.avgGap.toFixed(0)} days.`;
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-2">
+        <TrustBadge trust={TRUST.stability} />
+        <span className="text-[10px] text-muted-foreground">Fields: pdcProxy, refillGapDays</span>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <MiniKPI label="Avg PDC Proxy" value={`${(data.avgPdc * 100).toFixed(1)}%`} color={data.avgPdc >= 0.8 ? 'text-emerald-600' : 'text-foreground'} />
         <MiniKPI label="Avg Refill Gap" value={`${data.avgGap.toFixed(0)}d`} />
@@ -483,14 +480,13 @@ function StabilityTab() {
 // ═══════════════════════════════════════
 // ACCELERATION TAB
 // ═══════════════════════════════════════
-function AccelerationTab() {
+function AccelerationTab({ journeys }: { journeys: Journey[] }) {
   const { dataset, world } = useWorld();
 
   const data = useMemo(() => {
     if (!dataset) return null;
 
     if (world === 'glp1') {
-      const journeys = dataset.journeys;
       const monthDiff = (start: string, end: string) => {
         const [sy, sm] = String(start).split('-').map(Number);
         const [ey, em] = String(end).split('-').map(Number);
@@ -551,7 +547,7 @@ function AccelerationTab() {
     }
 
     return null;
-  }, [dataset, world]);
+  }, [dataset, world, journeys]);
 
   if (!dataset || !data) return null;
 
@@ -559,6 +555,15 @@ function AccelerationTab() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-2">
+        <TrustBadge trust={TRUST[trustKey] || TRUST.acceleration_glp1} />
+        <span className="text-[10px] text-muted-foreground">
+          {world === 'glp1' && 'Fields: lineStartMonth, lineEndMonth, discontinueFlag'}
+          {world === 'nsclc' && 'Fields: eventsSummary.byMonth (lab, diagnosis, procedure)'}
+          {world === 'alzheimer' && 'Fields: eventsSummary.byMonth (lab, visit)'}
+        </span>
+      </div>
+
       {data.type === 'glp1' && (
         <>
           <div className="grid grid-cols-3 gap-3 md:gap-4">
@@ -569,7 +574,7 @@ function AccelerationTab() {
           <ChartWrapper
             title="Early vs Late Discontinuation by Cohort Start Month"
             subtitle="GLP-1: Patients who stopped within 6 months of initiation vs. those who continued"
-            insight={`${((data.early / data.total) * 100).toFixed(0)}% of patients discontinued within 6 months — the critical early attrition window. ${data.ongoing.toLocaleString()} remain ongoing. Early intervention during months 1-6 could retain more patients.`}
+            insight={`${((data.early / data.total) * 100).toFixed(0)}% of patients discontinued within 6 months — the critical early attrition window.`}
           >
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={data.timeline}>
@@ -596,7 +601,7 @@ function AccelerationTab() {
           <ChartWrapper
             title="Biomarker Testing & Imaging Cadence"
             subtitle="NSCLC: Monthly lab/imaging volume as a proxy for biomarker testing and imaging surveillance"
-            insight={`${data.totalLabs.toLocaleString()} total lab/imaging events tracked. The cadence of testing indicates biomarker-driven treatment decisions and RECIST monitoring compliance.`}
+            insight={`${data.totalLabs.toLocaleString()} total lab/imaging events tracked.`}
           >
             <ResponsiveContainer width="100%" height={320}>
               <ComposedChart data={data.labByMonth}>
@@ -626,7 +631,7 @@ function AccelerationTab() {
           <ChartWrapper
             title="Lecanemab MRI Monitoring Cadence"
             subtitle="Alzheimer: Monthly monitoring events as proxy for ARIA surveillance MRI cadence"
-            insight={`${data.totalMonitoring.toLocaleString()} monitoring events tracked. ARIA surveillance requires MRI at baseline, before dose 5, before dose 7, and before dose 14. Monitoring cadence compliance is critical for lecanemab safety.`}
+            insight={`${data.totalMonitoring.toLocaleString()} monitoring events tracked. ARIA surveillance requires MRI at key infusion milestones.`}
           >
             <ResponsiveContainer width="100%" height={320}>
               <ComposedChart data={data.cadence}>
@@ -656,30 +661,69 @@ function AccelerationTab() {
 // ═══════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════
-export default function JourneyAnalytics() {
-  const { loading } = useWorld();
+export default function PatientJourney() {
+  const { loading, dataset, world } = useWorld();
+
+  // Sorted months for the slider
+  const allMonths = useMemo(() => {
+    if (!dataset) return [];
+    return [...new Set(dataset.patients.map(p => String(p.diagnosisMonth)))].filter(Boolean).sort();
+  }, [dataset]);
+
+  const [filters, setFilters] = useState<CohortFilters>({
+    selectedICD: [],
+    selectedNDC: [],
+    monthRange: [0, 0],
+  });
+
+  // Reset month range when dataset changes
+  useMemo(() => {
+    if (allMonths.length > 0) {
+      setFilters(prev => ({ ...prev, monthRange: [0, allMonths.length - 1] }));
+    }
+  }, [allMonths.length]);
+
+  const { patients: filteredPatients, journeys: filteredJourneys, diagnosisOnlyCount } = useFilteredCohort(filters, allMonths);
+
+  // Build KPIs for AI insights (mirroring GLP-1 dashboard structure)
+  const kpis = useMemo(() => {
+    if (!filteredJourneys.length) return { totalPatients: 0, activeRate: 0, dropOffRate: 0, medianRefillGap: 0 };
+    const active = filteredJourneys.filter(j => Number(j.discontinueFlag) === 0).length;
+    const total = filteredJourneys.length;
+    const gaps = filteredJourneys.map(j => Number(j.refillGapDays)).sort((a, b) => a - b);
+    return {
+      totalPatients: filteredPatients.length,
+      activeRate: active / total,
+      dropOffRate: (total - active) / total,
+      medianRefillGap: gaps[Math.floor(gaps.length / 2)] || 0,
+    };
+  }, [filteredJourneys, filteredPatients]);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 md:px-10 py-8 w-full">
-      <div className="flex items-center justify-between gap-4 mb-8">
-        <div>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-xs font-semibold tracking-[0.3em] uppercase mb-2 text-primary"
-          >
-            Patient Journey Module
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight"
-          >
-            Journey Analytics
-          </motion.h1>
-          <p className="text-sm text-muted-foreground mt-1">Patient flow, friction, stability & acceleration across therapy lines.</p>
+    <div className="min-h-screen bg-background">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-muted transition-colors"
+              aria-label="Back to portfolio"
+            >
+              <ArrowLeft className="h-5 w-5 text-foreground" />
+            </Link>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">Patient Journey</h1>
+          </div>
+          <div className="flex items-center gap-1">
+            <WorldSwitcher />
+            <TicketDialog />
+            <GuidedTour />
+            <InfoPanel />
+          </div>
         </div>
-        <WorldSwitcher />
+        <div className="max-w-[1400px] mx-auto px-4 md:px-6">
+          <div className="border-t border-border/40" />
+        </div>
       </div>
 
       {loading ? (
@@ -688,27 +732,66 @@ export default function JourneyAnalytics() {
           <span className="text-sm font-medium">Loading world data…</span>
         </div>
       ) : (
-        <Tabs defaultValue="flow" className="w-full">
-          <TabsList className="grid grid-cols-4 w-full max-w-lg mb-8">
-            <TabsTrigger value="flow" className="gap-1.5 text-xs">
-              <Waves className="h-3.5 w-3.5" /> Flow
-            </TabsTrigger>
-            <TabsTrigger value="friction" className="gap-1.5 text-xs">
-              <Shield className="h-3.5 w-3.5" /> Friction
-            </TabsTrigger>
-            <TabsTrigger value="stability" className="gap-1.5 text-xs">
-              <Activity className="h-3.5 w-3.5" /> Stability
-            </TabsTrigger>
-            <TabsTrigger value="acceleration" className="gap-1.5 text-xs">
-              <Zap className="h-3.5 w-3.5" /> Acceleration
-            </TabsTrigger>
-          </TabsList>
+        <motion.div
+          className="max-w-[1400px] mx-auto px-4 md:px-6 py-6 space-y-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Cohort Filter Bar */}
+          <CohortFilterBar
+            filters={filters}
+            onFiltersChange={setFilters}
+            filteredPatientCount={filteredPatients.length}
+            totalPatientCount={dataset?.patients.length || 0}
+            diagnosisOnlyCount={diagnosisOnlyCount}
+          />
 
-          <TabsContent value="flow"><FlowTab /></TabsContent>
-          <TabsContent value="friction"><FrictionTab /></TabsContent>
-          <TabsContent value="stability"><StabilityTab /></TabsContent>
-          <TabsContent value="acceleration"><AccelerationTab /></TabsContent>
-        </Tabs>
+          {/* Two-column: Charts + AI Insights sidebar */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <Tabs defaultValue="flow" className="w-full">
+                <TabsList className="grid grid-cols-4 w-full max-w-lg mb-6">
+                  <TabsTrigger value="flow" className="gap-1.5 text-xs">
+                    <Waves className="h-3.5 w-3.5" /> Flow
+                  </TabsTrigger>
+                  <TabsTrigger value="friction" className="gap-1.5 text-xs">
+                    <Shield className="h-3.5 w-3.5" /> Friction
+                  </TabsTrigger>
+                  <TabsTrigger value="stability" className="gap-1.5 text-xs">
+                    <Activity className="h-3.5 w-3.5" /> Stability
+                  </TabsTrigger>
+                  <TabsTrigger value="acceleration" className="gap-1.5 text-xs">
+                    <Zap className="h-3.5 w-3.5" /> Acceleration
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="flow"><FlowTab journeys={filteredJourneys} /></TabsContent>
+                <TabsContent value="friction"><FrictionTab journeys={filteredJourneys} patients={filteredPatients} /></TabsContent>
+                <TabsContent value="stability"><StabilityTab journeys={filteredJourneys} /></TabsContent>
+                <TabsContent value="acceleration"><AccelerationTab journeys={filteredJourneys} /></TabsContent>
+              </Tabs>
+            </div>
+
+            <div className="lg:col-span-1">
+              <div className="lg:sticky lg:top-[80px]">
+                <AIInsights
+                  kpis={kpis}
+                  segmentSnapshot={{ byPayer: {}, byBrand: {} }}
+                  cohort={{ patients: [], total: filteredPatients.length, byPayer: [], byBrand: [], byRegion: [] }}
+                  startDate={allMonths[filters.monthRange[0]] || '2023-01'}
+                  endDate={allMonths[filters.monthRange[1]] || '2024-12'}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-6 pb-8 text-center">
+            <p className="text-xs text-muted-foreground">
+              Built with synthetic claims data · {filteredPatients.length.toLocaleString()} patient cohort · Not real patient data
+            </p>
+          </div>
+        </motion.div>
       )}
     </div>
   );

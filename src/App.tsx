@@ -10,7 +10,7 @@ import Method from "./pages/Method";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import DataDictionary from "./pages/DataDictionary";
-import JourneyAnalytics from "./pages/JourneyAnalytics";
+import PatientJourney from "./pages/JourneyAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,7 +28,8 @@ const App = () => (
               <Route path="/method" element={<Method />} />
               <Route path="/about" element={<About />} />
               <Route path="/data-dictionary" element={<DataDictionary />} />
-              <Route path="/journey-analytics" element={<JourneyAnalytics />} />
+              <Route path="/journey-analytics" element={<PatientJourney />} />
+              <Route path="/patient-journey" element={<PatientJourney />} />
             </Route>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/methodology" element={<Method />} />
