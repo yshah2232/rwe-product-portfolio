@@ -777,8 +777,8 @@ export default function PatientJourney() {
               <div className="lg:sticky lg:top-[80px]">
                 <AIInsights
                   kpis={kpis}
-                  segmentSnapshot={{ payerMix: [], brandMix: [] }}
-                  cohort={{ total: filteredPatients.length, byPayer: [], byBrand: [], bySex: [], byAge: [], byState: [] }}
+                  segmentSnapshot={{ byPayer: {}, byBrand: {} }}
+                  cohort={{ patients: [], total: filteredPatients.length, byPayer: [], byBrand: [] }}
                   startDate={allMonths[filters.monthRange[0]] || '2023-01'}
                   endDate={allMonths[filters.monthRange[1]] || '2024-12'}
                 />
