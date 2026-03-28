@@ -10,7 +10,7 @@ import Method from "./pages/Method";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import DataDictionary from "./pages/DataDictionary";
-import JourneyAnalytics from "./pages/JourneyAnalytics";
+import PatientJourney from "./pages/JourneyAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
