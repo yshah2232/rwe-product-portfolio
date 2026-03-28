@@ -778,7 +778,7 @@ export default function PatientJourney() {
                 <AIInsights
                   kpis={kpis}
                   segmentSnapshot={{ byPayer: {}, byBrand: {} }}
-                  cohort={{ patients: [], total: filteredPatients.length, byPayer: [], byBrand: [] }}
+                  cohort={{ patients: [], total: filteredPatients.length, byPayer: [], byBrand: [], byRegion: [] }}
                   startDate={allMonths[filters.monthRange[0]] || '2023-01'}
                   endDate={allMonths[filters.monthRange[1]] || '2024-12'}
                 />
