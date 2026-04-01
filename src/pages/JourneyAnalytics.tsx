@@ -830,41 +830,32 @@ export default function PatientJourney() {
             </motion.div>
           )}
 
-          {/* KPI row — mirrors GLP-1 dashboard */}
+          {/* Journey-specific KPIs */}
           <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            <KPICard title="Patients Analyzed" value={displayKPIs.totalPatients.toLocaleString()} description="Unique patients matching cohort filters." detail="Patients are filtered by ICD-10, NDC codes, and diagnosis month range from the cohort filter bar above." />
-            <KPICard title="Still on Therapy" value={`${(displayKPIs.activeRate * 100).toFixed(1)}%`} description="Patients with active therapy (discontinueFlag = 0)." detail="Derived from journey records: percentage of journeys where discontinueFlag is 0." highlight sentiment="positive" />
-            <KPICard title="Stopped Therapy" value={`${(displayKPIs.dropOffRate * 100).toFixed(1)}%`} description="Patients who discontinued treatment." detail="Calculated as 100% minus Still on Therapy rate." highlight sentiment="negative" />
-            <KPICard title="Typical Refill Delay" value={displayKPIs.medianRefillGap.toFixed(1)} suffix=" days" description="Median refill gap across all journeys." detail="Sourced from journey refillGapDays: the median value across all filtered journeys." />
+            <KPICard title="Patients in Cohort" value={displayKPIs.totalPatients.toLocaleString()} description="Unique patients matching cohort filters." detail="Patients filtered by ICD-10, NDC codes, and diagnosis month range." />
+            <KPICard title="Total Journeys" value={filteredJourneys.length.toLocaleString()} description="Therapy lines across all filtered patients." detail="Each row in the journeys dataset represents one line of therapy for a patient." />
+            <KPICard
+              title="Discontinuation Rate"
+              value={`${filteredJourneys.length > 0 ? ((filteredJourneys.filter(j => Number(j.discontinueFlag) === 1).length / filteredJourneys.length) * 100).toFixed(1) : '0.0'}%`}
+              description="Journeys ending in discontinuation."
+              detail="Percentage of journeys where discontinueFlag = 1."
+              highlight
+              sentiment="negative"
+            />
+            <KPICard
+              title="Restart Rate"
+              value={`${filteredJourneys.length > 0 ? ((filteredJourneys.filter(j => Number(j.restartFlag) === 1).length / filteredJourneys.length) * 100).toFixed(1) : '0.0'}%`}
+              description="Journeys where patient restarted therapy."
+              detail="Percentage of journeys where restartFlag = 1."
+              highlight
+              sentiment="positive"
+            />
           </section>
 
-          {/* Two-column: Charts + AI Insights sidebar */}
+          {/* Two-column: Journey Analytics + AI Insights sidebar */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              {/* Persistence Curve */}
-              <div id="persistence-curve">
-                <PersistencyCurve data={curveData} activeFilter={activeFilter} />
-              </div>
-
-              {/* Payer + Brand breakdown */}
-              <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div id="payer-chart">
-                  <DropOffByPayer data={segmentSnapshot} selectedPayer={activeFilter?.type === 'payer' ? activeFilter.value : null} onPayerClick={(payer) => handleSegmentClick('payer', payer)} />
-                </div>
-                <div id="brand-chart">
-                  <BrandPersistency data={segmentSnapshot} selectedBrand={activeFilter?.type === 'brand' ? activeFilter.value : null} onBrandClick={(brand) => handleSegmentClick('brand', brand)} />
-                </div>
-              </section>
-
-              {/* Geographic Map */}
-              <div id="geo-map">
-                <PatientMap cohort={cohort} />
-              </div>
-
-              {/* Segmented Drilldown */}
-              <DrilldownTabs cohort={cohort} activeFilter={activeFilter} />
-
-              {/* Journey-specific tabs */}
+              {/* Journey-specific analytics tabs — primary content */}
               <Tabs defaultValue="flow" className="w-full">
                 <TabsList className="grid grid-cols-4 w-full max-w-lg mb-6">
                   <TabsTrigger value="flow" className="gap-1.5 text-xs">
