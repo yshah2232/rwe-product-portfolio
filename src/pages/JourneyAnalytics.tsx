@@ -1,9 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useWorld } from '@/contexts/WorldContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import TrustBadge from '@/components/TrustBadge';
 import WorldSwitcher from '@/components/WorldSwitcher';
 import ChartWrapper from '@/components/ChartWrapper';
@@ -13,16 +20,24 @@ import ExportPPT from '@/components/ExportPPT';
 import TicketDialog from '@/components/TicketDialog';
 import GuidedTour from '@/components/GuidedTour';
 import InfoPanel from '@/components/InfoPanel';
+import KPICard from '@/components/KPICard';
+import PersistencyCurve from '@/components/PersistencyCurve';
+import DropOffByPayer from '@/components/DropOffByPayer';
+import BrandPersistency from '@/components/BrandPersistency';
+import PatientMap from '@/components/PatientMap';
+import DrilldownTabs from '@/components/DrilldownTabs';
+import { buildCohortResult, buildKPIs, buildSegmentSnapshot, buildPersistenceCurve } from '@/data/engine/jsonToLegacy';
 import type { TrustInfo, Journey, Patient } from '@/data/engine/types';
+import type { ActiveFilter } from '@/data/csvDataService';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, Cell, Legend,
   LineChart, Line, ComposedChart, Area, AreaChart,
   LabelList,
 } from 'recharts';
-import { Activity, Shield, Zap, Waves, Loader2, ArrowLeft } from 'lucide-react';
+import { Activity, Shield, Zap, Waves, Loader2, ArrowLeft, X } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // ── Trust configs ──
 const TRUST: Record<string, TrustInfo> = {
@@ -662,7 +677,13 @@ function AccelerationTab({ journeys }: { journeys: Journey[] }) {
 // MAIN PAGE
 // ═══════════════════════════════════════
 export default function PatientJourney() {
+  const navigate = useNavigate();
   const { loading, dataset, world } = useWorld();
+
+  // Cross-filtering state (mirrors GLP-1 dashboard)
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter | null>(null);
+  const [chatMessageCount, setChatMessageCount] = useState(0);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   // Sorted months for the slider
   const allMonths = useMemo(() => {
@@ -685,28 +706,70 @@ export default function PatientJourney() {
 
   const { patients: filteredPatients, journeys: filteredJourneys, diagnosisOnlyCount } = useFilteredCohort(filters, allMonths);
 
-  // Build KPIs for AI insights (mirroring GLP-1 dashboard structure)
-  const kpis = useMemo(() => {
-    if (!filteredJourneys.length) return { totalPatients: 0, activeRate: 0, dropOffRate: 0, medianRefillGap: 0 };
-    const active = filteredJourneys.filter(j => Number(j.discontinueFlag) === 0).length;
-    const total = filteredJourneys.length;
-    const gaps = filteredJourneys.map(j => Number(j.refillGapDays)).sort((a, b) => a - b);
-    return {
-      totalPatients: filteredPatients.length,
-      activeRate: active / total,
-      dropOffRate: (total - active) / total,
-      medianRefillGap: gaps[Math.floor(gaps.length / 2)] || 0,
-    };
-  }, [filteredJourneys, filteredPatients]);
+  // Build legacy-compatible data structures for reused components
+  const kpis = useMemo(() => buildKPIs(filteredPatients, filteredJourneys), [filteredPatients, filteredJourneys]);
+
+  const cohort = useMemo(() => buildCohortResult(filteredPatients, filteredJourneys), [filteredPatients, filteredJourneys]);
+
+  const segmentSnapshot = useMemo(() => buildSegmentSnapshot(filteredPatients, filteredJourneys), [filteredPatients, filteredJourneys]);
+
+  const curveData = useMemo(
+    () => buildPersistenceCurve(filteredJourneys, activeFilter, filteredPatients),
+    [filteredJourneys, activeFilter, filteredPatients],
+  );
+
+  const displayKPIs = useMemo(() => {
+    if (!activeFilter) return kpis;
+    const segments = activeFilter.type === 'payer' ? cohort.byPayer : cohort.byBrand;
+    const seg = segments.find(s => s.name === activeFilter.value);
+    if (!seg) return kpis;
+    return { ...kpis, totalPatients: seg.patients };
+  }, [kpis, activeFilter, cohort]);
+
+  const startDate = allMonths[filters.monthRange[0]] || '2023-01';
+  const endDate = allMonths[filters.monthRange[1]] || '2024-12';
+
+  const handleSegmentClick = (type: ActiveFilter['type'], value: string) => {
+    setActiveFilter(prev =>
+      prev?.type === type && prev?.value === value ? null : { type, value },
+    );
+  };
+
+  const handleBackClick = useCallback((e: React.MouseEvent) => {
+    if (chatMessageCount > 0) {
+      e.preventDefault();
+      setShowExitDialog(true);
+    }
+  }, [chatMessageCount]);
+
+  const handleConfirmExit = useCallback(() => {
+    setShowExitDialog(false);
+    navigate('/');
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Unsaved chat exit dialog */}
+      <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogTitle>Unsaved Chat</DialogTitle>
+          <DialogDescription>
+            You have {chatMessageCount} chat message{chatMessageCount !== 1 ? 's' : ''} in the AI Q&A. Save your chat before leaving, or it will be lost.
+          </DialogDescription>
+          <div className="flex gap-2 justify-end mt-4">
+            <Button variant="outline" onClick={() => setShowExitDialog(false)}>Stay</Button>
+            <Button variant="destructive" onClick={handleConfirmExit}>Leave without saving</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Sticky header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
         <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               to="/"
+              onClick={handleBackClick}
               className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-muted transition-colors"
               aria-label="Back to portfolio"
             >
@@ -716,6 +779,7 @@ export default function PatientJourney() {
           </div>
           <div className="flex items-center gap-1">
             <WorldSwitcher />
+            <ExportPPT kpis={displayKPIs} segmentSnapshot={segmentSnapshot} cohort={cohort} curveData={curveData} startDate={startDate} endDate={endDate} />
             <TicketDialog />
             <GuidedTour />
             <InfoPanel />
@@ -747,9 +811,60 @@ export default function PatientJourney() {
             diagnosisOnlyCount={diagnosisOnlyCount}
           />
 
+          {/* Active filter badge */}
+          {activeFilter && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2"
+            >
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Filtered by:</span>
+              <button
+                onClick={() => setActiveFilter(null)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors"
+              >
+                {activeFilter.value}
+                <X className="h-3.5 w-3.5" />
+              </button>
+              <span className="text-xs text-muted-foreground">Click again or press × to clear</span>
+            </motion.div>
+          )}
+
+          {/* KPI row — mirrors GLP-1 dashboard */}
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <KPICard title="Patients Analyzed" value={displayKPIs.totalPatients.toLocaleString()} description="Unique patients matching cohort filters." detail="Patients are filtered by ICD-10, NDC codes, and diagnosis month range from the cohort filter bar above." />
+            <KPICard title="Still on Therapy" value={`${(displayKPIs.activeRate * 100).toFixed(1)}%`} description="Patients with active therapy (discontinueFlag = 0)." detail="Derived from journey records: percentage of journeys where discontinueFlag is 0." highlight sentiment="positive" />
+            <KPICard title="Stopped Therapy" value={`${(displayKPIs.dropOffRate * 100).toFixed(1)}%`} description="Patients who discontinued treatment." detail="Calculated as 100% minus Still on Therapy rate." highlight sentiment="negative" />
+            <KPICard title="Typical Refill Delay" value={displayKPIs.medianRefillGap.toFixed(1)} suffix=" days" description="Median refill gap across all journeys." detail="Sourced from journey refillGapDays: the median value across all filtered journeys." />
+          </section>
+
           {/* Two-column: Charts + AI Insights sidebar */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
+              {/* Persistence Curve */}
+              <div id="persistence-curve">
+                <PersistencyCurve data={curveData} activeFilter={activeFilter} />
+              </div>
+
+              {/* Payer + Brand breakdown */}
+              <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div id="payer-chart">
+                  <DropOffByPayer data={segmentSnapshot} selectedPayer={activeFilter?.type === 'payer' ? activeFilter.value : null} onPayerClick={(payer) => handleSegmentClick('payer', payer)} />
+                </div>
+                <div id="brand-chart">
+                  <BrandPersistency data={segmentSnapshot} selectedBrand={activeFilter?.type === 'brand' ? activeFilter.value : null} onBrandClick={(brand) => handleSegmentClick('brand', brand)} />
+                </div>
+              </section>
+
+              {/* Geographic Map */}
+              <div id="geo-map">
+                <PatientMap cohort={cohort} />
+              </div>
+
+              {/* Segmented Drilldown */}
+              <DrilldownTabs cohort={cohort} activeFilter={activeFilter} />
+
+              {/* Journey-specific tabs */}
               <Tabs defaultValue="flow" className="w-full">
                 <TabsList className="grid grid-cols-4 w-full max-w-lg mb-6">
                   <TabsTrigger value="flow" className="gap-1.5 text-xs">
@@ -776,11 +891,12 @@ export default function PatientJourney() {
             <div className="lg:col-span-1">
               <div className="lg:sticky lg:top-[80px]">
                 <AIInsights
-                  kpis={kpis}
-                  segmentSnapshot={{ byPayer: {}, byBrand: {} }}
-                  cohort={{ patients: [], total: filteredPatients.length, byPayer: [], byBrand: [], byRegion: [] }}
-                  startDate={allMonths[filters.monthRange[0]] || '2023-01'}
-                  endDate={allMonths[filters.monthRange[1]] || '2024-12'}
+                  kpis={displayKPIs}
+                  segmentSnapshot={segmentSnapshot}
+                  cohort={cohort}
+                  startDate={startDate}
+                  endDate={endDate}
+                  onChatMessagesChange={setChatMessageCount}
                 />
               </div>
             </div>
@@ -788,7 +904,7 @@ export default function PatientJourney() {
 
           <div className="border-t pt-6 pb-8 text-center">
             <p className="text-xs text-muted-foreground">
-              Built with synthetic claims data · {filteredPatients.length.toLocaleString()} patient cohort · Not real patient data
+              Built with synthetic claims data · {cohort.total.toLocaleString()} patient cohort · Not real patient data
             </p>
           </div>
         </motion.div>
