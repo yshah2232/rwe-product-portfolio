@@ -1,9 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useWorld } from '@/contexts/WorldContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import TrustBadge from '@/components/TrustBadge';
 import WorldSwitcher from '@/components/WorldSwitcher';
 import ChartWrapper from '@/components/ChartWrapper';
@@ -13,16 +20,24 @@ import ExportPPT from '@/components/ExportPPT';
 import TicketDialog from '@/components/TicketDialog';
 import GuidedTour from '@/components/GuidedTour';
 import InfoPanel from '@/components/InfoPanel';
+import KPICard from '@/components/KPICard';
+import PersistencyCurve from '@/components/PersistencyCurve';
+import DropOffByPayer from '@/components/DropOffByPayer';
+import BrandPersistency from '@/components/BrandPersistency';
+import PatientMap from '@/components/PatientMap';
+import DrilldownTabs from '@/components/DrilldownTabs';
+import { buildCohortResult, buildKPIs, buildSegmentSnapshot, buildPersistenceCurve } from '@/data/engine/jsonToLegacy';
 import type { TrustInfo, Journey, Patient } from '@/data/engine/types';
+import type { ActiveFilter } from '@/data/csvDataService';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, Cell, Legend,
   LineChart, Line, ComposedChart, Area, AreaChart,
   LabelList,
 } from 'recharts';
-import { Activity, Shield, Zap, Waves, Loader2, ArrowLeft } from 'lucide-react';
+import { Activity, Shield, Zap, Waves, Loader2, ArrowLeft, X } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // ── Trust configs ──
 const TRUST: Record<string, TrustInfo> = {
