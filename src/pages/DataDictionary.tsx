@@ -44,7 +44,7 @@ export default function DataDictionary() {
           <div>
             <h1 className="text-3xl font-bold text-foreground">Data Dictionary</h1>
             <p className="text-muted-foreground mt-1 max-w-2xl">
-              Every dataset and field used in Health Insights Hub. All data is synthetic. No PHI. No real provider NPIs. Only aggregated outputs are shown in the UI.
+              Every dataset and field used in RWE Studio. All data is synthetic. No PHI. No real provider NPIs. Only aggregated outputs are shown in the UI.
             </p>
           </div>
           <WorldSwitcher />

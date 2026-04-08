@@ -62,7 +62,7 @@ const modules = [
   },
   {
     title: 'Patient Journey',
-    status: 'live' as const,
+    status: 'wip' as const,
     outcome: 'Show friction, stability, acceleration, and drop off risk across the treatment lifecycle',
     user: 'Patient Outcomes Lead',
     metric: 'Time to therapy initiation',
@@ -211,6 +211,45 @@ const Index = () => {
               </Button>
             </div>
             <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, hsl(262 80% 70%), transparent 70%)' }} />
+          </motion.div>
+        ))}
+
+        {/* WIP module */}
+        {modules.filter(m => m.status === 'wip').map((mod, idx) => (
+          <motion.div
+            key={mod.title}
+            {...anim(0.6 + idx * 0.08)}
+            className="relative rounded-2xl overflow-hidden cursor-pointer group mb-6 border border-amber-500/30"
+            onClick={() => navigate(mod.route!)}
+            style={{
+              background: 'linear-gradient(135deg, hsl(38 70% 45%) 0%, hsl(38 60% 35%) 50%, hsl(38 50% 25%) 100%)',
+            }}
+          >
+            <div className="relative z-10 px-6 md:px-10 py-8 md:py-10 flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
+              <div className="flex-1 space-y-3">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/15 text-amber-200 text-[11px] font-semibold tracking-wider uppercase">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  Work in Progress
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                  {mod.title}
+                </h3>
+                <p className="text-white/70 text-sm md:text-base leading-relaxed max-w-lg">
+                  {mod.outcome}. Powered across GLP-1, NSCLC, and Alzheimer therapeutic areas.
+                </p>
+                <div className="pt-2 text-xs text-white/50 space-y-0.5">
+                  <p><span className="text-white/70 font-medium">Primary user:</span> {mod.user}</p>
+                  <p><span className="text-white/70 font-medium">Key metric:</span> {mod.metric}</p>
+                </div>
+              </div>
+              <Button
+                size="lg"
+                className="shrink-0 gap-2 text-sm font-bold shadow-lg group-hover:scale-105 transition-transform bg-white/90 text-foreground hover:bg-white"
+              >
+                Preview <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, hsl(38 80% 70%), transparent 70%)' }} />
           </motion.div>
         ))}
 

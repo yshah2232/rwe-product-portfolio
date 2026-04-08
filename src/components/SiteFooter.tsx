@@ -6,7 +6,7 @@ const SiteFooter = () => (
           Built with synthetic data. No protected health information. Designed to demonstrate product capability.
         </p>
         <p className="text-[10px] text-muted-foreground/50">
-          Health Insights Hub · Yash Shah · 2024
+          RWE Studio · Yash Shah · 2024
         </p>
       </div>
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
