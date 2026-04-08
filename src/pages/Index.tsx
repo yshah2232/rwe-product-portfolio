@@ -123,24 +123,21 @@ const Index = () => {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="px-6 md:px-10 lg:px-16 pt-16 md:pt-24 pb-16 md:pb-24">
-        <div className="max-w-4xl">
-          <motion.p {...anim(0.1)} className="text-xs font-semibold tracking-[0.3em] uppercase mb-5 text-primary">
-            Real World Evidence Portfolio
-          </motion.p>
-          <motion.h1
-            {...anim(0.2)}
-            className="text-[36px] md:text-[52px] lg:text-[64px] font-extrabold leading-[1.08] tracking-tight text-foreground"
-          >
-            I build evidence products that turn
-            <span className="text-primary"> fragmented healthcare data </span>
-            into decisions.
-          </motion.h1>
-          <motion.p {...anim(0.3)} className="mt-6 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
-            Real world evidence means using data generated during routine care, not clinical trials, to understand how treatments actually perform. Claims data are the receipts of healthcare: who filled what, when they stopped, and what they paid. They are not the full story, but they are the most scalable starting point for building products that change decisions.
-          </motion.p>
-        </div>
+      {/* Hero - full width, centered, impactful */}
+      <section className="px-6 md:px-10 lg:px-16 pt-20 md:pt-32 pb-20 md:pb-32 flex flex-col items-center text-center">
+        <motion.p {...anim(0.1)} className="text-xs font-semibold tracking-[0.3em] uppercase mb-6 text-primary">
+          Real World Evidence Portfolio
+        </motion.p>
+        <motion.h1
+          {...anim(0.2)}
+          className="text-[40px] md:text-[60px] lg:text-[76px] font-extrabold leading-[1.05] tracking-tight text-foreground max-w-5xl"
+        >
+          Fragmented healthcare data,{' '}
+          <span className="text-primary">turned into decisions.</span>
+        </motion.h1>
+        <motion.p {...anim(0.3)} className="mt-8 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
+          Claims data are the receipts of healthcare: who filled what, when they stopped, and what they paid. Not the full story, but the most scalable starting point for building products that change decisions.
+        </motion.p>
       </section>
 
       {/* What I Build */}
@@ -388,16 +385,18 @@ const Index = () => {
         </motion.div>
       </section>
 
-      {/* Why this Matters */}
+      {/* Why this Matters - full width */}
       <section className="px-6 md:px-10 lg:px-16 pb-20">
         <motion.div
           {...anim(0.95)}
-          className="rounded-2xl border border-primary/15 bg-accent/20 p-8 md:p-12 max-w-3xl"
+          className="rounded-2xl border border-primary/15 bg-accent/20 p-8 md:p-12"
         >
-          <h2 className="text-xl font-bold text-foreground mb-4">Why this matters</h2>
-          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Most healthcare analytics stays locked in spreadsheets, decks, and dashboards nobody opens twice. This portfolio is a working product, not a presentation. It demonstrates the ability to take messy longitudinal data, turn it into something a brand team or payer strategist would actually use weekly, and build the infrastructure to make it trustworthy, maintainable, and scalable. That is the job of a product manager in this space.
-          </p>
+          <div className="max-w-4xl mx-auto text-center space-y-4">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">Why this matters</h2>
+            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+              Most healthcare analytics stays locked in spreadsheets, decks, and dashboards nobody opens twice. This portfolio is a working product, not a presentation. It demonstrates the ability to take messy longitudinal data, turn it into something a brand team or payer strategist would actually use weekly, and build the infrastructure to make it trustworthy, maintainable, and scalable. That is the job of a product manager in this space.
+            </p>
+          </div>
         </motion.div>
       </section>
     </div>

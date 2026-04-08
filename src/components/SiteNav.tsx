@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Github, Linkedin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const navLinks = [
   { label: 'Home', to: '/', disabled: false },
@@ -47,26 +47,11 @@ const SiteNav = () => {
             })}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <a
-            href="https://www.linkedin.com/in/yashshah2232"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center w-9 h-9 rounded-lg hover:bg-accent transition-colors"
-            aria-label="LinkedIn"
-          >
-            <Linkedin className="h-[18px] w-[18px] text-muted-foreground hover:text-primary transition-colors" />
-          </a>
-          <a
-            href="https://github.com/yshah2232"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center w-9 h-9 rounded-lg hover:bg-muted transition-colors"
-            aria-label="GitHub"
-          >
-            <Github className="h-[18px] w-[18px] text-muted-foreground hover:text-foreground transition-colors" />
-          </a>
-        </div>
+        <Link to="/about">
+          <Button variant="outline" size="sm" className="text-xs font-semibold gap-1.5">
+            Know More
+          </Button>
+        </Link>
       </div>
     </nav>
   );
