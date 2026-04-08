@@ -124,6 +124,7 @@ const Index = () => {
   return (
     <div>
       {/* Hero - full width, centered, impactful */}
+      {/* Hero */}
       <section className="px-6 md:px-10 lg:px-16 pt-20 md:pt-32 pb-20 md:pb-32 flex flex-col items-center text-center">
         <motion.p {...anim(0.1)} className="text-xs font-semibold tracking-[0.3em] uppercase mb-6 text-primary">
           Real World Evidence Portfolio
@@ -132,11 +133,11 @@ const Index = () => {
           {...anim(0.2)}
           className="text-[40px] md:text-[60px] lg:text-[76px] font-extrabold leading-[1.05] tracking-tight text-foreground max-w-5xl"
         >
-          Fragmented healthcare data,{' '}
-          <span className="text-primary">turned into decisions.</span>
+          Longitudinal patient data,{' '}
+          <span className="text-primary">structured for action.</span>
         </motion.h1>
-        <motion.p {...anim(0.3)} className="mt-8 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
-          Claims data are the receipts of healthcare: who filled what, when they stopped, and what they paid. Not the full story, but the most scalable starting point for building products that change decisions.
+        <motion.p {...anim(0.3)} className="mt-8 text-base md:text-lg text-muted-foreground leading-[1.8] max-w-2xl">
+          I design analytics products that help brand teams, payer strategists, and medical affairs leads monitor treatment persistence, detect drop-off risk, and act on real-world evidence across therapeutic areas.
         </motion.p>
       </section>
 
@@ -389,12 +390,18 @@ const Index = () => {
       <section className="px-6 md:px-10 lg:px-16 pb-20">
         <motion.div
           {...anim(0.95)}
-          className="rounded-2xl border border-primary/15 bg-accent/20 p-8 md:p-12"
+          className="rounded-2xl border border-primary/15 bg-accent/20 p-10 md:p-16"
         >
-          <div className="max-w-4xl mx-auto text-center space-y-4">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">Why this matters</h2>
-            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-              Most healthcare analytics stays locked in spreadsheets, decks, and dashboards nobody opens twice. This portfolio is a working product, not a presentation. It demonstrates the ability to take messy longitudinal data, turn it into something a brand team or payer strategist would actually use weekly, and build the infrastructure to make it trustworthy, maintainable, and scalable. That is the job of a product manager in this space.
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground leading-tight">Why this matters</h2>
+            <p className="text-base md:text-lg text-muted-foreground leading-[1.9]">
+              Most healthcare analytics stays locked in spreadsheets, decks, and dashboards nobody opens twice.
+            </p>
+            <p className="text-base md:text-lg text-muted-foreground leading-[1.9]">
+              This portfolio is a working product — not a presentation. It demonstrates the ability to take messy longitudinal data, structure it for clinical and commercial stakeholders, and build the infrastructure to make it trustworthy, maintainable, and scalable.
+            </p>
+            <p className="text-sm font-semibold text-foreground/80 pt-2">
+              That is the job of a product manager in this space.
             </p>
           </div>
         </motion.div>

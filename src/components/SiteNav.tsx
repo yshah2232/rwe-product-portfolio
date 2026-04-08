@@ -15,7 +15,7 @@ const SiteNav = () => {
     <nav className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border/40">
       <div className="max-w-6xl mx-auto px-6 md:px-10 flex items-center justify-between h-14">
         <div className="flex items-center gap-8">
-          <Link to="/" className="text-base font-extrabold tracking-tight text-foreground">
+          <Link to="/" className="text-xl md:text-2xl font-black tracking-tight text-foreground">
             RWE Studio
           </Link>
           <div className="hidden md:flex items-center gap-1">
