@@ -1,57 +1,78 @@
 import { motion } from 'framer-motion';
-import { Separator } from '@/components/ui/separator';
+import { ArrowDown, Database, Users, Filter, Activity, Brain, ShieldCheck, AlertTriangle } from 'lucide-react';
 
-const sections = [
+const steps = [
   {
-    title: 'Data sources and what each can and cannot see',
-    content: [
-      'Claims data captures who filled a prescription, when, what they paid, and who the payer was. It does not capture why a patient stopped or how they felt.',
-      'EHR data captures clinical encounters, diagnoses, and lab values. It does not capture what happens between visits or at a different provider.',
-      'Hub and specialty pharmacy data captures enrollment, copay assistance usage, and adherence support. It does not capture out of network fills.',
-      'This product uses synthetic claims data only. Other data sources are referenced conceptually to demonstrate product thinking about data strategy.',
+    icon: Database,
+    title: 'Data Ingestion',
+    subtitle: 'Claims · EHR · Hub/SP',
+    bullets: [
+      'Claims: who filled, when, what they paid, payer',
+      'EHR: diagnoses, labs, encounters',
+      'Hub/SP: enrollment, copay, adherence support',
     ],
+    note: 'This product uses synthetic claims only',
+    color: 'bg-blue-500/10 text-blue-600',
   },
   {
-    title: 'Cohort design and why rules matter',
-    content: [
-      'A cohort starts with an index event, the first observable GLP 1 fill. Every patient is anchored to their own index date, not a calendar date.',
-      'Inclusion and exclusion criteria determine who counts. In this cohort: patients with at least one GLP 1 fill in the observation window, with no prior GLP 1 history.',
-      'Cohort rules directly impact every metric downstream. Changing the index date window changes persistence rates, payer mix, and geographic distribution.',
+    icon: Users,
+    title: 'Cohort Design',
+    subtitle: 'Index event → inclusion/exclusion',
+    bullets: [
+      'Anchor every patient to their first fill (index date)',
+      'Include: ≥1 fill in observation window, no prior history',
+      'Changing the index window changes all downstream metrics',
     ],
+    note: 'Rules drive every metric',
+    color: 'bg-violet-500/10 text-violet-600',
   },
   {
-    title: 'Line of therapy logic',
-    content: [
-      'Line of therapy (LOT) logic identifies which treatment a patient is on and when they switch. Example: a patient starts on Ozempic, switches to Mounjaro after 90 days.',
-      'LOT is determined by gaps between fills and brand changes. A gap longer than the expected refill window plus a grace period triggers a new line.',
-      'This logic is critical for persistence calculations. Without it, you cannot distinguish between patients who stopped, switched, or simply delayed a refill.',
+    icon: Filter,
+    title: 'Line of Therapy Logic',
+    subtitle: 'LOT assignment from gap & brand rules',
+    bullets: [
+      'Gap > expected refill + grace → new therapy line',
+      'Brand change triggers LOT increment',
+      'Distinguishes stop vs switch vs delay',
     ],
+    note: 'Critical for persistence accuracy',
+    color: 'bg-emerald-500/10 text-emerald-600',
   },
   {
-    title: 'How risk is detected using claims proxies',
-    content: [
-      'Claims data does not have a field called "at risk." Risk is inferred from observable patterns.',
-      'Refill gap elongation: when the time between fills increases over successive refills, it signals declining engagement.',
-      'Payer switch events: a change in payer type, especially from commercial to cash, often precedes discontinuation.',
-      'Geographic cold spots: regions with low fill density relative to diagnosed population may indicate access barriers.',
-      'These are proxies, not confirmed outcomes. Every signal should be labeled as observed or inferred.',
+    icon: Activity,
+    title: 'Risk Detection',
+    subtitle: 'Claims proxies → early signals',
+    bullets: [
+      'Refill gap elongation → declining engagement',
+      'Payer switch (commercial → cash) → discontinuation risk',
+      'Geographic cold spots → access barriers',
     ],
+    note: 'Proxies, not confirmed outcomes',
+    color: 'bg-amber-500/10 text-amber-600',
   },
   {
-    title: 'Trust and governance',
-    content: [
-      'Observed vs inferred: every metric in the suite should clearly state whether it was directly measured from the data or estimated using a model or proxy.',
-      'Confidence levels: statistical confidence intervals should accompany any aggregated metric where sample size affects reliability.',
-      'Data freshness: the recency of the underlying data matters. Stale data produces stale decisions. Every module page should display when the data was last updated.',
+    icon: Brain,
+    title: 'Metric Computation',
+    subtitle: 'Observed vs inferred labeling',
+    bullets: [
+      'Every metric tagged: observed or inferred',
+      'Confidence intervals on aggregated stats',
+      'Data freshness timestamp on every module',
     ],
+    note: 'Trust is a product feature',
+    color: 'bg-purple-500/10 text-purple-600',
   },
   {
-    title: 'Safety and privacy disclaimer',
-    content: [
-      'This entire product suite uses synthetic data. No real patient records, protected health information, or identifiable data were used at any point.',
-      'The synthetic cohort was generated using AI driven statistical modeling calibrated against published clinical studies and national utilization benchmarks.',
-      'This product is a demonstration of product management and data product design capability. It is not a clinical tool and should not be used for clinical or regulatory decisions.',
+    icon: ShieldCheck,
+    title: 'Privacy & Governance',
+    subtitle: 'Synthetic data · No PHI · Cell suppression',
+    bullets: [
+      '100% synthetic — no real patient data anywhere',
+      'AI-driven generation calibrated to published RWE studies',
+      'Any cell with < 11 records auto-suppressed',
     ],
+    note: 'Not a clinical tool',
+    color: 'bg-rose-500/10 text-rose-600',
   },
 ];
 
@@ -66,24 +87,56 @@ const Method = () => (
     <motion.div {...anim(0.1)}>
       <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">How this suite works</h1>
       <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">
-        This page reads like a product spec for executives. Each section explains a design decision, why it matters, and what it means for the data you see.
+        A visual pipeline of how raw healthcare data becomes trustworthy, actionable product metrics.
       </p>
     </motion.div>
 
-    {sections.map((section, i) => (
-      <motion.div key={section.title} {...anim(0.15 + i * 0.05)}>
-        <h2 className="text-lg font-bold text-foreground mb-4">{section.title}</h2>
-        <ul className="space-y-3">
-          {section.content.map((item, j) => (
-            <li key={j} className="flex gap-3 text-sm text-muted-foreground leading-relaxed">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-        {i < sections.length - 1 && <Separator className="mt-8" />}
-      </motion.div>
-    ))}
+    {/* Flow diagram */}
+    <div className="space-y-0">
+      {steps.map((step, i) => (
+        <div key={step.title}>
+          <motion.div
+            {...anim(0.15 + i * 0.07)}
+            className="relative rounded-xl border border-border/50 bg-card p-5 md:p-6"
+          >
+            <div className="flex items-start gap-4">
+              {/* Icon */}
+              <div className={`flex items-center justify-center w-11 h-11 rounded-xl shrink-0 ${step.color}`}>
+                <step.icon className="h-5 w-5" />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <h3 className="text-base font-bold text-foreground">{step.title}</h3>
+                  <span className="text-xs text-muted-foreground font-medium">{step.subtitle}</span>
+                </div>
+                <ul className="mt-2 space-y-1">
+                  {step.bullets.map((b, j) => (
+                    <li key={j} className="flex gap-2 text-sm text-muted-foreground leading-relaxed">
+                      <span className="h-1 w-1 rounded-full bg-primary mt-2 shrink-0" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+                {step.note && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
+                    <span className="text-[11px] text-amber-600 font-medium">{step.note}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Connector arrow */}
+          {i < steps.length - 1 && (
+            <div className="flex justify-center py-1">
+              <ArrowDown className="h-5 w-5 text-muted-foreground/30" />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
   </div>
 );
 
