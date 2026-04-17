@@ -139,6 +139,26 @@ const Index = () => {
         <motion.p {...anim(0.3)} className="mt-8 text-base md:text-lg text-muted-foreground leading-[1.8] max-w-2xl">
           I design analytics products that help brand teams, payer strategists, and medical affairs leads monitor treatment persistence, detect drop-off risk, and act on real-world evidence across therapeutic areas.
         </motion.p>
+        <motion.div {...anim(0.4)} className="mt-10 flex flex-col sm:flex-row items-center gap-3">
+          <Button
+            size="lg"
+            onClick={() => navigate('/dashboard')}
+            className="gap-2 text-sm font-bold shadow-lg hover:shadow-xl transition-all"
+          >
+            Explore the GLP-1 Dashboard <ArrowRight className="h-4 w-4" />
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => navigate('/method')}
+            className="gap-2 text-sm font-semibold"
+          >
+            See the Method
+          </Button>
+        </motion.div>
+        <motion.p {...anim(0.5)} className="mt-5 text-xs text-muted-foreground/70">
+          Live module · 8K+ synthetic patients · 3 therapeutic areas
+        </motion.p>
       </section>
 
       {/* What I Build */}
