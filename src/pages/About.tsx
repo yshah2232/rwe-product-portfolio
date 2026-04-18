@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Linkedin, Github, Mail, Handshake } from 'lucide-react';
 import iconLogo from '@/assets/icon-plc-logo.png';
 import syneosLogo from '@/assets/syneos-health-logo.png';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const anim = (delay: number) => ({
   initial: { opacity: 0, y: 12 },
