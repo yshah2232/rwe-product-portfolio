@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowDown, Database, Users, Filter, Activity, Brain, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const layers = [
   {
