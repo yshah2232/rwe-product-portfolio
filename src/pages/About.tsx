@@ -87,6 +87,7 @@ const About = () => (
       </div>
     </motion.div>
   </div>
-);
+  );
+};
 
 export default About;
