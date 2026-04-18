@@ -189,6 +189,7 @@ const Method = () => {
       ))}
     </div>
   </div>
-);
+  );
+};
 
 export default Method;
