@@ -9,7 +9,9 @@ const anim = (delay: number) => ({
   transition: { delay, duration: 0.35 },
 });
 
-const About = () => (
+const About = () => {
+  usePageTitle('About — RWE Studio');
+  return (
   <div className="max-w-3xl mx-auto px-6 md:px-10 py-12 md:py-16 space-y-12">
     <motion.div {...anim(0.1)}>
       <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">About</h1>
