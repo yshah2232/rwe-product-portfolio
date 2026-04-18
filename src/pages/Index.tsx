@@ -2,6 +2,9 @@ import { motion } from 'framer-motion';
 import ArtifactDialog from '@/components/ArtifactDialog';
 import SkillPillarDialog from '@/components/SkillPillarDialog';
 import { useNavigate } from 'react-router-dom';
+import heroProductShot from '@/assets/hero-product-shot.png';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { track } from '@/lib/track';
 import {
   ArrowRight,
   BarChart3,
@@ -120,45 +123,82 @@ const anim = (delay: number) => ({
 
 const Index = () => {
   const navigate = useNavigate();
+  usePageTitle('RWE Studio — Principal PM Portfolio · Real-World Evidence Products');
 
   return (
     <div>
-      {/* Hero - full width, centered, impactful */}
       {/* Hero */}
-      <section className="px-6 md:px-10 lg:px-16 pt-20 md:pt-32 pb-20 md:pb-32 flex flex-col items-center text-center">
-        <motion.p {...anim(0.1)} className="text-xs font-semibold tracking-[0.3em] uppercase mb-6 text-primary">
-          Real World Evidence Portfolio
-        </motion.p>
-        <motion.h1
-          {...anim(0.2)}
-          className="text-[40px] md:text-[60px] lg:text-[76px] font-extrabold leading-[1.05] tracking-tight text-foreground max-w-5xl"
-        >
-          Longitudinal patient data,{' '}
-          <span className="text-primary">structured for action.</span>
-        </motion.h1>
-        <motion.p {...anim(0.3)} className="mt-8 text-base md:text-lg text-muted-foreground leading-[1.8] max-w-2xl">
-          I design analytics products that help brand teams, payer strategists, and medical affairs leads monitor treatment persistence, detect drop-off risk, and act on real-world evidence across therapeutic areas.
-        </motion.p>
-        <motion.div {...anim(0.4)} className="mt-10 flex flex-col sm:flex-row items-center gap-3">
-          <Button
-            size="lg"
-            onClick={() => navigate('/dashboard')}
-            className="gap-2 text-sm font-bold shadow-lg hover:shadow-xl transition-all"
+      <section className="px-6 md:px-10 lg:px-16 pt-16 md:pt-24 pb-16 md:pb-24">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          <div className="lg:col-span-6 text-center lg:text-left">
+            <motion.p {...anim(0.1)} className="text-xs font-semibold tracking-[0.3em] uppercase mb-6 text-primary">
+              Principal PM · Real-World Evidence
+            </motion.p>
+            <motion.h1
+              {...anim(0.2)}
+              className="text-[40px] md:text-[56px] lg:text-[68px] font-extrabold leading-[1.05] tracking-tight text-foreground"
+            >
+              I build analytics products on{' '}
+              <span className="text-primary">real-world patient data.</span>
+            </motion.h1>
+            <motion.p {...anim(0.3)} className="mt-6 md:mt-8 text-base md:text-lg text-muted-foreground leading-[1.7] max-w-xl mx-auto lg:mx-0">
+              Live dashboards across GLP-1, NSCLC, and Alzheimer's — built on 8,000+ synthetic patient claims, calibrated to peer-reviewed RWE benchmarks. For brand teams, payer strategists, and medical affairs leads who need to act on evidence, not admire it.
+            </motion.p>
+            <motion.div {...anim(0.4)} className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3">
+              <Button
+                size="lg"
+                onClick={() => {
+                  track('cta_click', { location: 'hero_primary', target: '/dashboard' });
+                  navigate('/dashboard');
+                }}
+                className="gap-2 text-sm font-bold shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
+              >
+                Explore the GLP-1 Dashboard <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => {
+                  track('cta_click', { location: 'hero_secondary', target: '/method' });
+                  navigate('/method');
+                }}
+                className="gap-2 text-sm font-semibold w-full sm:w-auto"
+              >
+                See the Method
+              </Button>
+            </motion.div>
+            <motion.div {...anim(0.5)} className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> 8K+ synthetic patients</span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> 3 therapeutic areas</span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Live & interactive</span>
+            </motion.div>
+          </div>
+
+          <motion.div
+            {...anim(0.35)}
+            className="lg:col-span-6 cursor-pointer group"
+            onClick={() => {
+              track('cta_click', { location: 'hero_preview', target: '/dashboard' });
+              navigate('/dashboard');
+            }}
           >
-            Explore the GLP-1 Dashboard <ArrowRight className="h-4 w-4" />
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={() => navigate('/method')}
-            className="gap-2 text-sm font-semibold"
-          >
-            See the Method
-          </Button>
-        </motion.div>
-        <motion.p {...anim(0.5)} className="mt-5 text-xs text-muted-foreground/70">
-          Live module · 8K+ synthetic patients · 3 therapeutic areas
-        </motion.p>
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-border/30 transition-transform duration-300 group-hover:-translate-y-1">
+              <img
+                src={heroProductShot}
+                alt="GLP-1 patient persistence dashboard preview showing KPIs, persistence curve, and AI insights"
+                className="w-full h-auto block"
+                loading="eager"
+                width={1366}
+                height={768}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6">
+                <span className="px-4 py-2 rounded-full bg-background/95 text-foreground text-xs font-bold shadow-lg flex items-center gap-1.5">
+                  Open dashboard <ArrowRight className="h-3.5 w-3.5" />
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       {/* What I Build */}
