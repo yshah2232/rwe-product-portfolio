@@ -31,17 +31,20 @@ const pillars = [
   {
     icon: BarChart3,
     title: 'Measure what happened',
-    desc: 'Claims data tells you who filled, who stopped, and when. This is the receipt, not the full story, but it is the most scalable starting point.',
+    eyebrow: 'Step 1 · Establish the baseline',
+    desc: 'Turn raw longitudinal claims into the metrics brand and medical teams already trust: starts, fills, switches, drop off, and persistence at 6 and 12 months. The receipt of patient behavior, structured for decisions.',
   },
   {
     icon: Activity,
     title: 'Detect risk early',
-    desc: 'Refill gaps, payer switches, and geographic cold spots are proxies for patient struggle. Catching them early changes outcomes.',
+    eyebrow: 'Step 2 · Move from lagging to leading',
+    desc: 'Surface refill gaps, payer churn, and geographic cold spots as leading indicators of abandonment, before they show up in quarterly reports. The earlier the signal, the more recoverable the patient.',
   },
   {
     icon: Eye,
     title: 'Explain what is known vs inferred',
-    desc: 'Healthcare data is incomplete by design. Every metric should tell you whether it was observed directly or estimated, and how confident you should be.',
+    eyebrow: 'Step 3 · Make the data trustworthy',
+    desc: 'Every KPI is tagged Observed, Inferred, or Modeled with a confidence score. Stakeholders see not just the number, but how much weight it can carry in a decision. Trust is the product.',
   },
 ];
 
@@ -123,7 +126,7 @@ const anim = (delay: number) => ({
 
 const Index = () => {
   const navigate = useNavigate();
-  usePageTitle('RWE Studio — Principal PM Portfolio · Real-World Evidence Products');
+  usePageTitle('RWE Studio — Real-World Evidence Product Portfolio');
 
   return (
     <div>
@@ -132,7 +135,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-6 text-center lg:text-left">
             <motion.p {...anim(0.1)} className="text-xs font-semibold tracking-[0.3em] uppercase mb-6 text-primary">
-              Principal PM · Real-World Evidence
+              Real-World Evidence · Product Portfolio
             </motion.p>
             <motion.h1
               {...anim(0.2)}
@@ -201,23 +204,34 @@ const Index = () => {
         </div>
       </section>
 
-      {/* What I Build */}
+      {/* What I Build — story arc: Measure → Detect → Explain */}
       <section className="px-6 md:px-10 lg:px-16 pb-20">
-        <motion.div {...anim(0.35)} className="flex items-baseline gap-4 mb-10">
-          <h2 className="text-xl md:text-2xl font-bold text-foreground">What I build</h2>
+        <motion.div {...anim(0.35)} className="flex items-baseline gap-4 mb-3">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">How I think about RWE products</h2>
           <div className="flex-1 border-t border-border/50" />
         </motion.div>
+        <motion.p {...anim(0.38)} className="text-sm md:text-base text-muted-foreground max-w-2xl mb-10 leading-relaxed">
+          Three jobs, in order. Each pillar below maps to a live capability in the dashboard.
+        </motion.p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {pillars.map((p, i) => (
             <motion.div
               key={p.title}
               {...anim(0.4 + i * 0.08)}
-              className="rounded-2xl border border-border/50 bg-card p-6 md:p-8 space-y-4"
+              className="relative rounded-2xl border border-border/50 bg-card p-6 md:p-8 space-y-4"
             >
-              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-accent">
-                <p.icon className="h-6 w-6 text-primary" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-accent">
+                  <p.icon className="h-6 w-6 text-primary" />
+                </div>
+                <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-muted-foreground/70">
+                  0{i + 1}
+                </span>
               </div>
-              <h3 className="text-lg font-bold text-foreground">{p.title}</h3>
+              <p className="text-[11px] font-semibold tracking-wider uppercase text-primary/80">
+                {p.eyebrow}
+              </p>
+              <h3 className="text-lg font-bold text-foreground leading-snug">{p.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
             </motion.div>
           ))}
