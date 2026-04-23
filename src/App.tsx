@@ -6,9 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { WorldProvider } from "@/contexts/WorldContext";
 import SiteLayout from "@/components/SiteLayout";
 import Index from "./pages/Index";
-import Method from "./pages/Method";
 import About from "./pages/About";
-import DataDictionary from "./pages/DataDictionary";
 import DataMethod from "./pages/DataMethod";
 import ClinicalTrials from "./pages/ClinicalTrials";
 import NotFound from "./pages/NotFound";
@@ -37,7 +35,7 @@ const App = () => (
               <Route path="/journey-analytics" element={<Navigate to="/clinical-trials" replace />} />
               <Route path="/patient-journey" element={<Navigate to="/clinical-trials" replace />} />
             </Route>
-            <Route path="/methodology" element={<Method />} />
+            <Route path="/methodology" element={<Navigate to="/data-method" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
