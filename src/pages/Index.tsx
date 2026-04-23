@@ -141,11 +141,11 @@ const Index = () => {
               {...anim(0.2)}
               className="text-[40px] md:text-[56px] lg:text-[68px] font-extrabold leading-[1.05] tracking-tight text-foreground"
             >
-              I build analytics products on{' '}
-              <span className="text-primary">real-world patient data.</span>
+              Real-world evidence,{' '}
+              <span className="text-primary">turned into product.</span>
             </motion.h1>
             <motion.p {...anim(0.3)} className="mt-6 md:mt-8 text-base md:text-lg text-muted-foreground leading-[1.7] max-w-xl mx-auto lg:mx-0">
-              Live dashboards across GLP-1, NSCLC, and Alzheimer's — built on 8,000+ synthetic patient claims, calibrated to peer-reviewed RWE benchmarks. For brand teams, payer strategists, and medical affairs leads who need to act on evidence, not admire it.
+              Live, interactive dashboards across GLP-1, NSCLC, and Alzheimer's — built on 8,000+ synthetic patient claims, calibrated to peer-reviewed RWE benchmarks. Built for brand, payer, and medical affairs teams who need to act on evidence, not admire it.
             </motion.p>
             <motion.div {...anim(0.4)} className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3">
               <Button
