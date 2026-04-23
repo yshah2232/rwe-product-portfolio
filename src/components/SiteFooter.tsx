@@ -18,14 +18,12 @@ const SiteFooter = () => (
         {/* Companies */}
         <div className="flex items-center gap-5">
           <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-semibold">Experience at</span>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/40 bg-card">
-              <img src={iconLogo} alt="ICON PLC" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" />
-              <span className="text-xs font-semibold text-foreground">ICON PLC</span>
+          <div className="flex items-center gap-5">
+            <div className="flex items-center justify-center px-3 py-2 rounded-lg border border-border/40 bg-card">
+              <img src={iconLogo} alt="ICON Plc" loading="lazy" className="h-7 w-auto object-contain" />
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/40 bg-card">
-              <img src={syneosLogo} alt="Syneos Health" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" />
-              <span className="text-xs font-semibold text-foreground">Syneos Health</span>
+            <div className="flex items-center justify-center px-3 py-2 rounded-lg border border-border/40 bg-card">
+              <img src={syneosLogo} alt="Syneos Health" loading="lazy" className="h-7 w-auto object-contain" />
             </div>
           </div>
         </div>
