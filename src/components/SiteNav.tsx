@@ -19,8 +19,8 @@ const SiteNav = () => {
     <nav className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border/40">
       <div className="max-w-6xl mx-auto px-6 md:px-10 flex items-center justify-between h-14">
         <div className="flex items-center gap-8">
-          <Link to="/" className="text-xl md:text-2xl font-black tracking-tight text-foreground" onClick={() => setMobileOpen(false)}>
-            RWE Studio
+          <Link to="/" className="font-display text-xl md:text-[22px] font-semibold tracking-tight text-foreground leading-none" onClick={() => setMobileOpen(false)}>
+            Clinical Trial <span className="italic text-primary">Diversity</span> Studio
           </Link>
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
