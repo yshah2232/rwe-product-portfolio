@@ -5,10 +5,8 @@ import { Button } from '@/components/ui/button';
 
 const navLinks = [
   { label: 'Home', to: '/', disabled: false },
-  { label: 'Clinical Trials', to: '/clinical-trials', disabled: false },
-  { label: 'Method', to: '/method', disabled: false },
-  { label: 'Data', to: '/data-dictionary', disabled: true },
-  { label: 'About', to: '/about', disabled: false },
+  { label: 'Data & Method', to: '/data-method', disabled: false },
+  { label: 'PM Profile', to: '/about', disabled: false },
 ];
 
 const SiteNav = () => {
@@ -52,11 +50,6 @@ const SiteNav = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Link to="/about" className="hidden md:block">
-            <Button variant="outline" size="sm" className="text-xs font-semibold gap-1.5">
-              Know More
-            </Button>
-          </Link>
           <button
             type="button"
             aria-label="Toggle menu"
