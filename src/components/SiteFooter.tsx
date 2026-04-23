@@ -59,9 +59,11 @@ const SiteFooter = () => (
       {/* Brand + social row */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-2">
         <div className="space-y-1.5">
-          <p className="text-lg font-black text-foreground tracking-tight">RWE Studio</p>
+          <p className="font-display text-lg font-semibold text-foreground tracking-tight">
+            Clinical Trial <span className="italic text-primary">Diversity</span> Studio
+          </p>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Built with synthetic data · No PHI · Product capability demo
+            Built on live ClinicalTrials.gov registry data · No PHI · Product capability demo
           </p>
         </div>
 
@@ -79,7 +81,7 @@ const SiteFooter = () => (
 
       {/* Bottom */}
       <div className="border-t border-border/30 pt-4">
-        <p className="text-[10px] text-muted-foreground/50">© {new Date().getFullYear()} Yash Shah · RWE Studio</p>
+        <p className="text-[10px] text-muted-foreground/50">© {new Date().getFullYear()} Yash Shah · Clinical Trial Diversity Studio</p>
       </div>
     </div>
   </footer>
