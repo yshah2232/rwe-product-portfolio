@@ -212,7 +212,7 @@ const Index = () => {
               Background
             </span>
             <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-              <span className="text-sm font-bold text-foreground/90 tracking-tight">ICON plc</span>
+              <span className="text-sm font-bold text-foreground/90 tracking-tight">ICON Plc (Symphony Health)</span>
               <span className="h-3 w-px bg-border/60" />
               <span className="text-sm font-bold text-foreground/90 tracking-tight">Syneos Health</span>
               <span className="h-3 w-px bg-border/60" />
