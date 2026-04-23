@@ -126,7 +126,7 @@ const anim = (delay: number) => ({
 
 const Index = () => {
   const navigate = useNavigate();
-  usePageTitle('RWE Studio — Real-World Evidence Product Portfolio');
+  usePageTitle('RWE Studio — Real World Evidence Product Portfolio');
 
   return (
     <div>
@@ -135,17 +135,17 @@ const Index = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div className="lg:col-span-6 text-center lg:text-left">
             <motion.p {...anim(0.1)} className="text-xs font-semibold tracking-[0.3em] uppercase mb-6 text-primary">
-              Real-World Evidence · Product Portfolio
+              Real World Evidence · Product Portfolio
             </motion.p>
             <motion.h1
               {...anim(0.2)}
               className="text-[40px] md:text-[56px] lg:text-[68px] font-extrabold leading-[1.05] tracking-tight text-foreground"
             >
-              Real-world evidence,{' '}
+              Real world evidence,{' '}
               <span className="text-primary">turned into product.</span>
             </motion.h1>
             <motion.p {...anim(0.3)} className="mt-6 md:mt-8 text-base md:text-lg text-muted-foreground leading-[1.7] max-w-xl mx-auto lg:mx-0">
-              Live, interactive dashboards across GLP-1, NSCLC, and Alzheimer's — built on 8,000+ synthetic patient claims, calibrated to peer-reviewed RWE benchmarks. Built for brand, payer, and medical affairs teams who need to act on evidence, not admire it.
+              Live, interactive dashboards across GLP-1, NSCLC, and Alzheimer's — built on 8,000+ synthetic patient claims, calibrated to peer reviewed RWE benchmarks. Built for brand, payer, and medical affairs teams who need to act on evidence, not admire it.
             </motion.p>
             <motion.div {...anim(0.4)} className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3">
               <Button
@@ -216,7 +216,7 @@ const Index = () => {
               <span className="h-3 w-px bg-border/60" />
               <span className="text-sm font-bold text-foreground/90 tracking-tight">Syneos Health</span>
               <span className="h-3 w-px bg-border/60" />
-              <span className="text-sm font-medium text-muted-foreground tracking-tight">10+ yrs in RWE & analytics</span>
+              <span className="text-sm font-medium text-muted-foreground tracking-tight">7 years in RWE and healthcare analytics</span>
             </div>
           </div>
         </motion.div>
@@ -232,9 +232,9 @@ const Index = () => {
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { title: 'GLP-1 Persistence Dashboard', desc: 'Adoption, drop-off, payer mix across 8K patients.', route: '/dashboard', icon: BarChart3, status: 'Live' },
+              { title: 'GLP-1 Persistence Dashboard', desc: 'Adoption, drop off, payer mix across 8K patients.', route: '/dashboard', icon: BarChart3, status: 'Live' },
               { title: 'Patient Journey Analytics', desc: 'Friction, stability, and acceleration across the lifecycle.', route: '/patient-journey', icon: TrendingUp, status: 'Preview' },
-              { title: 'The Method', desc: 'How I structure RWE products end-to-end.', route: '/method', icon: FileText, status: 'Read' },
+              { title: 'The Method', desc: 'How I structure RWE products end to end.', route: '/method', icon: FileText, status: 'Read' },
             ].map((card, i) => (
               <motion.button
                 key={card.title}
@@ -457,7 +457,7 @@ const Index = () => {
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
                The patient cohorts were synthetically modeled using AI driven statistical generation calibrated against published RWE studies. Discontinuation patterns follow
-               <strong className="text-foreground"> modified Weibull survival curves</strong> anchored to peer-reviewed benchmarks. No real patient data exists anywhere in this product.
+               <strong className="text-foreground"> modified Weibull survival curves</strong> anchored to peer reviewed benchmarks. No real patient data exists anywhere in this product.
              </p>
              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
                {[
