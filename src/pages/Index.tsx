@@ -216,7 +216,7 @@ const Index = () => {
               <span className="h-3 w-px bg-border/60" />
               <span className="text-sm font-bold text-foreground/90 tracking-tight">Syneos Health</span>
               <span className="h-3 w-px bg-border/60" />
-              <span className="text-sm font-medium text-muted-foreground tracking-tight">7 years in RWE and healthcare analytics</span>
+              <span className="text-sm font-medium text-muted-foreground tracking-tight">7 Years in RWE and Healthcare Analytics</span>
             </div>
           </div>
         </motion.div>
