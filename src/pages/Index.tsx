@@ -204,6 +204,68 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Credibility strip */}
+      <section className="px-6 md:px-10 lg:px-16 -mt-4 pb-10">
+        <motion.div {...anim(0.55)} className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-10 py-5 px-6 rounded-xl border border-border/40 bg-muted/20">
+            <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-muted-foreground/70">
+              Background
+            </span>
+            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+              <span className="text-sm font-bold text-foreground/90 tracking-tight">ICON plc</span>
+              <span className="h-3 w-px bg-border/60" />
+              <span className="text-sm font-bold text-foreground/90 tracking-tight">Syneos Health</span>
+              <span className="h-3 w-px bg-border/60" />
+              <span className="text-sm font-medium text-muted-foreground tracking-tight">10+ yrs in RWE & analytics</span>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Featured Work — second click magnet */}
+      <section className="px-6 md:px-10 lg:px-16 pb-16">
+        <div className="max-w-7xl mx-auto">
+          <motion.div {...anim(0.6)} className="flex items-baseline gap-4 mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">Jump straight in</h2>
+            <div className="flex-1 border-t border-border/50" />
+            <span className="text-xs text-muted-foreground hidden sm:inline">Pick a module</span>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { title: 'GLP-1 Persistence Dashboard', desc: 'Adoption, drop-off, payer mix across 8K patients.', route: '/dashboard', icon: BarChart3, status: 'Live' },
+              { title: 'Patient Journey Analytics', desc: 'Friction, stability, and acceleration across the lifecycle.', route: '/patient-journey', icon: TrendingUp, status: 'Preview' },
+              { title: 'The Method', desc: 'How I structure RWE products end-to-end.', route: '/method', icon: FileText, status: 'Read' },
+            ].map((card, i) => (
+              <motion.button
+                key={card.title}
+                {...anim(0.65 + i * 0.05)}
+                onClick={() => {
+                  track('cta_click', { location: 'featured_work', target: card.route });
+                  navigate(card.route);
+                }}
+                className="text-left rounded-xl border border-border/50 bg-card p-5 hover:border-primary/40 hover:bg-accent/30 transition-all duration-200 group"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent">
+                    <card.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground/70">
+                    {card.status}
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors">
+                  {card.title}
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{card.desc}</p>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                  Open <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                </span>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* What I Build — story arc: Measure → Detect → Explain */}
       <section className="px-6 md:px-10 lg:px-16 pb-20">
         <motion.div {...anim(0.35)} className="flex items-baseline gap-4 mb-3">
