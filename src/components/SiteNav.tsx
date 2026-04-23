@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 
 const navLinks = [
   { label: 'Home', to: '/', disabled: false },
+  { label: 'Clinical Trials', to: '/clinical-trials', disabled: false },
   { label: 'Method', to: '/method', disabled: false },
   { label: 'Data', to: '/data-dictionary', disabled: true },
   { label: 'About', to: '/about', disabled: false },

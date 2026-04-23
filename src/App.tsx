@@ -8,9 +8,8 @@ import SiteLayout from "@/components/SiteLayout";
 import Index from "./pages/Index";
 import Method from "./pages/Method";
 import About from "./pages/About";
-import Dashboard from "./pages/Dashboard";
 import DataDictionary from "./pages/DataDictionary";
-import PatientJourney from "./pages/JourneyAnalytics";
+import ClinicalTrials from "./pages/ClinicalTrials";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,10 +28,12 @@ const App = () => (
               <Route path="/method" element={<Method />} />
               <Route path="/about" element={<About />} />
               <Route path="/data-dictionary" element={<DataDictionary />} />
-              <Route path="/journey-analytics" element={<PatientJourney />} />
-              <Route path="/patient-journey" element={<PatientJourney />} />
+              <Route path="/clinical-trials" element={<ClinicalTrials />} />
+              {/* Deactivated: legacy persistence + patient journey dashboards now route to Clinical Trials */}
+              <Route path="/dashboard" element={<Navigate to="/clinical-trials" replace />} />
+              <Route path="/journey-analytics" element={<Navigate to="/clinical-trials" replace />} />
+              <Route path="/patient-journey" element={<Navigate to="/clinical-trials" replace />} />
             </Route>
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/methodology" element={<Method />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
