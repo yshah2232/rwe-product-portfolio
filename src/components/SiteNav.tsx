@@ -87,11 +87,6 @@ const SiteNav = () => {
                 </Link>
               )
             ))}
-            <Link to="/about" onClick={() => setMobileOpen(false)} className="mt-2">
-              <Button variant="outline" size="sm" className="w-full text-xs font-semibold">
-                Know More
-              </Button>
-            </Link>
           </div>
         </div>
       )}
