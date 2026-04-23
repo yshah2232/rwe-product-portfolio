@@ -11,13 +11,18 @@ const anim = (delay: number) => ({
 });
 
 const About = () => {
-  usePageTitle('About — RWE Studio');
+  usePageTitle('PM Profile — Clinical Trial Diversity Studio');
   return (
   <div className="max-w-3xl mx-auto px-6 md:px-10 py-12 md:py-16 space-y-12">
     <motion.div {...anim(0.1)}>
-      <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">About</h1>
+      <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-4">PM Profile</p>
+      <h1 className="font-display text-3xl md:text-[44px] font-medium tracking-[-0.01em] text-foreground mb-4 leading-[1.1]">
+        The product manager behind the studio.
+      </h1>
       <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl">
-        I am a product manager focused on healthcare analytics and real world evidence. I build tools that help brand teams, payer strategists, and medical affairs leads make better decisions with longitudinal data.
+        I'm a product manager focused on healthcare analytics and real-world evidence. I build tools that help clinical
+        operations, feasibility, diversity strategy, and medical affairs leads make better decisions with longitudinal
+        data.
       </p>
     </motion.div>
 
