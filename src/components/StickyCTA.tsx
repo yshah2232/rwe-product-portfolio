@@ -25,7 +25,7 @@ const StickyCTA = () => {
       return;
     }
     const onScroll = () => {
-      setVisible(window.scrollY > 600);
+      setVisible(window.scrollY > 300);
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
