@@ -141,11 +141,11 @@ const Index = () => {
               {...anim(0.2)}
               className="text-[40px] md:text-[56px] lg:text-[68px] font-extrabold leading-[1.05] tracking-tight text-foreground"
             >
-              I build analytics products on{' '}
-              <span className="text-primary">real-world patient data.</span>
+              Real-world evidence,{' '}
+              <span className="text-primary">turned into product.</span>
             </motion.h1>
             <motion.p {...anim(0.3)} className="mt-6 md:mt-8 text-base md:text-lg text-muted-foreground leading-[1.7] max-w-xl mx-auto lg:mx-0">
-              Live dashboards across GLP-1, NSCLC, and Alzheimer's — built on 8,000+ synthetic patient claims, calibrated to peer-reviewed RWE benchmarks. For brand teams, payer strategists, and medical affairs leads who need to act on evidence, not admire it.
+              Live, interactive dashboards across GLP-1, NSCLC, and Alzheimer's — built on 8,000+ synthetic patient claims, calibrated to peer-reviewed RWE benchmarks. Built for brand, payer, and medical affairs teams who need to act on evidence, not admire it.
             </motion.p>
             <motion.div {...anim(0.4)} className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3">
               <Button
@@ -201,6 +201,68 @@ const Index = () => {
               </div>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Credibility strip */}
+      <section className="px-6 md:px-10 lg:px-16 -mt-4 pb-10">
+        <motion.div {...anim(0.55)} className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-10 py-5 px-6 rounded-xl border border-border/40 bg-muted/20">
+            <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-muted-foreground/70">
+              Background
+            </span>
+            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+              <span className="text-sm font-bold text-foreground/90 tracking-tight">ICON plc</span>
+              <span className="h-3 w-px bg-border/60" />
+              <span className="text-sm font-bold text-foreground/90 tracking-tight">Syneos Health</span>
+              <span className="h-3 w-px bg-border/60" />
+              <span className="text-sm font-medium text-muted-foreground tracking-tight">10+ yrs in RWE & analytics</span>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Featured Work — second click magnet */}
+      <section className="px-6 md:px-10 lg:px-16 pb-16">
+        <div className="max-w-7xl mx-auto">
+          <motion.div {...anim(0.6)} className="flex items-baseline gap-4 mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">Jump straight in</h2>
+            <div className="flex-1 border-t border-border/50" />
+            <span className="text-xs text-muted-foreground hidden sm:inline">Pick a module</span>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { title: 'GLP-1 Persistence Dashboard', desc: 'Adoption, drop-off, payer mix across 8K patients.', route: '/dashboard', icon: BarChart3, status: 'Live' },
+              { title: 'Patient Journey Analytics', desc: 'Friction, stability, and acceleration across the lifecycle.', route: '/patient-journey', icon: TrendingUp, status: 'Preview' },
+              { title: 'The Method', desc: 'How I structure RWE products end-to-end.', route: '/method', icon: FileText, status: 'Read' },
+            ].map((card, i) => (
+              <motion.button
+                key={card.title}
+                {...anim(0.65 + i * 0.05)}
+                onClick={() => {
+                  track('cta_click', { location: 'featured_work', target: card.route });
+                  navigate(card.route);
+                }}
+                className="text-left rounded-xl border border-border/50 bg-card p-5 hover:border-primary/40 hover:bg-accent/30 transition-all duration-200 group"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent">
+                    <card.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground/70">
+                    {card.status}
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors">
+                  {card.title}
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{card.desc}</p>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                  Open <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                </span>
+              </motion.button>
+            ))}
+          </div>
         </div>
       </section>
 
