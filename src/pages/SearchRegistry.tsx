@@ -31,8 +31,11 @@ interface RankedTrial {
   status: string;
   phase: string[];
   conditions: string[];
+  conditionsClean?: string[];
   interventions: string[];
+  interventionsClean?: string[];
   leadSponsor: string;
+  leadSponsorClean?: string;
   enrollment: number | null;
   startDate: string;
   countries: string[];
