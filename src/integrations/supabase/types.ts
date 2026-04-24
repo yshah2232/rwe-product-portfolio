@@ -14,13 +14,238 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      result_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          nct_id: string
+          rating: string
+          reason: string | null
+          search_event_id: string | null
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nct_id: string
+          rating: string
+          reason?: string | null
+          search_event_id?: string | null
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nct_id?: string
+          rating?: string
+          reason?: string | null
+          search_event_id?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "result_feedback_search_event_id_fkey"
+            columns: ["search_event_id"]
+            isOneToOne: false
+            referencedRelation: "search_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      result_interactions: {
+        Row: {
+          created_at: string
+          dwell_ms: number | null
+          event_type: string
+          id: string
+          nct_id: string
+          rank_position: number | null
+          search_event_id: string | null
+          semantic_score: number | null
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          dwell_ms?: number | null
+          event_type: string
+          id?: string
+          nct_id: string
+          rank_position?: number | null
+          search_event_id?: string | null
+          semantic_score?: number | null
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          dwell_ms?: number | null
+          event_type?: string
+          id?: string
+          nct_id?: string
+          rank_position?: number | null
+          search_event_id?: string | null
+          semantic_score?: number | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "result_interactions_search_event_id_fkey"
+            columns: ["search_event_id"]
+            isOneToOne: false
+            referencedRelation: "search_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_events: {
+        Row: {
+          candidates_fetched: number | null
+          created_at: string
+          ctg_query: string | null
+          filter_country_us: boolean | null
+          filter_phase: string | null
+          filter_status: string | null
+          id: string
+          ip_hash: string | null
+          query: string
+          query_normalized: string | null
+          results_returned: number | null
+          session_id: string
+          total_count: number | null
+          used_fallback: boolean | null
+          user_agent: string | null
+        }
+        Insert: {
+          candidates_fetched?: number | null
+          created_at?: string
+          ctg_query?: string | null
+          filter_country_us?: boolean | null
+          filter_phase?: string | null
+          filter_status?: string | null
+          id?: string
+          ip_hash?: string | null
+          query: string
+          query_normalized?: string | null
+          results_returned?: number | null
+          session_id: string
+          total_count?: number | null
+          used_fallback?: boolean | null
+          user_agent?: string | null
+        }
+        Update: {
+          candidates_fetched?: number | null
+          created_at?: string
+          ctg_query?: string | null
+          filter_country_us?: boolean | null
+          filter_phase?: string | null
+          filter_status?: string | null
+          id?: string
+          ip_hash?: string | null
+          query?: string
+          query_normalized?: string | null
+          results_returned?: number | null
+          session_id?: string
+          total_count?: number | null
+          used_fallback?: boolean | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      search_refinements: {
+        Row: {
+          created_at: string
+          id: string
+          next_query: string | null
+          next_search_event_id: string | null
+          prior_query: string | null
+          prior_search_event_id: string | null
+          seconds_between: number | null
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          next_query?: string | null
+          next_search_event_id?: string | null
+          prior_query?: string | null
+          prior_search_event_id?: string | null
+          seconds_between?: number | null
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          next_query?: string | null
+          next_search_event_id?: string | null
+          prior_query?: string | null
+          prior_search_event_id?: string | null
+          seconds_between?: number | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_refinements_next_search_event_id_fkey"
+            columns: ["next_search_event_id"]
+            isOneToOne: false
+            referencedRelation: "search_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_refinements_prior_search_event_id_fkey"
+            columns: ["prior_search_event_id"]
+            isOneToOne: false
+            referencedRelation: "search_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_outcomes: {
+        Row: {
+          consent_to_show: boolean | null
+          created_at: string
+          id: string
+          rating: number | null
+          role: string | null
+          session_id: string
+          testimonial: string | null
+          use_case: string | null
+        }
+        Insert: {
+          consent_to_show?: boolean | null
+          created_at?: string
+          id?: string
+          rating?: number | null
+          role?: string | null
+          session_id: string
+          testimonial?: string | null
+          use_case?: string | null
+        }
+        Update: {
+          consent_to_show?: boolean | null
+          created_at?: string
+          id?: string
+          rating?: number | null
+          role?: string | null
+          session_id?: string
+          testimonial?: string | null
+          use_case?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_registry_impact: {
+        Args: never
+        Returns: {
+          positive_feedback_pct: number
+          top_queries: Json
+          total_searches: number
+          total_trials_surfaced: number
+          unique_sessions: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
