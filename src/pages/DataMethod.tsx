@@ -236,7 +236,211 @@ const DataMethod = () => {
         </div>
       </section>
 
-      {/* PIPELINE */}
+      {/* CANONICALIZATION — how cleaned values are derived */}
+      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24 border-b border-border/50">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...anim(0.05)} className="mb-10 max-w-3xl">
+            <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-3">
+              Canonicalization
+            </p>
+            <h2 className="font-display text-3xl md:text-[40px] font-medium leading-[1.1] tracking-[-0.01em] text-foreground">
+              How &ldquo;Pfizer Inc.&rdquo;, &ldquo;Pfizer, Inc.&rdquo; and &ldquo;Pfizer Pharmaceuticals&rdquo; all become &ldquo;Pfizer&rdquo;.
+            </h2>
+            <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed">
+              CTG.gov stores sponsor, indication, and intervention names as free text. The same entity appears
+              under dozens of variants. Before counting or comparing anything, the studio resolves each value
+              through a deterministic, fully auditable mapping pipeline.
+            </p>
+          </motion.div>
+
+          <motion.div {...anim(0.1)} className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+            <div className="rounded-xl border border-border/60 bg-card p-5">
+              <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center mb-3">
+                <Wand2 className="h-4 w-4 text-primary" strokeWidth={1.75} />
+              </div>
+              <p className="font-display text-[16px] font-semibold text-foreground mb-1.5">1. Rule lookup</p>
+              <p className="text-[13px] text-muted-foreground leading-relaxed">
+                Hand-curated regex + exact-match table covering 100+ top sponsors, MeSH-form indications,
+                and major asset classes. Each rule carries a confidence score and a one-line note explaining why.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-card p-5">
+              <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center mb-3">
+                <GitMerge className="h-4 w-4 text-primary" strokeWidth={1.75} />
+              </div>
+              <p className="font-display text-[16px] font-semibold text-foreground mb-1.5">2. User overrides</p>
+              <p className="text-[13px] text-muted-foreground leading-relaxed">
+                Anyone can open the Trust Drawer on any cleaned value, propose a better mapping, and submit it.
+                Repeated suggestions accumulate votes; high-confidence ones get promoted into the rule table.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-card p-5">
+              <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center mb-3">
+                <ShieldCheck className="h-4 w-4 text-primary" strokeWidth={1.75} />
+              </div>
+              <p className="font-display text-[16px] font-semibold text-foreground mb-1.5">3. Passthrough</p>
+              <p className="text-[13px] text-muted-foreground leading-relaxed">
+                If no rule matches, the raw registry value is shown as-is and flagged at 70% confidence with an
+                amber warning in the Trust Drawer — never silently &ldquo;guessed&rdquo;.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Worked validation cases */}
+          <motion.div {...anim(0.16)} className="rounded-xl border border-border/60 bg-card overflow-hidden mb-6">
+            <div className="px-5 md:px-6 py-4 border-b border-border/60 flex items-center justify-between">
+              <p className="font-display text-[18px] font-semibold text-foreground">Validation cases</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                Test inputs &amp; expected cleaned outputs
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[13px]">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <th className="text-left py-3 px-5 md:px-6 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-24">
+                      Field
+                    </th>
+                    <th className="text-left py-3 px-5 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Raw (from CTG.gov)
+                    </th>
+                    <th className="text-left py-3 px-5 md:px-6 font-semibold text-[11px] uppercase tracking-wider text-primary">
+                      Cleaned
+                    </th>
+                    <th className="text-left py-3 px-5 md:px-6 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Rule
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { field: 'Sponsor', raw: 'Novo Nordisk A/S', clean: 'Novo Nordisk', rule: 'Trim Danish legal suffix A/S' },
+                    { field: 'Sponsor', raw: 'F. Hoffmann-La Roche Ltd', clean: 'Roche', rule: 'Trade name + trim legal' },
+                    { field: 'Sponsor', raw: 'Janssen Research & Development, LLC', clean: 'Janssen (J&J)', rule: 'Subsidiary roll-up' },
+                    { field: 'Sponsor', raw: 'EMD Serono', clean: 'Merck KGaA', rule: 'US subsidiary of Merck KGaA (distinct from US Merck)' },
+                    { field: 'Indication', raw: 'Carcinoma, Non-Small-Cell Lung', clean: 'NSCLC', rule: 'MeSH form → standard abbreviation' },
+                    { field: 'Indication', raw: 'Diabetes Mellitus, Type 2', clean: 'Type 2 diabetes', rule: 'MeSH form, drop "mellitus"' },
+                    { field: 'Indication', raw: 'Pulmonary Disease, Chronic Obstructive', clean: 'COPD', rule: 'MeSH form → abbreviation' },
+                    { field: 'Asset', raw: 'semaglutide', clean: 'Semaglutide (GLP-1)', rule: 'Add drug class tag' },
+                    { field: 'Asset', raw: 'Trastuzumab deruxtecan', clean: 'T-DXd (anti-HER2 ADC)', rule: 'Common name + class' },
+                    { field: 'Asset', raw: 'Tisagenlecleucel', clean: 'Tisagenlecleucel (CD19 CAR-T)', rule: 'Cell therapy class tag' },
+                  ].map((r, i) => (
+                    <tr key={i} className="border-t border-border/40 align-top">
+                      <td className="py-3 px-5 md:px-6 text-[12px] text-muted-foreground font-semibold uppercase tracking-wider">{r.field}</td>
+                      <td className="py-3 px-5 font-mono text-[12px] text-foreground/80">{r.raw}</td>
+                      <td className="py-3 px-5 md:px-6 text-foreground font-medium">{r.clean}</td>
+                      <td className="py-3 px-5 md:px-6 text-[12.5px] text-muted-foreground">{r.rule}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+
+          <motion.div {...anim(0.22)} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-5">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+                Who validates this?
+              </p>
+              <p className="text-[13.5px] text-foreground/85 leading-relaxed">
+                Every mapping is open: click the <span className="font-mono text-[12px]">ⓘ</span> next to any
+                cleaned value to see the raw input, the rule that matched, and the confidence. There is no
+                hidden ML — the rule table is the entire logic, and you can read every entry.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-5">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+                What about outliers?
+              </p>
+              <p className="text-[13.5px] text-foreground/85 leading-relaxed">
+                Anything not covered by a rule passes through with the raw value at 70% confidence — flagged
+                amber. That is by design: the platform never invents a normalization. If you see a wrong or
+                missing mapping, suggest it inline in the Trust Drawer; it lands in the review queue with your vote.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* RELEVANCE SCORING — how the LLM reranker decides */}
+      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24 border-b border-border/50 bg-muted/30">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...anim(0.05)} className="mb-10 max-w-3xl">
+            <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-3">
+              Relevance scoring
+            </p>
+            <h2 className="font-display text-3xl md:text-[40px] font-medium leading-[1.1] tracking-[-0.01em] text-foreground">
+              How the 0–100 score on every result is decided.
+            </h2>
+            <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed">
+              The score is produced by an LLM reranker (Google Gemini 2.5 Flash Lite via the Lovable AI Gateway).
+              It receives your full plain-language query and the title + conditions + interventions of every
+              candidate fetched from CTG.gov, and assigns each one a single integer 0–100 with a one-sentence
+              rationale.
+            </p>
+          </motion.div>
+
+          <motion.div {...anim(0.1)} className="rounded-xl border border-border/60 bg-card p-5 md:p-6 mb-6">
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary/80 mb-3">
+              The exact instruction sent to the model
+            </p>
+            <pre className="font-mono text-[12.5px] text-foreground bg-muted/40 rounded-lg p-4 leading-relaxed whitespace-pre-wrap">
+{`You are a clinical trial relevance scorer. Given a user's
+search intent and a list of trial candidates, score each
+candidate 0–100 for how well it matches the *meaning* of the
+query (not just keyword overlap). Consider synonyms,
+abbreviations, drug class relationships, disease equivalents,
+and clinical context.
+
+Be strict:
+  90+   only for excellent matches
+  60–89 for solid matches
+  30–59 for tangential
+  <30   for poor matches`}
+            </pre>
+          </motion.div>
+
+          <motion.div {...anim(0.16)} className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-display text-2xl font-bold text-primary">90+</span>
+                <Brain className="h-4 w-4 text-primary" />
+              </div>
+              <p className="text-[12.5px] text-foreground font-semibold mb-1">Excellent match</p>
+              <p className="text-[12.5px] text-muted-foreground leading-relaxed">
+                Same disease, same drug or class, same patient context.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-card p-5">
+              <span className="font-display text-2xl font-bold text-foreground">60–89</span>
+              <p className="text-[12.5px] text-foreground font-semibold mb-1 mt-2">Solid match</p>
+              <p className="text-[12.5px] text-muted-foreground leading-relaxed">
+                Right indication or right intervention class, partial overlap on patient context.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-card p-5">
+              <span className="font-display text-2xl font-bold text-muted-foreground">{'<60'}</span>
+              <p className="text-[12.5px] text-foreground font-semibold mb-1 mt-2">Tangential or poor</p>
+              <p className="text-[12.5px] text-muted-foreground leading-relaxed">
+                Adjacent area, wrong patient population, or only a single keyword overlap.
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div {...anim(0.22)} className="rounded-xl border border-border/60 bg-card p-5 md:p-6">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-3">
+              Guardrails
+            </p>
+            <ul className="space-y-2 text-[13.5px] text-foreground/85 leading-relaxed">
+              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Single LLM call per search</strong> — all candidates scored in one batch (no per-trial costs).</span></li>
+              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Structured output via tool-calling</strong> — the model must return a typed JSON array, no free-text parsing.</span></li>
+              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Graceful fallback</strong> — if the AI gateway is unavailable, results fall back to CTG.gov default order and the UI surfaces this honestly.</span></li>
+              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Score &amp; rationale on every card</strong> — you can see what the model thought and disagree with it via the thumbs up/down feedback loop.</span></li>
+            </ul>
+          </motion.div>
+        </div>
+      </section>
+
       <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24">
         <div className="max-w-5xl mx-auto">
           <motion.div {...anim(0.05)} className="mb-12">
