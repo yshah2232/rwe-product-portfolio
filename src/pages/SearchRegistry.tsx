@@ -77,6 +77,14 @@ const SearchRegistry = () => {
   const [data, setData] = useState<SearchResponse | null>(null);
   const [feedbackGiven, setFeedbackGiven] = useState<Record<string, 'up' | 'down'>>({});
 
+  // Study detail sheet
+  const [openNct, setOpenNct] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Cohort save flow
+  const [selectedNcts, setSelectedNcts] = useState<Set<string>>(new Set());
+  const [saveOpen, setSaveOpen] = useState(false);
+
   // Outcome modal state
   const [outcomeOpen, setOutcomeOpen] = useState(false);
   const [outcomeShown, setOutcomeShown] = useState(false);
@@ -103,6 +111,7 @@ const SearchRegistry = () => {
     setLoading(true);
     setError(null);
     setFeedbackGiven({});
+    setSelectedNcts(new Set()); // reset selection on new search
 
     const params = new URLSearchParams({ q: q.trim(), sid: sessionId });
     if (phase !== 'any') params.set('phase', phase);
