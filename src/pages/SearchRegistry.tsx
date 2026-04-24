@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Search, Loader2, ExternalLink, Sparkles, AlertCircle, Info, Filter,
-  ThumbsUp, ThumbsDown, Star, Save, Layers,
+  ThumbsUp, ThumbsDown, Star, Save, Layers, LayoutGrid, Map as MapIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,8 @@ import { toast } from 'sonner';
 import StudyDetailSheet from '@/components/StudyDetailSheet';
 import TrustDrawer from '@/components/TrustDrawer';
 import SaveCohortDialog from '@/components/SaveCohortDialog';
-import { cleanSponsor } from '@/lib/canonicalize';
+import TrialMap from '@/components/TrialMap';
+import { cleanSponsor, cleanIndication } from '@/lib/canonicalize';
 
 interface RankedTrial {
   nctId: string;
