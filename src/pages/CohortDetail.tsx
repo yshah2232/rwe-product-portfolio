@@ -340,6 +340,7 @@ const CohortDetail = () => {
                           {t.sponsor_raw && (
                             <TrustDrawer
                               field="Sponsor"
+                              fieldType="sponsor"
                               hit={sponsorHit}
                               sourceField="protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
                               refreshedAt={cohort.refreshed_at ?? undefined}

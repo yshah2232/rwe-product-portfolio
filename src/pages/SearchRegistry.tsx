@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Search, Loader2, ExternalLink, Sparkles, AlertCircle, Info, Filter,
-  ThumbsUp, ThumbsDown, Star, Save, Layers,
+  ThumbsUp, ThumbsDown, Star, Save, Layers, LayoutGrid, Map as MapIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,8 @@ import { toast } from 'sonner';
 import StudyDetailSheet from '@/components/StudyDetailSheet';
 import TrustDrawer from '@/components/TrustDrawer';
 import SaveCohortDialog from '@/components/SaveCohortDialog';
-import { cleanSponsor } from '@/lib/canonicalize';
+import TrialMap from '@/components/TrialMap';
+import { cleanSponsor, cleanIndication } from '@/lib/canonicalize';
 
 interface RankedTrial {
   nctId: string;
@@ -84,6 +85,7 @@ const SearchRegistry = () => {
   // Cohort save flow
   const [selectedNcts, setSelectedNcts] = useState<Set<string>>(new Set());
   const [saveOpen, setSaveOpen] = useState(false);
+  const [view, setView] = useState<'cards' | 'map'>('cards');
 
   // Outcome modal state
   const [outcomeOpen, setOutcomeOpen] = useState(false);
@@ -375,12 +377,12 @@ const SearchRegistry = () => {
 
           {data && !loading && (
             <>
-              <div className="flex flex-wrap items-baseline justify-between gap-3 mb-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-4 mb-6">
                 <div>
-                  <h2 className="font-display text-2xl font-medium text-foreground">
+                  <h2 className="font-display text-[26px] md:text-[28px] font-semibold text-foreground tracking-tight">
                     {data.results.length} re-ranked results
                   </h2>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-[13px] text-muted-foreground mt-1.5">
                     From {data.candidatesFetched} candidates · {data.totalCount.toLocaleString()} total matching the
                     keyword on CTG.gov
                     {data.fallback && ' · semantic re-rank unavailable, showing CTG default order'}
@@ -391,19 +393,51 @@ const SearchRegistry = () => {
                     href={`https://clinicaltrials.gov/search?cond=${encodeURIComponent(data.query)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[11px] text-primary hover:underline inline-flex items-center gap-1"
+                    className="text-[12px] font-medium text-primary hover:underline inline-flex items-center gap-1"
                   >
                     Cross-check on CTG.gov <ExternalLink className="h-3 w-3" />
                   </a>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[12px] text-muted-foreground">
                     {data.usage.rateLimitRemaining} searches left today
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              {/* View toggle */}
+              <div className="flex items-center gap-1 mb-6 p-1 rounded-lg border border-border/60 bg-muted/40 w-fit">
+                <button
+                  onClick={() => setView('cards')}
+                  className={`text-[12.5px] font-medium px-3.5 py-1.5 rounded-md inline-flex items-center gap-1.5 transition-colors ${
+                    view === 'cards'
+                      ? 'bg-background text-foreground shadow-sm border border-border/60'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" /> Card view
+                </button>
+                <button
+                  onClick={() => setView('map')}
+                  className={`text-[12.5px] font-medium px-3.5 py-1.5 rounded-md inline-flex items-center gap-1.5 transition-colors ${
+                    view === 'map'
+                      ? 'bg-background text-foreground shadow-sm border border-border/60'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <MapIcon className="h-3.5 w-3.5" /> Map view
+                </button>
+              </div>
+
+              {view === 'map' && (
+                <TrialMap
+                  trials={data.results.map((t) => ({ nctId: t.nctId, countries: t.countries }))}
+                />
+              )}
+
+              {view === 'cards' && (
+              <div className="space-y-3.5">
                 {data.results.map((trial, idx) => {
                   const checked = selectedNcts.has(trial.nctId);
+                  const sponsorHit = cleanSponsor(trial.leadSponsor);
                   return (
                   <motion.div
                     key={trial.nctId}
@@ -412,11 +446,11 @@ const SearchRegistry = () => {
                     transition={{ duration: 0.3 }}
                     onMouseEnter={() => handleCardEnter(trial.nctId)}
                     onMouseLeave={() => handleCardLeave(trial, idx + 1)}
-                    className={`rounded-xl border bg-card p-5 transition-colors ${
+                    className={`rounded-xl border bg-card p-5 md:p-6 transition-colors ${
                       checked ? 'border-primary/60 ring-1 ring-primary/20' : 'border-border/60 hover:border-primary/40'
                     }`}
                   >
-                    <div className="flex items-start gap-3 mb-2">
+                    <div className="flex items-start gap-3 mb-3">
                       <Checkbox
                         checked={checked}
                         onCheckedChange={(v) => {
@@ -428,27 +462,27 @@ const SearchRegistry = () => {
                           });
                         }}
                         aria-label={`Select ${trial.nctId} for cohort`}
-                        className="mt-1"
+                        className="mt-1.5"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <button
                             onClick={() => {
                               setOpenNct(trial.nctId);
                               setSheetOpen(true);
                               trackInteraction(trial, idx + 1, 'card_click');
                             }}
-                            className="text-xs font-mono font-semibold text-primary hover:underline"
+                            className="text-[12px] font-mono font-semibold text-primary hover:underline"
                           >
                             {trial.nctId}
                           </button>
                           {trial.status && (
-                            <Badge variant="outline" className="text-[10px] py-0 h-5">
+                            <Badge variant="outline" className="text-[10px] py-0 h-5 font-medium">
                               {trial.status.replace(/_/g, ' ')}
                             </Badge>
                           )}
                           {trial.phase.map((p) => (
-                            <Badge key={p} variant="secondary" className="text-[10px] py-0 h-5">
+                            <Badge key={p} variant="secondary" className="text-[10px] py-0 h-5 font-medium">
                               {p.replace('PHASE', 'Phase ')}
                             </Badge>
                           ))}
@@ -459,71 +493,112 @@ const SearchRegistry = () => {
                             setSheetOpen(true);
                             trackInteraction(trial, idx + 1, 'card_click');
                           }}
-                          className="font-display text-[17px] font-medium text-foreground leading-snug text-left hover:text-primary transition-colors"
+                          className="font-display text-[18px] md:text-[19px] font-semibold text-foreground leading-snug text-left hover:text-primary transition-colors"
                         >
                           {trial.briefTitle}
                         </button>
                       </div>
                       <div className="shrink-0 text-right">
                         <div
-                          className={`inline-flex items-center justify-center w-12 h-12 rounded-lg font-display text-lg font-semibold ${
+                          className={`inline-flex items-center justify-center w-14 h-14 rounded-lg font-display text-xl font-bold ${
                             trial.semanticScore >= 80
                               ? 'bg-primary/15 text-primary'
                               : trial.semanticScore >= 60
                               ? 'bg-accent text-foreground'
                               : 'bg-muted text-muted-foreground'
                           }`}
+                          title="Semantic relevance score (0–100). See Data & Method for how this is computed."
                         >
                           {trial.semanticScore}
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">
+                        <p className="text-[10px] text-muted-foreground mt-1.5 uppercase tracking-wider font-medium">
                           Relevance
                         </p>
                       </div>
                     </div>
 
-                    <p className="text-[13px] text-muted-foreground italic leading-relaxed mb-3 pl-3 border-l-2 border-primary/30">
-                      {trial.semanticReason}
-                    </p>
+                    {/* Why this scored: rationale from LLM reranker */}
+                    <div className="mb-4 pl-3 border-l-2 border-primary/40 bg-primary/[0.03] rounded-r py-2 pr-3">
+                      <p className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold mb-1">
+                        Why this score
+                      </p>
+                      <p className="text-[13px] text-foreground/85 leading-relaxed">
+                        {trial.semanticReason}
+                      </p>
+                    </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px] mb-4">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-0.5">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[12.5px] mb-4">
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
                           Sponsor
                         </p>
-                        <p className="text-foreground truncate inline-flex items-center" title={trial.leadSponsor}>
-                          {trial.leadSponsorClean || trial.leadSponsor || '—'}
+                        <p className="text-foreground font-medium leading-snug truncate inline-flex items-center w-full" title={trial.leadSponsor}>
+                          <span className="truncate">{sponsorHit.clean || trial.leadSponsor || '—'}</span>
                           {trial.leadSponsor && (
                             <TrustDrawer
                               field="Sponsor"
-                              hit={cleanSponsor(trial.leadSponsor)}
+                              fieldType="sponsor"
+                              hit={sponsorHit}
                               sourceField="protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
                             />
                           )}
                         </p>
+                        {sponsorHit.source === 'rule' && sponsorHit.clean !== sponsorHit.raw && (
+                          <p className="text-[10.5px] text-muted-foreground mt-0.5 truncate" title={`Raw CTG.gov value: ${sponsorHit.raw}`}>
+                            raw: <span className="font-mono">{sponsorHit.raw}</span>
+                          </p>
+                        )}
                       </div>
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-0.5">
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
                           Conditions
                         </p>
-                        <p className="text-foreground truncate" title={trial.conditions.join('; ')}>
-                          {trial.conditions.slice(0, 2).join(', ') || '—'}
-                        </p>
+                        {trial.conditions.length > 0 ? (
+                          <div className="flex flex-col gap-0.5">
+                            {trial.conditions.slice(0, 2).map((c) => {
+                              const cleanedHit = cleanIndication(c);
+                              const changed = cleanedHit.source === 'rule' && cleanedHit.clean !== cleanedHit.raw;
+                              return (
+                                <span key={c} className="text-foreground font-medium leading-snug inline-flex items-center" title={c}>
+                                  <span className="truncate">{cleanedHit.clean}</span>
+                                  {changed && (
+                                    <TrustDrawer
+                                      field="Condition"
+                                      fieldType="indication"
+                                      hit={cleanedHit}
+                                      sourceField="protocolSection.conditionsModule.conditions[]"
+                                    />
+                                  )}
+                                </span>
+                              );
+                            })}
+                            {trial.conditions.length > 2 && (
+                              <span className="text-[10.5px] text-muted-foreground">
+                                +{trial.conditions.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-foreground">—</p>
+                        )}
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-0.5">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
                           Enrollment
                         </p>
-                        <p className="text-foreground">
+                        <p className="text-foreground font-medium">
                           {trial.enrollment ? trial.enrollment.toLocaleString() : '—'}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-0.5">
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
                           Countries
                         </p>
-                        <p className="text-foreground truncate" title={trial.countries.join(', ')}>
+                        <p className="text-foreground font-medium truncate" title={trial.countries.join(', ')}>
                           {trial.countries.slice(0, 2).join(', ') || '—'}
+                          {trial.countries.length > 2 && (
+                            <span className="text-muted-foreground"> +{trial.countries.length - 2}</span>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -534,7 +609,7 @@ const SearchRegistry = () => {
                         asChild
                         size="sm"
                         variant="outline"
-                        className="gap-1.5 h-8 text-xs"
+                        className="gap-1.5 h-8 text-xs font-medium"
                         onClick={() => trackInteraction(trial, idx + 1, 'ctg_link_click')}
                       >
                         <a href={ctgUrl(trial.nctId)} target="_blank" rel="noopener noreferrer">
@@ -543,7 +618,7 @@ const SearchRegistry = () => {
                       </Button>
 
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mr-1">
+                        <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground font-semibold mr-1">
                           Was this match useful?
                         </span>
                         <button
@@ -576,6 +651,7 @@ const SearchRegistry = () => {
                   );
                 })}
               </div>
+              )}
 
               {data.results.length === 0 && (
                 <div className="text-center py-16 text-muted-foreground">

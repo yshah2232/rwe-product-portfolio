@@ -1,1 +1,4 @@
 project_id = "uldditxzuxotajapnzed"
+
+[functions.ctg-mapping-override]
+verify_jwt = false
