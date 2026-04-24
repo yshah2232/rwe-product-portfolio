@@ -20,6 +20,7 @@
 
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
+import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -79,8 +80,11 @@ interface RankedTrial {
   status: string;
   phase: string[];
   conditions: string[];
+  conditionsClean: string[];
   interventions: string[];
+  interventionsClean: string[];
   leadSponsor: string;
+  leadSponsorClean: string;
   enrollment: number | null;
   startDate: string;
   countries: string[];
@@ -174,15 +178,22 @@ Deno.serve(async (req) => {
       const contacts = s.protocolSection?.contactsLocationsModule ?? {};
       const locs = (contacts.locations ?? []) as any[];
 
+      const conditions = (cond.conditions ?? []) as string[];
+      const interventions = (arms.interventions ?? []).map((i: any) => i.name).filter(Boolean) as string[];
+      const sponsorRaw = sponsor.name ?? "";
+
       return {
         nctId: id.nctId ?? "",
         briefTitle: id.briefTitle ?? "",
         officialTitle: id.officialTitle ?? "",
         status: status.overallStatus ?? "",
         phase: (design.phases ?? []) as string[],
-        conditions: (cond.conditions ?? []) as string[],
-        interventions: (arms.interventions ?? []).map((i: any) => i.name).filter(Boolean) as string[],
-        leadSponsor: sponsor.name ?? "",
+        conditions,
+        conditionsClean: conditions.map((c) => cleanIndication(c).clean),
+        interventions,
+        interventionsClean: interventions.map((i) => cleanAsset(i).clean),
+        leadSponsor: sponsorRaw,
+        leadSponsorClean: cleanSponsor(sponsorRaw).clean,
         enrollment: design.enrollmentInfo?.count ?? null,
         startDate: status.startDateStruct?.date ?? "",
         countries: Array.from(new Set(locs.map((l: any) => l.country).filter(Boolean))) as string[],
