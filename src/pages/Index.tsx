@@ -105,7 +105,7 @@ const Index = () => {
           >
             <span className="inline-flex items-center gap-2">
               <span className="h-[1px] w-6 bg-primary/60" />
-              An RWE Product Concept
+              Live · Semantic Search of ClinicalTrials.gov
               <span className="h-[1px] w-6 bg-primary/60" />
             </span>
           </motion.p>
@@ -114,18 +114,19 @@ const Index = () => {
             {...anim(0.12)}
             className="font-display text-[44px] md:text-[64px] lg:text-[78px] font-medium leading-[1.02] tracking-[-0.02em] text-foreground"
           >
-            Equitable trial planning,
+            Search 500K+ trials
             <br />
-            <span className="italic text-primary font-normal">grounded in real registry data.</span>
+            <span className="italic text-primary font-normal">by meaning, not just keywords.</span>
           </motion.h1>
 
           <motion.p
             {...anim(0.22)}
             className="mt-8 md:mt-10 text-base md:text-[19px] text-muted-foreground leading-[1.7] max-w-3xl mx-auto font-normal"
           >
-            <span className="font-semibold text-foreground">Clinical Trial Diversity Studio</span> helps pharma teams
-            search ClinicalTrials.gov studies, build simple cohorts, view diversity and access insights, prioritize
-            sites, and generate transparent rationale for diversity planning.
+            Type a clinical scenario in plain language — &ldquo;elderly patients with advanced lung tumors who
+            already had chemo&rdquo; — and the <span className="font-semibold text-foreground">Search Registry</span>{' '}
+            pulls live candidates from the ClinicalTrials.gov v2 API, then re-ranks them by intent. Every result
+            deep-links back to CTG.gov for one-click verification.
           </motion.p>
 
           <motion.div
@@ -135,23 +136,23 @@ const Index = () => {
             <Button
               size="lg"
               onClick={() => {
-                track('cta_click', { location: 'hero_primary', target: '/clinical-trials' });
-                navigate('/clinical-trials');
+                track('cta_click', { location: 'hero_primary', target: '/search-registry' });
+                navigate('/search-registry');
               }}
               className="gap-2 text-sm font-semibold shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
             >
-              Open the Clinical Trials studio <ArrowRight className="h-4 w-4" />
+              <Search className="h-4 w-4" /> Open the Search Registry <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
               size="lg"
               variant="outline"
               onClick={() => {
-                track('cta_click', { location: 'hero_secondary', target: '/method' });
-                navigate('/method');
+                track('cta_click', { location: 'hero_secondary', target: '/data-method' });
+                navigate('/data-method');
               }}
               className="gap-2 text-sm font-semibold w-full sm:w-auto"
             >
-              See the method
+              See how it works
             </Button>
           </motion.div>
 
@@ -163,10 +164,10 @@ const Index = () => {
               <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Live ClinicalTrials.gov v2 API
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Real NCT IDs · real sites
+              <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Semantic re-rank · auditable rationale
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> No PHI, no synthetic mockups
+              <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> One-click verify on CTG.gov
             </span>
           </motion.div>
         </div>
@@ -257,10 +258,10 @@ const Index = () => {
                 </p>
               </div>
               <button
-                onClick={() => navigate('/clinical-trials')}
+                onClick={() => navigate('/search-registry')}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:gap-2.5 transition-all"
               >
-                Tour the studio <ArrowRight className="h-3.5 w-3.5" />
+                Try the Search Registry <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </motion.div>
           </div>
@@ -355,25 +356,25 @@ const Index = () => {
               <div className="flex-1 space-y-3">
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold tracking-wider uppercase">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  Live module
+                  Hero capability · Live
                 </div>
                 <h3 className="font-display text-2xl md:text-[32px] font-medium leading-tight tracking-[-0.01em] text-foreground">
-                  Open the Clinical Trials studio
+                  Open the Search Registry
                 </h3>
                 <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-xl">
-                  Real NCT IDs, lead sponsors, principal investigators, and site locations across GLP-1, NSCLC, and
-                  Alzheimer's — with diversity and access views layered on top.
+                  Plain-language search across the full ClinicalTrials.gov registry. Semantic re-ranking surfaces
+                  trials that keyword search misses — every result deep-links to CTG.gov for one-click verification.
                 </p>
               </div>
               <Button
                 size="lg"
                 onClick={() => {
-                  track('cta_click', { location: 'proof_cta', target: '/clinical-trials' });
-                  navigate('/clinical-trials');
+                  track('cta_click', { location: 'proof_cta', target: '/search-registry' });
+                  navigate('/search-registry');
                 }}
                 className="shrink-0 gap-2 text-sm font-semibold shadow-md"
               >
-                Enter the studio <ArrowRight className="h-4 w-4" />
+                <Search className="h-4 w-4" /> Search the registry <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </motion.div>

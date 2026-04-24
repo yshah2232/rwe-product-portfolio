@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { Database, Filter, Layers, MapPin, RefreshCw, ShieldCheck, ExternalLink, ArrowRight } from 'lucide-react';
+import { Database, Filter, Layers, MapPin, RefreshCw, ShieldCheck, ExternalLink, ArrowRight, Search, Check, X, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -80,6 +80,159 @@ const DataMethod = () => {
           >
             ClinicalTrials.gov API documentation <ExternalLink className="h-3.5 w-3.5" />
           </motion.a>
+        </div>
+      </section>
+
+      {/* CTG.gov vs Search Registry — why this is better */}
+      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24 border-b border-border/50 bg-muted/30">
+        <div className="max-w-5xl mx-auto">
+          <motion.div {...anim(0.05)} className="mb-12 max-w-2xl">
+            <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-3">
+              CTG.gov vs Search Registry
+            </p>
+            <h2 className="font-display text-3xl md:text-[40px] font-medium leading-[1.1] tracking-[-0.01em] text-foreground">
+              Same source. Better question-answering.
+            </h2>
+            <p className="mt-4 text-sm md:text-base text-muted-foreground leading-relaxed">
+              The Search Registry pulls from the exact same authoritative source as the public CTG.gov website —
+              the v2 API. The difference is in the layer on top: how the query is understood, how results are
+              ranked, and how the platform learns from use.
+            </p>
+          </motion.div>
+
+          {/* Worked example */}
+          <motion.div
+            {...anim(0.1)}
+            className="rounded-xl border border-border/60 bg-card p-5 md:p-7 mb-8"
+          >
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary/80 mb-3">
+              Worked example
+            </p>
+            <p className="font-mono text-[13px] md:text-[14px] text-foreground bg-muted/40 rounded-lg p-4 leading-relaxed">
+              "elderly patients with advanced lung tumors who already had chemo"
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <X className="h-4 w-4 text-destructive" strokeWidth={2.5} />
+                  <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    CTG.gov keyword search
+                  </p>
+                </div>
+                <p className="text-[13px] text-muted-foreground leading-relaxed">
+                  Returns <span className="font-semibold text-foreground">0 trials</span> — no protocol uses the
+                  literal phrase "elderly" or "lung tumor". The user has to translate clinical intent into
+                  registry vocabulary first.
+                </p>
+              </div>
+              <div className="rounded-lg border border-primary/40 bg-primary/5 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-primary" strokeWidth={2.5} />
+                  <p className="text-[12px] font-semibold uppercase tracking-wider text-primary">
+                    Search Registry
+                  </p>
+                </div>
+                <p className="text-[13px] text-muted-foreground leading-relaxed">
+                  Strips filler, fetches NSCLC candidates, then re-ranks by full intent — surfacing{' '}
+                  <span className="font-semibold text-foreground">Phase 2/3 NSCLC trials in patients ≥65 with
+                  prior chemotherapy exposure</span>, ranked by semantic match with a one-line rationale on each.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Comparison table */}
+          <motion.div {...anim(0.18)} className="rounded-xl border border-border/60 bg-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <th className="text-left py-3.5 px-5 md:px-6 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Capability
+                    </th>
+                    <th className="text-left py-3.5 px-5 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground">
+                      CTG.gov public site
+                    </th>
+                    <th className="text-left py-3.5 px-5 md:px-6 font-semibold text-[11px] uppercase tracking-wider text-primary">
+                      Search Registry
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="text-[13px]">
+                  {[
+                    {
+                      cap: 'Query understanding',
+                      ctg: 'Keyword + boolean. Natural-language phrases often return zero hits.',
+                      ours: 'Plain-language scenarios. Stopwords stripped, intent preserved.',
+                    },
+                    {
+                      cap: 'Ranking',
+                      ctg: 'Recency + keyword frequency.',
+                      ours: 'Semantic relevance to clinical intent (LLM-as-reranker, 0–100).',
+                    },
+                    {
+                      cap: 'Why this trial?',
+                      ctg: 'No rationale.',
+                      ours: 'One-sentence reason on every result, citing the matching condition / intervention.',
+                    },
+                    {
+                      cap: 'Synonyms & abbreviations',
+                      ctg: 'Manual — user must include both "NSCLC" and "non-small cell lung cancer".',
+                      ours: 'Handled implicitly by the semantic layer.',
+                    },
+                    {
+                      cap: 'Cross-verification',
+                      ctg: 'N/A — it is the source.',
+                      ours: 'Every result deep-links back to CTG.gov in one click. Header link cross-checks the same query.',
+                    },
+                    {
+                      cap: 'Learning loop',
+                      ctg: 'Static.',
+                      ours: 'Captures clicks, dwell, thumbs up/down, refinements, and outcome ratings — feeds future ranking.',
+                    },
+                    {
+                      cap: 'Cost guardrails',
+                      ctg: 'N/A.',
+                      ours: 'Per-IP rate limits + 1-hour edge cache + single LLM call per query.',
+                    },
+                  ].map((row) => (
+                    <tr key={row.cap} className="border-t border-border/40 align-top">
+                      <td className="py-4 px-5 md:px-6 font-semibold text-foreground whitespace-nowrap">
+                        {row.cap}
+                      </td>
+                      <td className="py-4 px-5 text-muted-foreground leading-relaxed">
+                        <span className="inline-flex items-start gap-1.5">
+                          <X className="h-3.5 w-3.5 text-muted-foreground/60 mt-0.5 shrink-0" />
+                          {row.ctg}
+                        </span>
+                      </td>
+                      <td className="py-4 px-5 md:px-6 text-foreground leading-relaxed">
+                        <span className="inline-flex items-start gap-1.5">
+                          <Check className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                          {row.ours}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+
+          <motion.p {...anim(0.26)} className="mt-6 text-[12.5px] text-muted-foreground italic">
+            We are not replacing CTG.gov — we sit on top of it. Same trials, same NCT IDs, faster path from a
+            clinical question to a defensible shortlist.
+          </motion.p>
+
+          <motion.div {...anim(0.32)} className="mt-8">
+            <Button
+              size="lg"
+              onClick={() => navigate('/search-registry')}
+              className="gap-2 text-sm font-semibold shadow-md"
+            >
+              <Search className="h-4 w-4" /> Try the Search Registry <ArrowRight className="h-4 w-4" />
+            </Button>
+          </motion.div>
         </div>
       </section>
 
@@ -275,10 +428,10 @@ const DataMethod = () => {
           <motion.div {...anim(0.2)} className="mt-12 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <Button
               size="lg"
-              onClick={() => navigate('/clinical-trials')}
+              onClick={() => navigate('/search-registry')}
               className="gap-2 text-sm font-semibold shadow-md"
             >
-              See it in the studio <ArrowRight className="h-4 w-4" />
+              <Search className="h-4 w-4" /> Try the Search Registry <ArrowRight className="h-4 w-4" />
             </Button>
             <a
               href="https://clinicaltrials.gov/data-api/api"
