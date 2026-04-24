@@ -43,21 +43,21 @@ const StickyCTA = () => {
       <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 rounded-2xl border border-border/60 bg-background/95 backdrop-blur-md shadow-2xl">
         <div className="flex-1 min-w-0">
           <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
-            See the GLP-1 dashboard in action
+            Search 500K+ trials by meaning
           </p>
           <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-            Live module · 8K+ synthetic patients · interactive
+            Live CTG.gov v2 · semantic re-rank · adaptive
           </p>
         </div>
         <Button
           size="sm"
           onClick={() => {
-            track('cta_click', { location: 'sticky_bar', target: '/dashboard' });
-            navigate('/dashboard');
+            track('cta_click', { location: 'sticky_bar', target: '/search-registry' });
+            navigate('/search-registry');
           }}
           className="gap-1.5 text-xs font-bold shrink-0"
         >
-          Explore <ArrowRight className="h-3.5 w-3.5" />
+          Search Registry <ArrowRight className="h-3.5 w-3.5" />
         </Button>
         <button
           type="button"
