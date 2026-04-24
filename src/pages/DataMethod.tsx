@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { Database, Filter, Layers, MapPin, RefreshCw, ShieldCheck, ExternalLink, ArrowRight } from 'lucide-react';
+import { Database, Filter, Layers, MapPin, RefreshCw, ShieldCheck, ExternalLink, ArrowRight, Search, Check, X, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
