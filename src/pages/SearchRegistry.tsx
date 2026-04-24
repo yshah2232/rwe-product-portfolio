@@ -85,6 +85,7 @@ const SearchRegistry = () => {
   // Cohort save flow
   const [selectedNcts, setSelectedNcts] = useState<Set<string>>(new Set());
   const [saveOpen, setSaveOpen] = useState(false);
+  const [view, setView] = useState<'cards' | 'map'>('cards');
 
   // Outcome modal state
   const [outcomeOpen, setOutcomeOpen] = useState(false);
