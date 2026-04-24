@@ -258,10 +258,10 @@ const Index = () => {
                 </p>
               </div>
               <button
-                onClick={() => navigate('/clinical-trials')}
+                onClick={() => navigate('/search-registry')}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:gap-2.5 transition-all"
               >
-                Tour the studio <ArrowRight className="h-3.5 w-3.5" />
+                Try the Search Registry <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </motion.div>
           </div>
@@ -356,25 +356,25 @@ const Index = () => {
               <div className="flex-1 space-y-3">
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold tracking-wider uppercase">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  Live module
+                  Hero capability · Live
                 </div>
                 <h3 className="font-display text-2xl md:text-[32px] font-medium leading-tight tracking-[-0.01em] text-foreground">
-                  Open the Clinical Trials studio
+                  Open the Search Registry
                 </h3>
                 <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-xl">
-                  Real NCT IDs, lead sponsors, principal investigators, and site locations across GLP-1, NSCLC, and
-                  Alzheimer's — with diversity and access views layered on top.
+                  Plain-language search across the full ClinicalTrials.gov registry. Semantic re-ranking surfaces
+                  trials that keyword search misses — every result deep-links to CTG.gov for one-click verification.
                 </p>
               </div>
               <Button
                 size="lg"
                 onClick={() => {
-                  track('cta_click', { location: 'proof_cta', target: '/clinical-trials' });
-                  navigate('/clinical-trials');
+                  track('cta_click', { location: 'proof_cta', target: '/search-registry' });
+                  navigate('/search-registry');
                 }}
                 className="shrink-0 gap-2 text-sm font-semibold shadow-md"
               >
-                Enter the studio <ArrowRight className="h-4 w-4" />
+                <Search className="h-4 w-4" /> Search the registry <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </motion.div>
