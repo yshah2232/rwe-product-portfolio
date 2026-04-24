@@ -8,8 +8,9 @@ import SiteLayout from "@/components/SiteLayout";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import DataMethod from "./pages/DataMethod";
-import ClinicalTrials from "./pages/ClinicalTrials";
 import SearchRegistry from "./pages/SearchRegistry";
+import Cohorts from "./pages/Cohorts";
+import CohortDetail from "./pages/CohortDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,12 +31,14 @@ const App = () => (
               <Route path="/method" element={<Navigate to="/data-method" replace />} />
               <Route path="/data-dictionary" element={<Navigate to="/data-method" replace />} />
               <Route path="/about" element={<About />} />
-              <Route path="/clinical-trials" element={<ClinicalTrials />} />
+              <Route path="/clinical-trials" element={<Navigate to="/search-registry" replace />} />
               <Route path="/search-registry" element={<SearchRegistry />} />
-              {/* Deactivated: legacy persistence + patient journey dashboards now route to Clinical Trials */}
-              <Route path="/dashboard" element={<Navigate to="/clinical-trials" replace />} />
-              <Route path="/journey-analytics" element={<Navigate to="/clinical-trials" replace />} />
-              <Route path="/patient-journey" element={<Navigate to="/clinical-trials" replace />} />
+              <Route path="/cohorts" element={<Cohorts />} />
+              <Route path="/cohorts/:id" element={<CohortDetail />} />
+              {/* Deactivated legacy synthetic dashboards */}
+              <Route path="/dashboard" element={<Navigate to="/search-registry" replace />} />
+              <Route path="/journey-analytics" element={<Navigate to="/search-registry" replace />} />
+              <Route path="/patient-journey" element={<Navigate to="/search-registry" replace />} />
             </Route>
             <Route path="/methodology" element={<Navigate to="/data-method" replace />} />
             <Route path="*" element={<NotFound />} />

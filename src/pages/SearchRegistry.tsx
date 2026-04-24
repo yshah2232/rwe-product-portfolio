@@ -671,6 +671,51 @@ const SearchRegistry = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Study detail sheet */}
+      <StudyDetailSheet nctId={openNct} open={sheetOpen} onOpenChange={setSheetOpen} />
+
+      {/* Save cohort dialog */}
+      <SaveCohortDialog
+        open={saveOpen}
+        onOpenChange={setSaveOpen}
+        trials={(data?.results ?? []).filter((t) => selectedNcts.has(t.nctId))}
+        query={data?.query ?? query}
+        filters={{ phase, status, countryUS }}
+      />
+
+      {/* Sticky save bar */}
+      {selectedNcts.size > 0 && (
+        <motion.div
+          initial={{ y: 80, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-foreground text-background rounded-full shadow-2xl px-5 py-3 flex items-center gap-4"
+        >
+          <span className="text-sm font-medium">
+            {selectedNcts.size} selected
+          </span>
+          <button
+            onClick={() => setSelectedNcts(new Set())}
+            className="text-xs opacity-70 hover:opacity-100 transition-opacity"
+          >
+            Clear
+          </button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setSaveOpen(true)}
+            className="gap-1.5"
+          >
+            <Save className="h-3.5 w-3.5" /> Save as cohort
+          </Button>
+          <Link
+            to="/cohorts"
+            className="text-xs inline-flex items-center gap-1 opacity-80 hover:opacity-100"
+          >
+            <Layers className="h-3.5 w-3.5" /> My cohorts
+          </Link>
+        </motion.div>
+      )}
     </div>
   );
 };
