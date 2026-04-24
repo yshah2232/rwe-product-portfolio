@@ -428,10 +428,10 @@ const DataMethod = () => {
           <motion.div {...anim(0.2)} className="mt-12 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <Button
               size="lg"
-              onClick={() => navigate('/clinical-trials')}
+              onClick={() => navigate('/search-registry')}
               className="gap-2 text-sm font-semibold shadow-md"
             >
-              See it in the studio <ArrowRight className="h-4 w-4" />
+              <Search className="h-4 w-4" /> Try the Search Registry <ArrowRight className="h-4 w-4" />
             </Button>
             <a
               href="https://clinicaltrials.gov/data-api/api"
