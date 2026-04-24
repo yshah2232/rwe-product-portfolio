@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import DataMethod from "./pages/DataMethod";
 import ClinicalTrials from "./pages/ClinicalTrials";
+import SearchRegistry from "./pages/SearchRegistry";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/data-dictionary" element={<Navigate to="/data-method" replace />} />
               <Route path="/about" element={<About />} />
               <Route path="/clinical-trials" element={<ClinicalTrials />} />
+              <Route path="/search-registry" element={<SearchRegistry />} />
               {/* Deactivated: legacy persistence + patient journey dashboards now route to Clinical Trials */}
               <Route path="/dashboard" element={<Navigate to="/clinical-trials" replace />} />
               <Route path="/journey-analytics" element={<Navigate to="/clinical-trials" replace />} />
