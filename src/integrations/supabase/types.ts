@@ -14,6 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
+      asset_mappings: {
+        Row: {
+          clean_value: string
+          confidence: number
+          id: string
+          mapping_type: string
+          raw_value: string
+          source_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          clean_value: string
+          confidence?: number
+          id?: string
+          mapping_type?: string
+          raw_value: string
+          source_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clean_value?: string
+          confidence?: number
+          id?: string
+          mapping_type?: string
+          raw_value?: string
+          source_note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cohort_trials: {
+        Row: {
+          added_at: string
+          brief_title: string | null
+          cohort_id: string
+          conditions_clean: string[] | null
+          conditions_raw: string[] | null
+          countries: string[] | null
+          enrollment: number | null
+          id: string
+          interventions_clean: string[] | null
+          interventions_raw: string[] | null
+          nct_id: string
+          overall_status: string | null
+          phase: string[] | null
+          semantic_reason: string | null
+          semantic_score: number | null
+          sponsor_clean: string | null
+          sponsor_raw: string | null
+        }
+        Insert: {
+          added_at?: string
+          brief_title?: string | null
+          cohort_id: string
+          conditions_clean?: string[] | null
+          conditions_raw?: string[] | null
+          countries?: string[] | null
+          enrollment?: number | null
+          id?: string
+          interventions_clean?: string[] | null
+          interventions_raw?: string[] | null
+          nct_id: string
+          overall_status?: string | null
+          phase?: string[] | null
+          semantic_reason?: string | null
+          semantic_score?: number | null
+          sponsor_clean?: string | null
+          sponsor_raw?: string | null
+        }
+        Update: {
+          added_at?: string
+          brief_title?: string | null
+          cohort_id?: string
+          conditions_clean?: string[] | null
+          conditions_raw?: string[] | null
+          countries?: string[] | null
+          enrollment?: number | null
+          id?: string
+          interventions_clean?: string[] | null
+          interventions_raw?: string[] | null
+          nct_id?: string
+          overall_status?: string | null
+          phase?: string[] | null
+          semantic_reason?: string | null
+          semantic_score?: number | null
+          sponsor_clean?: string | null
+          sponsor_raw?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cohort_trials_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "saved_cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      indication_mappings: {
+        Row: {
+          clean_value: string
+          confidence: number
+          id: string
+          mapping_type: string
+          raw_value: string
+          source_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          clean_value: string
+          confidence?: number
+          id?: string
+          mapping_type?: string
+          raw_value: string
+          source_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clean_value?: string
+          confidence?: number
+          id?: string
+          mapping_type?: string
+          raw_value?: string
+          source_note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       result_feedback: {
         Row: {
           created_at: string
@@ -95,6 +223,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saved_cohorts: {
+        Row: {
+          created_at: string
+          filter_country_us: boolean | null
+          filter_phase: string | null
+          filter_status: string | null
+          id: string
+          name: string
+          notes: string | null
+          query_text: string | null
+          refreshed_at: string | null
+          session_id: string
+          trial_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          filter_country_us?: boolean | null
+          filter_phase?: string | null
+          filter_status?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          query_text?: string | null
+          refreshed_at?: string | null
+          session_id: string
+          trial_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          filter_country_us?: boolean | null
+          filter_phase?: string | null
+          filter_status?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          query_text?: string | null
+          refreshed_at?: string | null
+          session_id?: string
+          trial_count?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       search_events: {
         Row: {
@@ -228,6 +401,36 @@ export type Database = {
           session_id?: string
           testimonial?: string | null
           use_case?: string | null
+        }
+        Relationships: []
+      }
+      sponsor_mappings: {
+        Row: {
+          clean_value: string
+          confidence: number
+          id: string
+          mapping_type: string
+          raw_value: string
+          source_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          clean_value: string
+          confidence?: number
+          id?: string
+          mapping_type?: string
+          raw_value: string
+          source_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clean_value?: string
+          confidence?: number
+          id?: string
+          mapping_type?: string
+          raw_value?: string
+          source_note?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

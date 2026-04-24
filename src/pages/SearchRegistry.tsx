@@ -1,23 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Search, Loader2, ExternalLink, Sparkles, AlertCircle, Info, Filter,
-  ThumbsUp, ThumbsDown, Star,
+  ThumbsUp, ThumbsDown, Star, Save, Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { track } from '@/lib/track';
 import { getSessionId, sendSignal } from '@/lib/searchSession';
 import { toast } from 'sonner';
+import StudyDetailSheet from '@/components/StudyDetailSheet';
+import TrustDrawer from '@/components/TrustDrawer';
+import SaveCohortDialog from '@/components/SaveCohortDialog';
+import { cleanSponsor } from '@/lib/canonicalize';
 
 interface RankedTrial {
   nctId: string;
@@ -26,8 +31,11 @@ interface RankedTrial {
   status: string;
   phase: string[];
   conditions: string[];
+  conditionsClean?: string[];
   interventions: string[];
+  interventionsClean?: string[];
   leadSponsor: string;
+  leadSponsorClean?: string;
   enrollment: number | null;
   startDate: string;
   countries: string[];
@@ -69,6 +77,14 @@ const SearchRegistry = () => {
   const [data, setData] = useState<SearchResponse | null>(null);
   const [feedbackGiven, setFeedbackGiven] = useState<Record<string, 'up' | 'down'>>({});
 
+  // Study detail sheet
+  const [openNct, setOpenNct] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Cohort save flow
+  const [selectedNcts, setSelectedNcts] = useState<Set<string>>(new Set());
+  const [saveOpen, setSaveOpen] = useState(false);
+
   // Outcome modal state
   const [outcomeOpen, setOutcomeOpen] = useState(false);
   const [outcomeShown, setOutcomeShown] = useState(false);
@@ -95,6 +111,7 @@ const SearchRegistry = () => {
     setLoading(true);
     setError(null);
     setFeedbackGiven({});
+    setSelectedNcts(new Set()); // reset selection on new search
 
     const params = new URLSearchParams({ q: q.trim(), sid: sessionId });
     if (phase !== 'any') params.set('phase', phase);
@@ -385,7 +402,9 @@ const SearchRegistry = () => {
               </div>
 
               <div className="space-y-3">
-                {data.results.map((trial, idx) => (
+                {data.results.map((trial, idx) => {
+                  const checked = selectedNcts.has(trial.nctId);
+                  return (
                   <motion.div
                     key={trial.nctId}
                     initial={{ opacity: 0, y: 8 }}
@@ -393,21 +412,36 @@ const SearchRegistry = () => {
                     transition={{ duration: 0.3 }}
                     onMouseEnter={() => handleCardEnter(trial.nctId)}
                     onMouseLeave={() => handleCardLeave(trial, idx + 1)}
-                    className="rounded-xl border border-border/60 bg-card p-5 hover:border-primary/40 transition-colors"
+                    className={`rounded-xl border bg-card p-5 transition-colors ${
+                      checked ? 'border-primary/60 ring-1 ring-primary/20' : 'border-border/60 hover:border-primary/40'
+                    }`}
                   >
-                    <div className="flex items-start justify-between gap-4 mb-2">
+                    <div className="flex items-start gap-3 mb-2">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setSelectedNcts((prev) => {
+                            const next = new Set(prev);
+                            if (v) next.add(trial.nctId);
+                            else next.delete(trial.nctId);
+                            return next;
+                          });
+                        }}
+                        aria-label={`Select ${trial.nctId} for cohort`}
+                        className="mt-1"
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                          <a
-                            href={ctgUrl(trial.nctId)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => trackInteraction(trial, idx + 1, 'ctg_link_click')}
-                            className="text-xs font-mono font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                          <button
+                            onClick={() => {
+                              setOpenNct(trial.nctId);
+                              setSheetOpen(true);
+                              trackInteraction(trial, idx + 1, 'card_click');
+                            }}
+                            className="text-xs font-mono font-semibold text-primary hover:underline"
                           >
                             {trial.nctId}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
+                          </button>
                           {trial.status && (
                             <Badge variant="outline" className="text-[10px] py-0 h-5">
                               {trial.status.replace(/_/g, ' ')}
@@ -419,9 +453,16 @@ const SearchRegistry = () => {
                             </Badge>
                           ))}
                         </div>
-                        <h3 className="font-display text-[17px] font-medium text-foreground leading-snug">
+                        <button
+                          onClick={() => {
+                            setOpenNct(trial.nctId);
+                            setSheetOpen(true);
+                            trackInteraction(trial, idx + 1, 'card_click');
+                          }}
+                          className="font-display text-[17px] font-medium text-foreground leading-snug text-left hover:text-primary transition-colors"
+                        >
                           {trial.briefTitle}
-                        </h3>
+                        </button>
                       </div>
                       <div className="shrink-0 text-right">
                         <div
@@ -450,8 +491,15 @@ const SearchRegistry = () => {
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-0.5">
                           Sponsor
                         </p>
-                        <p className="text-foreground truncate" title={trial.leadSponsor}>
-                          {trial.leadSponsor || '—'}
+                        <p className="text-foreground truncate inline-flex items-center" title={trial.leadSponsor}>
+                          {trial.leadSponsorClean || trial.leadSponsor || '—'}
+                          {trial.leadSponsor && (
+                            <TrustDrawer
+                              field="Sponsor"
+                              hit={cleanSponsor(trial.leadSponsor)}
+                              sourceField="protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+                            />
+                          )}
                         </p>
                       </div>
                       <div>
@@ -525,7 +573,8 @@ const SearchRegistry = () => {
                       </div>
                     </div>
                   </motion.div>
-                ))}
+                  );
+                })}
               </div>
 
               {data.results.length === 0 && (
@@ -622,6 +671,51 @@ const SearchRegistry = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Study detail sheet */}
+      <StudyDetailSheet nctId={openNct} open={sheetOpen} onOpenChange={setSheetOpen} />
+
+      {/* Save cohort dialog */}
+      <SaveCohortDialog
+        open={saveOpen}
+        onOpenChange={setSaveOpen}
+        trials={(data?.results ?? []).filter((t) => selectedNcts.has(t.nctId))}
+        query={data?.query ?? query}
+        filters={{ phase, status, countryUS }}
+      />
+
+      {/* Sticky save bar */}
+      {selectedNcts.size > 0 && (
+        <motion.div
+          initial={{ y: 80, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-foreground text-background rounded-full shadow-2xl px-5 py-3 flex items-center gap-4"
+        >
+          <span className="text-sm font-medium">
+            {selectedNcts.size} selected
+          </span>
+          <button
+            onClick={() => setSelectedNcts(new Set())}
+            className="text-xs opacity-70 hover:opacity-100 transition-opacity"
+          >
+            Clear
+          </button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setSaveOpen(true)}
+            className="gap-1.5"
+          >
+            <Save className="h-3.5 w-3.5" /> Save as cohort
+          </Button>
+          <Link
+            to="/cohorts"
+            className="text-xs inline-flex items-center gap-1 opacity-80 hover:opacity-100"
+          >
+            <Layers className="h-3.5 w-3.5" /> My cohorts
+          </Link>
+        </motion.div>
+      )}
     </div>
   );
 };
