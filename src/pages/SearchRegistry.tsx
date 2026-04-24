@@ -491,8 +491,15 @@ const SearchRegistry = () => {
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-0.5">
                           Sponsor
                         </p>
-                        <p className="text-foreground truncate" title={trial.leadSponsor}>
-                          {trial.leadSponsor || '—'}
+                        <p className="text-foreground truncate inline-flex items-center" title={trial.leadSponsor}>
+                          {trial.leadSponsorClean || trial.leadSponsor || '—'}
+                          {trial.leadSponsor && (
+                            <TrustDrawer
+                              field="Sponsor"
+                              hit={cleanSponsor(trial.leadSponsor)}
+                              sourceField="protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+                            />
+                          )}
                         </p>
                       </div>
                       <div>
