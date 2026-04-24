@@ -103,6 +103,8 @@ Deno.serve(async (req) => {
     const phase = url.searchParams.get("phase") ?? "";
     const status = url.searchParams.get("status") ?? "";
     const countryUS = url.searchParams.get("countryUS") === "true";
+    const sessionId = (url.searchParams.get("sid") ?? "").trim().slice(0, 64) || crypto.randomUUID();
+    const userAgent = (req.headers.get("user-agent") ?? "").slice(0, 200);
 
     // ── Input validation ──
     if (query.length < 3) {
@@ -267,6 +269,12 @@ Return a relevance score and a one-sentence reason for each candidate.`;
         semanticScore: 50,
         semanticReason: "Semantic ranking unavailable — showing CTG.gov default order.",
       }));
+      const ipHashFb = await hashIp(ip);
+      const searchEventIdFb = await logSearchEvent({
+        sessionId, ipHash: ipHashFb, query, ctgQuery, phase, status, countryUS,
+        candidatesFetched: candidates.length, resultsReturned: fallback.length,
+        totalCount, usedFallback: true, userAgent,
+      });
       return json(
         {
           query,
@@ -274,6 +282,8 @@ Return a relevance score and a one-sentence reason for each candidate.`;
           candidatesFetched: candidates.length,
           results: fallback,
           fallback: true,
+          sessionId,
+          searchEventId: searchEventIdFb,
           usage: { rateLimitRemaining: DAILY_CAP - (ipDailyCount.get(ip)?.count ?? 0) },
         },
         200,
@@ -303,12 +313,21 @@ Return a relevance score and a one-sentence reason for each candidate.`;
     scored.sort((a, b) => b.semanticScore - a.semanticScore);
     const top = scored.slice(0, 10);
 
+    const ipHash = await hashIp(ip);
+    const searchEventId = await logSearchEvent({
+      sessionId, ipHash, query, ctgQuery, phase, status, countryUS,
+      candidatesFetched: candidates.length, resultsReturned: top.length,
+      totalCount, usedFallback: false, userAgent,
+    });
+
     return new Response(
       JSON.stringify({
         query,
         totalCount,
         candidatesFetched: candidates.length,
         results: top,
+        sessionId,
+        searchEventId,
         usage: { rateLimitRemaining: DAILY_CAP - (ipDailyCount.get(ip)?.count ?? 0) },
       }),
       {
@@ -325,6 +344,36 @@ Return a relevance score and a one-sentence reason for each candidate.`;
     return json({ error: err instanceof Error ? err.message : "Unknown error" }, 500);
   }
 });
+
+async function logSearchEvent(p: {
+  sessionId: string; ipHash: string; query: string; ctgQuery: string;
+  phase: string; status: string; countryUS: boolean;
+  candidatesFetched: number; resultsReturned: number; totalCount: number;
+  usedFallback: boolean; userAgent: string;
+}): Promise<string | null> {
+  try {
+    const { data, error } = await sb.from("search_events").insert({
+      session_id: p.sessionId,
+      ip_hash: p.ipHash,
+      query: p.query,
+      query_normalized: p.query.toLowerCase().trim(),
+      ctg_query: p.ctgQuery,
+      filter_phase: p.phase || null,
+      filter_status: p.status || null,
+      filter_country_us: p.countryUS,
+      candidates_fetched: p.candidatesFetched,
+      results_returned: p.resultsReturned,
+      total_count: p.totalCount,
+      used_fallback: p.usedFallback,
+      user_agent: p.userAgent,
+    }).select("id").single();
+    if (error) { console.error("logSearchEvent", error); return null; }
+    return data.id;
+  } catch (e) {
+    console.error("logSearchEvent ex", e);
+    return null;
+  }
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
