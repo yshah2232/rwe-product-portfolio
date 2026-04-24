@@ -4,6 +4,7 @@ import { Menu, X } from 'lucide-react';
 
 const navLinks = [
   { label: 'Home', to: '/', disabled: false },
+  { label: 'Search Registry', to: '/search-registry', disabled: false },
   { label: 'Data & Method', to: '/data-method', disabled: false },
   { label: 'PM Profile', to: '/about', disabled: false },
 ];

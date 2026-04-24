@@ -30,7 +30,9 @@ const pillars = [
     icon: Search,
     eyebrow: 'Capability 01',
     title: 'Search the registry',
-    desc: 'Query ClinicalTrials.gov in plain language across condition, phase, status, sponsor, and geography. No CSV exports, no scraping.',
+    desc: 'Query ClinicalTrials.gov in plain language across condition, phase, status, sponsor, and geography. Semantic re-ranking — not just keyword match.',
+    to: '/search-registry',
+    live: true,
   },
   {
     icon: Layers,
@@ -187,24 +189,58 @@ const Index = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 border border-border/60 rounded-2xl overflow-hidden">
-            {pillars.map((p, i) => (
-              <motion.div
-                key={p.title}
-                {...anim(0.1 + i * 0.06)}
-                className="bg-card p-7 md:p-8 flex flex-col gap-4 hover:bg-accent/30 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-accent">
-                    <p.icon className="h-5 w-5 text-primary" strokeWidth={1.75} />
+            {pillars.map((p, i) => {
+              const isClickable = !!p.to;
+              const content = (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-accent">
+                      <p.icon className="h-5 w-5 text-primary" strokeWidth={1.75} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {p.live && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-wider uppercase">
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                          Live
+                        </span>
+                      )}
+                      <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground/60">
+                        {p.eyebrow}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground/60">
-                    {p.eyebrow}
-                  </span>
-                </div>
-                <h3 className="font-display text-[22px] font-medium leading-snug text-foreground">{p.title}</h3>
-                <p className="text-[13.5px] text-muted-foreground leading-[1.65]">{p.desc}</p>
-              </motion.div>
-            ))}
+                  <h3 className="font-display text-[22px] font-medium leading-snug text-foreground">{p.title}</h3>
+                  <p className="text-[13.5px] text-muted-foreground leading-[1.65]">{p.desc}</p>
+                  {isClickable && (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary mt-1">
+                      Try it <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                  )}
+                </>
+              );
+
+              return isClickable ? (
+                <motion.button
+                  key={p.title}
+                  {...anim(0.1 + i * 0.06)}
+                  onClick={() => {
+                    track('pillar_click', { pillar: p.title, target: p.to });
+                    navigate(p.to!);
+                  }}
+                  className="bg-card p-7 md:p-8 flex flex-col gap-4 hover:bg-accent/40 transition-colors text-left cursor-pointer"
+                >
+                  {content}
+                </motion.button>
+              ) : (
+                <motion.div
+                  key={p.title}
+                  {...anim(0.1 + i * 0.06)}
+                  className="bg-card p-7 md:p-8 flex flex-col gap-4 hover:bg-accent/30 transition-colors"
+                >
+                  {content}
+                </motion.div>
+              );
+            })}
             {/* filler tile to keep the grid clean on lg */}
             <motion.div
               {...anim(0.1 + pillars.length * 0.06)}
