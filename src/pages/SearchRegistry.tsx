@@ -566,7 +566,8 @@ const SearchRegistry = () => {
                       </div>
                     </div>
                   </motion.div>
-                ))}
+                  );
+                })}
               </div>
 
               {data.results.length === 0 && (
