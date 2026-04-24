@@ -37,7 +37,7 @@ const StickyCTA = () => {
   return (
     <div
       role="region"
-      aria-label="Explore dashboard call to action"
+      aria-label="Search Registry call to action"
       className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] sm:w-auto max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
       <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 rounded-2xl border border-border/60 bg-background/95 backdrop-blur-md shadow-2xl">
