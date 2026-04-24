@@ -160,6 +160,7 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
                   </span>
                   <TrustDrawer
                     field="Lead sponsor"
+                    fieldType="sponsor"
                     hit={cleanSponsor(data.leadSponsor.name)}
                     sourceField="protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
                   />
@@ -191,6 +192,7 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
                         <span className="text-foreground">{hit.clean}</span>
                         <TrustDrawer
                           field="Condition"
+                          fieldType="indication"
                           hit={hit}
                           sourceField="protocolSection.conditionsModule.conditions[]"
                         />
@@ -216,6 +218,7 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
                           <span className="font-medium text-foreground">{hit.clean}</span>
                           <TrustDrawer
                             field="Intervention"
+                            fieldType="asset"
                             hit={hit}
                             sourceField="protocolSection.armsInterventionsModule.interventions[].name"
                           />
