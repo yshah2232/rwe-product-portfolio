@@ -142,6 +142,45 @@ export type Database = {
         }
         Relationships: []
       }
+      mapping_overrides: {
+        Row: {
+          created_at: string
+          field_type: string
+          id: string
+          note: string | null
+          raw_value: string
+          session_id: string | null
+          status: string
+          suggested_clean: string
+          updated_at: string
+          vote_count: number
+        }
+        Insert: {
+          created_at?: string
+          field_type: string
+          id?: string
+          note?: string | null
+          raw_value: string
+          session_id?: string | null
+          status?: string
+          suggested_clean: string
+          updated_at?: string
+          vote_count?: number
+        }
+        Update: {
+          created_at?: string
+          field_type?: string
+          id?: string
+          note?: string | null
+          raw_value?: string
+          session_id?: string | null
+          status?: string
+          suggested_clean?: string
+          updated_at?: string
+          vote_count?: number
+        }
+        Relationships: []
+      }
       result_feedback: {
         Row: {
           created_at: string
