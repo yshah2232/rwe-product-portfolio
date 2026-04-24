@@ -402,7 +402,9 @@ const SearchRegistry = () => {
               </div>
 
               <div className="space-y-3">
-                {data.results.map((trial, idx) => (
+                {data.results.map((trial, idx) => {
+                  const checked = selectedNcts.has(trial.nctId);
+                  return (
                   <motion.div
                     key={trial.nctId}
                     initial={{ opacity: 0, y: 8 }}
@@ -410,21 +412,36 @@ const SearchRegistry = () => {
                     transition={{ duration: 0.3 }}
                     onMouseEnter={() => handleCardEnter(trial.nctId)}
                     onMouseLeave={() => handleCardLeave(trial, idx + 1)}
-                    className="rounded-xl border border-border/60 bg-card p-5 hover:border-primary/40 transition-colors"
+                    className={`rounded-xl border bg-card p-5 transition-colors ${
+                      checked ? 'border-primary/60 ring-1 ring-primary/20' : 'border-border/60 hover:border-primary/40'
+                    }`}
                   >
-                    <div className="flex items-start justify-between gap-4 mb-2">
+                    <div className="flex items-start gap-3 mb-2">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setSelectedNcts((prev) => {
+                            const next = new Set(prev);
+                            if (v) next.add(trial.nctId);
+                            else next.delete(trial.nctId);
+                            return next;
+                          });
+                        }}
+                        aria-label={`Select ${trial.nctId} for cohort`}
+                        className="mt-1"
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                          <a
-                            href={ctgUrl(trial.nctId)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => trackInteraction(trial, idx + 1, 'ctg_link_click')}
-                            className="text-xs font-mono font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                          <button
+                            onClick={() => {
+                              setOpenNct(trial.nctId);
+                              setSheetOpen(true);
+                              trackInteraction(trial, idx + 1, 'card_click');
+                            }}
+                            className="text-xs font-mono font-semibold text-primary hover:underline"
                           >
                             {trial.nctId}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
+                          </button>
                           {trial.status && (
                             <Badge variant="outline" className="text-[10px] py-0 h-5">
                               {trial.status.replace(/_/g, ' ')}
@@ -436,9 +453,16 @@ const SearchRegistry = () => {
                             </Badge>
                           ))}
                         </div>
-                        <h3 className="font-display text-[17px] font-medium text-foreground leading-snug">
+                        <button
+                          onClick={() => {
+                            setOpenNct(trial.nctId);
+                            setSheetOpen(true);
+                            trackInteraction(trial, idx + 1, 'card_click');
+                          }}
+                          className="font-display text-[17px] font-medium text-foreground leading-snug text-left hover:text-primary transition-colors"
+                        >
                           {trial.briefTitle}
-                        </h3>
+                        </button>
                       </div>
                       <div className="shrink-0 text-right">
                         <div
