@@ -1,12 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Loader2, ExternalLink, Sparkles, AlertCircle, Info, Filter } from 'lucide-react';
+import {
+  Search, Loader2, ExternalLink, Sparkles, AlertCircle, Info, Filter,
+  ThumbsUp, ThumbsDown, Star,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { track } from '@/lib/track';
+import { getSessionId, sendSignal } from '@/lib/searchSession';
+import { toast } from 'sonner';
 
 interface RankedTrial {
   nctId: string;
@@ -30,6 +41,8 @@ interface SearchResponse {
   candidatesFetched: number;
   results: RankedTrial[];
   fallback?: boolean;
+  sessionId?: string;
+  searchEventId?: string | null;
   usage: { rateLimitRemaining: number };
 }
 
@@ -42,6 +55,8 @@ const exampleQueries = [
   'pediatric leukemia immunotherapy',
 ];
 
+const ctgUrl = (nct: string) => `https://clinicaltrials.gov/study/${nct}`;
+
 const SearchRegistry = () => {
   usePageTitle('Search Registry — Semantic search across ClinicalTrials.gov');
 
@@ -52,7 +67,21 @@ const SearchRegistry = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SearchResponse | null>(null);
+  const [feedbackGiven, setFeedbackGiven] = useState<Record<string, 'up' | 'down'>>({});
+
+  // Outcome modal state
+  const [outcomeOpen, setOutcomeOpen] = useState(false);
+  const [outcomeShown, setOutcomeShown] = useState(false);
+  const [outcomeRating, setOutcomeRating] = useState<number>(0);
+  const [outcomeText, setOutcomeText] = useState('');
+  const [outcomeRole, setOutcomeRole] = useState('');
+  const [outcomeConsent, setOutcomeConsent] = useState(false);
+
   const abortRef = useRef<AbortController | null>(null);
+  const dwellRef = useRef<Map<string, number>>(new Map());
+  const sessionSearchCount = useRef(0);
+  const lastSearchRef = useRef<{ id: string | null; query: string; at: number } | null>(null);
+  const sessionId = getSessionId();
 
   const runSearch = async (q: string) => {
     if (q.trim().length < 3) {
@@ -65,8 +94,9 @@ const SearchRegistry = () => {
 
     setLoading(true);
     setError(null);
+    setFeedbackGiven({});
 
-    const params = new URLSearchParams({ q: q.trim() });
+    const params = new URLSearchParams({ q: q.trim(), sid: sessionId });
     if (phase !== 'any') params.set('phase', phase);
     if (status !== 'any') params.set('status', status);
     if (countryUS) params.set('countryUS', 'true');
@@ -74,17 +104,39 @@ const SearchRegistry = () => {
     try {
       const res = await fetch(`${SEARCH_URL}?${params.toString()}`, {
         signal: controller.signal,
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
+        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
       });
-      const body = await res.json();
+      const body: SearchResponse = await res.json();
       if (!res.ok) {
-        setError(body.error ?? `Request failed (${res.status})`);
+        setError((body as any).error ?? `Request failed (${res.status})`);
         setData(null);
       } else {
         setData(body);
+        sessionSearchCount.current += 1;
         track('search_registry_query', { query: q, results: body.results?.length ?? 0 });
+
+        // Refinement detection — if this query came within 3 minutes of the prior one,
+        // treat it as a pivot/refinement signal.
+        const prior = lastSearchRef.current;
+        const now = Date.now();
+        if (prior && now - prior.at < 180_000 && prior.query !== q.trim()) {
+          sendSignal({
+            type: 'refinement',
+            sessionId,
+            priorSearchEventId: prior.id,
+            nextSearchEventId: body.searchEventId ?? null,
+            priorQuery: prior.query,
+            nextQuery: q.trim(),
+            secondsBetween: Math.round((now - prior.at) / 1000),
+          });
+        }
+        lastSearchRef.current = { id: body.searchEventId ?? null, query: q.trim(), at: now };
+
+        // Trigger the outcome modal once after the 2nd search of a session
+        if (sessionSearchCount.current >= 2 && !outcomeShown) {
+          setOutcomeShown(true);
+          setTimeout(() => setOutcomeOpen(true), 4000);
+        }
       }
     } catch (e) {
       if ((e as Error).name !== 'AbortError') {
@@ -103,6 +155,62 @@ const SearchRegistry = () => {
   const handleExample = (q: string) => {
     setQuery(q);
     runSearch(q);
+  };
+
+  // ── Signal helpers ──
+  const trackInteraction = (
+    trial: RankedTrial,
+    rankPosition: number,
+    eventType: 'card_click' | 'ctg_link_click' | 'dwell',
+    dwellMs?: number,
+  ) => {
+    sendSignal({
+      type: 'interaction',
+      sessionId,
+      searchEventId: data?.searchEventId ?? null,
+      nctId: trial.nctId,
+      rankPosition,
+      semanticScore: trial.semanticScore,
+      eventType,
+      dwellMs,
+    });
+  };
+
+  const handleCardEnter = (nctId: string) => {
+    dwellRef.current.set(nctId, Date.now());
+  };
+  const handleCardLeave = (trial: RankedTrial, rank: number) => {
+    const start = dwellRef.current.get(trial.nctId);
+    if (!start) return;
+    const dwell = Date.now() - start;
+    dwellRef.current.delete(trial.nctId);
+    if (dwell > 1500) trackInteraction(trial, rank, 'dwell', dwell);
+  };
+
+  const handleFeedback = (trial: RankedTrial, rank: number, rating: 'up' | 'down') => {
+    setFeedbackGiven((prev) => ({ ...prev, [trial.nctId]: rating }));
+    sendSignal({
+      type: 'feedback',
+      sessionId,
+      searchEventId: data?.searchEventId ?? null,
+      nctId: trial.nctId,
+      rating,
+    });
+    toast.success(rating === 'up' ? 'Thanks — noted as a good match' : 'Thanks — noted as off-topic');
+  };
+
+  const submitOutcome = async () => {
+    if (outcomeRating < 1) return;
+    await sendSignal({
+      type: 'outcome',
+      sessionId,
+      rating: outcomeRating,
+      testimonial: outcomeText || undefined,
+      role: outcomeRole || undefined,
+      consentToShow: outcomeConsent,
+    });
+    toast.success('Thanks for the feedback');
+    setOutcomeOpen(false);
   };
 
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -132,7 +240,8 @@ const SearchRegistry = () => {
             <p className="mt-6 text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
               Type a clinical scenario in plain language. We pull live candidates from the CTG.gov v2 API and
               re-rank them semantically — so &ldquo;elderly lung tumor&rdquo; finds NSCLC trials in patients ≥65
-              even when those exact words never appear in the protocol.
+              even when those exact words never appear in the protocol. Every result deep-links to the
+              authoritative CTG.gov page so you can verify in one click.
             </p>
           </motion.div>
         </div>
@@ -199,7 +308,6 @@ const SearchRegistry = () => {
             </div>
           </form>
 
-          {/* Examples */}
           {!data && !loading && (
             <div className="mt-6">
               <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-3">
@@ -219,13 +327,13 @@ const SearchRegistry = () => {
             </div>
           )}
 
-          {/* Demo mode banner */}
           <div className="mt-6 flex items-start gap-3 p-4 rounded-lg bg-accent/30 border border-border/40">
             <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
             <div className="text-[13px] text-muted-foreground leading-relaxed">
               <span className="font-semibold text-foreground">Demo limits in effect:</span> 30 searches per IP per
-              day, 6 per minute, 25 candidates fetched, top 10 returned. Each query uses one cached LLM call to
-              keep costs near zero — identical queries within the hour are served from edge cache.
+              day, 6 per minute, 25 candidates fetched, top 10 returned. Identical queries within the hour are
+              served from edge cache. Anonymous interaction signals (clicks, dwell, thumbs up/down) are stored to
+              improve future ranking — no IP or PII retained.
             </div>
           </div>
         </div>
@@ -257,31 +365,44 @@ const SearchRegistry = () => {
                   </h2>
                   <p className="text-xs text-muted-foreground mt-1">
                     From {data.candidatesFetched} candidates · {data.totalCount.toLocaleString()} total matching the
-                    keyword in the registry
+                    keyword on CTG.gov
                     {data.fallback && ' · semantic re-rank unavailable, showing CTG default order'}
                   </p>
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {data.usage.rateLimitRemaining} searches remaining today
-                </p>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={`https://clinicaltrials.gov/search?cond=${encodeURIComponent(data.query)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    Cross-check on CTG.gov <ExternalLink className="h-3 w-3" />
+                  </a>
+                  <p className="text-[11px] text-muted-foreground">
+                    {data.usage.rateLimitRemaining} searches left today
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-3">
-                {data.results.map((trial) => (
+                {data.results.map((trial, idx) => (
                   <motion.div
                     key={trial.nctId}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
+                    onMouseEnter={() => handleCardEnter(trial.nctId)}
+                    onMouseLeave={() => handleCardLeave(trial, idx + 1)}
                     className="rounded-xl border border-border/60 bg-card p-5 hover:border-primary/40 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                           <a
-                            href={`https://clinicaltrials.gov/study/${trial.nctId}`}
+                            href={ctgUrl(trial.nctId)}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => trackInteraction(trial, idx + 1, 'ctg_link_click')}
                             className="text-xs font-mono font-semibold text-primary hover:underline inline-flex items-center gap-1"
                           >
                             {trial.nctId}
@@ -324,7 +445,7 @@ const SearchRegistry = () => {
                       {trial.semanticReason}
                     </p>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px]">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px] mb-4">
                       <div>
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-0.5">
                           Sponsor
@@ -358,6 +479,51 @@ const SearchRegistry = () => {
                         </p>
                       </div>
                     </div>
+
+                    {/* Action row: explicit CTG button + feedback */}
+                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-border/40">
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 h-8 text-xs"
+                        onClick={() => trackInteraction(trial, idx + 1, 'ctg_link_click')}
+                      >
+                        <a href={ctgUrl(trial.nctId)} target="_blank" rel="noopener noreferrer">
+                          View on CTG.gov <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </Button>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mr-1">
+                          Was this match useful?
+                        </span>
+                        <button
+                          onClick={() => handleFeedback(trial, idx + 1, 'up')}
+                          disabled={!!feedbackGiven[trial.nctId]}
+                          className={`p-1.5 rounded-md border transition-colors ${
+                            feedbackGiven[trial.nctId] === 'up'
+                              ? 'border-primary bg-primary/15 text-primary'
+                              : 'border-border/60 hover:border-primary/40 text-muted-foreground hover:text-foreground'
+                          } disabled:opacity-60`}
+                          aria-label="Mark as good match"
+                        >
+                          <ThumbsUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleFeedback(trial, idx + 1, 'down')}
+                          disabled={!!feedbackGiven[trial.nctId]}
+                          className={`p-1.5 rounded-md border transition-colors ${
+                            feedbackGiven[trial.nctId] === 'down'
+                              ? 'border-destructive/60 bg-destructive/10 text-destructive'
+                              : 'border-border/60 hover:border-destructive/40 text-muted-foreground hover:text-foreground'
+                          } disabled:opacity-60`}
+                          aria-label="Mark as off-topic"
+                        >
+                          <ThumbsDown className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -371,6 +537,91 @@ const SearchRegistry = () => {
           )}
         </div>
       </section>
+
+      {/* End-of-session outcome modal */}
+      <Dialog open={outcomeOpen} onOpenChange={setOutcomeOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Quick check — is this useful?</DialogTitle>
+            <DialogDescription>
+              Two-second rating helps the platform learn. Optional testimonial helps us prioritize what to build next.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">
+                Overall rating
+              </Label>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setOutcomeRating(n)}
+                    className={`p-2 rounded-md border transition-colors ${
+                      outcomeRating >= n
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border/60 text-muted-foreground hover:border-primary/40'
+                    }`}
+                    aria-label={`${n} star${n > 1 ? 's' : ''}`}
+                  >
+                    <Star className="h-4 w-4" fill={outcomeRating >= n ? 'currentColor' : 'none'} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="role" className="text-xs uppercase tracking-wider text-muted-foreground">
+                Your role (optional)
+              </Label>
+              <Input
+                id="role"
+                value={outcomeRole}
+                onChange={(e) => setOutcomeRole(e.target.value)}
+                placeholder="e.g. Feasibility lead at mid-cap biotech"
+                className="mt-1.5"
+                maxLength={80}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="testimonial" className="text-xs uppercase tracking-wider text-muted-foreground">
+                Anything specific worth sharing? (optional)
+              </Label>
+              <Textarea
+                id="testimonial"
+                value={outcomeText}
+                onChange={(e) => setOutcomeText(e.target.value)}
+                placeholder="e.g. Surfaced 3 trials our keyword search missed."
+                className="mt-1.5 text-sm"
+                rows={3}
+                maxLength={500}
+              />
+            </div>
+
+            <label className="flex items-start gap-2 cursor-pointer">
+              <Checkbox
+                checked={outcomeConsent}
+                onCheckedChange={(v) => setOutcomeConsent(!!v)}
+                id="consent"
+              />
+              <span className="text-xs text-muted-foreground leading-relaxed">
+                You can quote me anonymously (role only, no name) on the public impact page.
+              </span>
+            </label>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={() => setOutcomeOpen(false)}>
+              Skip
+            </Button>
+            <Button onClick={submitOutcome} disabled={outcomeRating < 1}>
+              Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
