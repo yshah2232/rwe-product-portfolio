@@ -110,8 +110,13 @@ Deno.serve(async (req) => {
     }
 
     // ── 1. Fetch candidates from CTG.gov ──
+    // CTG's query.cond does keyword matching, not NL understanding.
+    // We strip stopwords/filler so a natural-language query still finds candidates;
+    // semantic re-rank then handles the meaning.
+    const ctgQuery = simplifyForCTG(query);
+
     const ctgParams = new URLSearchParams();
-    ctgParams.set("query.cond", query);
+    ctgParams.set("query.cond", ctgQuery);
     ctgParams.set("pageSize", "25");
     ctgParams.set("format", "json");
     ctgParams.set("countTotal", "true");
@@ -313,4 +318,29 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+// Lightweight NL → keyword condition cleaner.
+// CTG.gov's query.cond is keyword based; long natural-language queries
+// often return 0 hits. We strip filler words so candidates can be fetched,
+// then the LLM re-ranks by full semantic meaning of the original query.
+const STOPWORDS = new Set([
+  "a","an","the","and","or","but","of","in","on","for","with","without","who","that","which","is","are","was","were",
+  "be","been","being","to","from","by","at","as","it","this","these","those","i","we","you","they","them","their",
+  "patient","patients","trial","trials","study","studies","subject","subjects","participant","participants",
+  "already","had","have","has","not","no","do","does","did","can","could","would","should","may","might",
+  "advanced","early","late","mild","moderate","severe","new","old","over","under","more","less","than",
+  "people","person","adult","adults","group","groups","using","use","used","about","across","into","versus","vs",
+]);
+
+function simplifyForCTG(q: string): string {
+  const tokens = q
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((t) => !STOPWORDS.has(t) && t.length > 1);
+  // Keep up to 6 most meaningful tokens to avoid CTG over-narrowing
+  const cleaned = tokens.slice(0, 6).join(" ");
+  return cleaned || q; // fallback to original if everything got stripped
 }
