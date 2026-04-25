@@ -1,61 +1,53 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronRight } from 'lucide-react';
+import { Menu, X, ChevronRight, Info, ChevronUp, ChevronDown } from 'lucide-react';
 
 const navLinks = [
   { label: 'Home', to: '/' },
   { label: 'Search Registry', to: '/search-registry' },
   { label: 'Cohorts', to: '/cohorts' },
   { label: 'Data & Method', to: '/data-method' },
+  { label: 'About', to: '/about' },
 ];
+
+const BANNER_AUTO_HIDE_MS = 45000;
 
 const SiteNav = () => {
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [bannerExpanded, setBannerExpanded] = useState(true);
+
+  // Auto-collapse the intro banner after 45s of session time
+  useEffect(() => {
+    const t = setTimeout(() => setBannerExpanded(false), BANNER_AUTO_HIDE_MS);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <header className="sticky top-0 z-30 bg-background border-b border-border">
-      {/* Top gov-style banner */}
-      <div
-        className="w-full text-[12px] leading-tight"
-        style={{ backgroundColor: 'hsl(var(--gov-banner-bg))' }}
-      >
-        <div className="max-w-6xl mx-auto px-6 md:px-10 py-1.5 flex items-center gap-2 text-foreground/80">
-          <span className="inline-block w-4 h-3 bg-gradient-to-b from-[#bf0a30] via-white to-[#002868] border border-foreground/20 shrink-0" aria-hidden />
-          <span className="hidden sm:inline">An independent product capability demo</span>
-          <span className="sm:hidden">Demo</span>
-          <span className="text-muted-foreground"> · Built on the public ClinicalTrials.gov API</span>
-          <a
-            href="https://clinicaltrials.gov/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto inline-flex items-center text-[12px] underline underline-offset-2"
-            style={{ color: 'hsl(var(--link))' }}
-          >
-            View source registry <ChevronRight className="h-3 w-3 ml-0.5" />
-          </a>
-        </div>
-      </div>
-
-      {/* NLM-style deep blue band */}
+      {/* Unified NLM-style deep blue band: wordmark + product line */}
       <div
         className="w-full"
         style={{ backgroundColor: 'hsl(var(--gov-band-bg))', color: 'hsl(var(--gov-band-fg))' }}
       >
-        <div className="max-w-6xl mx-auto px-6 md:px-10 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="max-w-6xl mx-auto px-6 md:px-10 py-4 flex items-center justify-between gap-4">
+          <Link to="/" className="flex items-center gap-3 group">
             <div
-              className="flex items-center justify-center h-9 w-9 rounded-sm font-bold text-[12px] tracking-wider"
+              className="flex items-center justify-center h-10 w-10 rounded-sm font-bold text-[13px] tracking-wider shrink-0"
               style={{ backgroundColor: 'white', color: 'hsl(var(--gov-band-bg))' }}
               aria-hidden
             >
               CTD
             </div>
             <div className="leading-tight">
-              <div className="text-[15px] font-bold">Clinical Trial Diversity Studio</div>
-              <div className="text-[11px] opacity-85">Equitable Trial Planning · Live Registry Data</div>
+              <div className="text-[18px] md:text-[20px] font-bold">
+                Clinical Trial Diversity Studio
+              </div>
+              <div className="text-[12px] md:text-[13px] opacity-90">
+                A planning workspace built on the public ClinicalTrials.gov registry
+              </div>
             </div>
-          </div>
+          </Link>
           <button
             type="button"
             aria-label="Toggle menu"
@@ -68,22 +60,56 @@ const SiteNav = () => {
         </div>
       </div>
 
-      {/* White wordmark + nav row (CTG.gov style) */}
-      <div className="bg-background">
-        <div className="max-w-6xl mx-auto px-6 md:px-10 pt-4 pb-0">
-          <Link
-            to="/"
-            onClick={() => setMobileOpen(false)}
-            className="inline-flex items-baseline gap-1 text-[26px] md:text-[28px] font-bold leading-none"
+      {/* Dismissible / collapsible intro banner (replaces old top strip) */}
+      <div
+        className="w-full border-b border-border"
+        style={{ backgroundColor: 'hsl(var(--accent))' }}
+        role="region"
+        aria-label="About this product"
+      >
+        <div className="max-w-6xl mx-auto px-6 md:px-10 py-2 flex items-start gap-3">
+          <Info className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'hsl(var(--primary))' }} />
+          <div className="flex-1 min-w-0">
+            {bannerExpanded ? (
+              <p className="text-[13px] leading-snug text-foreground/85">
+                <span className="font-semibold" style={{ color: 'hsl(var(--primary))' }}>
+                  Independent product capability demo.
+                </span>{' '}
+                All study data is fetched live from the public ClinicalTrials.gov API. This workspace
+                is not affiliated with NIH or NLM.{' '}
+                <a
+                  href="https://clinicaltrials.gov/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center underline underline-offset-2"
+                  style={{ color: 'hsl(var(--link))' }}
+                >
+                  View source registry <ChevronRight className="h-3 w-3 ml-0.5" />
+                </a>
+              </p>
+            ) : (
+              <p className="text-[12px] leading-snug text-foreground/70 truncate">
+                Independent demo · Live ClinicalTrials.gov data
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setBannerExpanded((v) => !v)}
+            aria-label={bannerExpanded ? 'Collapse banner' : 'Expand banner'}
+            aria-expanded={bannerExpanded}
+            className="shrink-0 p-1 rounded-sm hover:bg-background/60 transition-colors"
             style={{ color: 'hsl(var(--primary))' }}
           >
-            DiversityStudio
-            <span className="text-[20px] md:text-[22px] font-normal" style={{ color: 'hsl(var(--link))' }}>
-              .ctg
-            </span>
-          </Link>
+            {bannerExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
 
-          <nav className="hidden md:flex items-center gap-1 mt-3 -mb-px">
+      {/* Nav row */}
+      <div className="bg-background">
+        <div className="max-w-6xl mx-auto px-6 md:px-10">
+          <nav className="hidden md:flex items-center gap-1 -mb-px">
             {navLinks.map((link) => {
               const isActive =
                 link.to === '/'
@@ -93,7 +119,7 @@ const SiteNav = () => {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`px-4 py-2.5 text-[14px] font-semibold border-b-2 transition-colors ${
+                  className={`px-4 py-3 text-[14px] font-semibold border-b-2 transition-colors ${
                     isActive
                       ? 'border-primary text-primary'
                       : 'border-transparent text-foreground/75 hover:text-primary hover:border-primary/40'
@@ -105,7 +131,6 @@ const SiteNav = () => {
             })}
           </nav>
         </div>
-        <div className="border-b border-border" />
       </div>
 
       {/* Mobile drawer */}
