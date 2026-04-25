@@ -62,29 +62,23 @@ const Cohorts = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      <section className="px-6 md:px-10 lg:px-16 pt-16 pb-10 border-b border-border/50">
-        <div className="max-w-5xl mx-auto">
-          <p className="text-[11px] font-semibold tracking-[0.32em] uppercase text-primary/80 mb-5">
-            <span className="inline-flex items-center gap-2">
-              <span className="h-[1px] w-6 bg-primary/60" />
-              Capability 02 · Cohorts
-              <span className="h-[1px] w-6 bg-primary/60" />
-            </span>
+      <section className="ctg-hero">
+        <div className="ctg-hero-inner">
+          <p className="text-[12px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'hsl(var(--link))' }}>
+            Home &nbsp;›&nbsp; Cohorts
           </p>
-          <h1 className="font-display text-4xl md:text-5xl font-medium leading-[1.05] tracking-[-0.02em] text-foreground">
-            Saved cohorts
-          </h1>
-          <p className="mt-5 text-base text-muted-foreground leading-relaxed max-w-2xl">
+          <h1 className="ctg-hero-title">Saved cohorts</h1>
+          <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
             A cohort is a reusable group of trials saved from a Search Registry query. Each cohort
             keeps the originating query and re-pulls the underlying records from CTG.gov on demand.
           </p>
-          <div className="mt-6 flex items-center gap-3">
-            <Button asChild className="gap-2">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Button asChild className="gap-2 rounded-sm">
               <Link to="/search-registry">
                 <Plus className="h-4 w-4" /> Build a new cohort
               </Link>
             </Button>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               Cohorts are scoped to this browser session. Bookmark each cohort link to return.
             </p>
           </div>

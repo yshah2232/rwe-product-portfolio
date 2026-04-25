@@ -59,8 +59,8 @@ const SiteFooter = () => (
       {/* Brand + social row */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-2">
         <div className="space-y-1.5">
-          <p className="font-display text-lg font-semibold text-foreground tracking-tight">
-            Clinical Trial <span className="italic text-primary">Diversity</span> Studio
+          <p className="text-[16px] font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
+            Clinical Trial Diversity Studio
           </p>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Built on live ClinicalTrials.gov registry data · No PHI · Product capability demo
