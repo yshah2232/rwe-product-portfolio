@@ -52,31 +52,27 @@ const DataMethod = () => {
   return (
     <div className="bg-background">
       {/* HERO */}
-      <section className="px-6 md:px-10 lg:px-16 pt-16 md:pt-24 pb-14 md:pb-20 border-b border-border/50">
-        <div className="max-w-5xl mx-auto">
-          <motion.p {...anim(0.05)} className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-5">
-            Data & Method
+      <section className="ctg-hero">
+        <div className="ctg-hero-inner">
+          <motion.p {...anim(0.05)} className="text-[12px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'hsl(var(--link))' }}>
+            Home &nbsp;›&nbsp; Data & Method
           </motion.p>
-          <motion.h1
-            {...anim(0.12)}
-            className="font-display text-[40px] md:text-[60px] font-medium leading-[1.05] tracking-[-0.02em] text-foreground"
-          >
-            Every number in the studio
-            <br />
-            <span className="italic text-primary font-normal">comes from the public registry.</span>
+          <motion.h1 {...anim(0.1)} className="ctg-hero-title">
+            Every number in the studio comes from the public registry.
           </motion.h1>
-          <motion.p {...anim(0.2)} className="mt-7 text-base md:text-lg text-muted-foreground leading-[1.7] max-w-3xl">
+          <motion.p {...anim(0.18)} className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
             The Clinical Trial Diversity Studio reads directly from the ClinicalTrials.gov v2 API. This page documents
             the exact source, the parameters we send, the fields we display, and how often the data refreshes — so any
             recommendation surfaced in the studio is fully traceable.
           </motion.p>
 
           <motion.a
-            {...anim(0.28)}
+            {...anim(0.26)}
             href="https://clinicaltrials.gov/data-api/api"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:gap-3 transition-all"
+            className="mt-5 inline-flex items-center gap-2 text-[14px] font-semibold underline underline-offset-2"
+            style={{ color: 'hsl(var(--link))' }}
           >
             ClinicalTrials.gov API documentation <ExternalLink className="h-3.5 w-3.5" />
           </motion.a>
