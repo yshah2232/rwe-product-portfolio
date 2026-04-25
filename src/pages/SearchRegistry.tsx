@@ -237,30 +237,25 @@ const SearchRegistry = () => {
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
-      <section className="px-6 md:px-10 lg:px-16 pt-16 md:pt-20 pb-10 border-b border-border/50">
-        <div className="max-w-5xl mx-auto">
+      <section className="ctg-hero">
+        <div className="ctg-hero-inner">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4 }}
+            className="max-w-4xl"
           >
-            <p className="text-[11px] font-semibold tracking-[0.32em] uppercase text-primary/80 mb-5">
-              <span className="inline-flex items-center gap-2">
-                <span className="h-[1px] w-6 bg-primary/60" />
-                Capability 01 · Search the Registry
-                <span className="h-[1px] w-6 bg-primary/60" />
-              </span>
+            <p className="text-[12px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'hsl(var(--link))' }}>
+              Home &nbsp;›&nbsp; Search the Registry
             </p>
-            <h1 className="font-display text-4xl md:text-[56px] font-medium leading-[1.05] tracking-[-0.02em] text-foreground">
-              Search ClinicalTrials.gov
-              <br />
-              <span className="italic text-primary font-normal">by meaning, not just keywords.</span>
+            <h1 className="ctg-hero-title">
+              Search ClinicalTrials.gov by meaning, not just keywords.
             </h1>
-            <p className="mt-6 text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
-              Type a clinical scenario in plain language. We pull live candidates from the CTG.gov v2 API and
-              re-rank them semantically — so &ldquo;elderly lung tumor&rdquo; finds NSCLC trials in patients ≥65
-              even when those exact words never appear in the protocol. Every result deep-links to the
-              authoritative CTG.gov page so you can verify in one click.
+            <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
+              Type a clinical scenario in plain language. We pull live candidates from the CTG.gov v2 API
+              and re-rank them semantically — so &ldquo;elderly lung tumor&rdquo; finds NSCLC trials in
+              patients ≥65 even when those exact words never appear in the protocol. Every result deep-links
+              to the authoritative CTG.gov page.
             </p>
           </motion.div>
         </div>
