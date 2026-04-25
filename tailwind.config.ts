@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        display: ['"Fraunces"', 'Georgia', 'serif'],
+        sans: ['"Source Sans 3"', '"Source Sans Pro"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Source Sans 3"', '"Source Sans Pro"', 'system-ui', 'sans-serif'],
+        serif: ['"Merriweather"', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
