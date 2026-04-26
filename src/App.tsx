@@ -13,6 +13,9 @@ import DataMethod from "./pages/DataMethod";
 import SearchRegistry from "./pages/SearchRegistry";
 import Cohorts from "./pages/Cohorts";
 import CohortDetail from "./pages/CohortDetail";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import MedicalDisclaimer from "./pages/MedicalDisclaimer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +42,9 @@ const App = () => (
               <Route path="/search-registry" element={<SearchRegistry />} />
               <Route path="/cohorts" element={<Cohorts />} />
               <Route path="/cohorts/:id" element={<CohortDetail />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/medical-disclaimer" element={<MedicalDisclaimer />} />
               {/* Deactivated legacy synthetic dashboards */}
               <Route path="/dashboard" element={<Navigate to="/search-registry" replace />} />
               <Route path="/journey-analytics" element={<Navigate to="/search-registry" replace />} />

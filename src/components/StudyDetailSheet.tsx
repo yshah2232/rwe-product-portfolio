@@ -5,7 +5,7 @@
 // When PlainMode is ON, also fetches the AI-rewritten plain-language version
 // from ctg-plain-language and shows it at the top with a switch to view raw.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ExternalLink, Loader2, MapPin, Users, Calendar, FlaskConical, AlertCircle, Sparkles, Phone, Mail } from 'lucide-react';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
@@ -20,6 +20,7 @@ import EligibilityCheck from '@/components/EligibilityCheck';
 import { cleanSponsor, cleanIndication, cleanAsset } from '@/lib/canonicalize';
 import { usePlainMode } from '@/contexts/PlainModeContext';
 import { usePlainTrial } from '@/lib/usePlainTrial';
+import { useSeo } from '@/hooks/useSeo';
 
 interface TrialDetail {
   nctId: string;
@@ -56,6 +57,9 @@ interface TrialDetail {
   overallOfficials?: { name: string; affiliation: string; role: string }[];
   countries: string[];
   ctgUrl: string;
+  lastUpdateSubmitDate?: string;
+  lastUpdatePostDate?: string;
+  fetchedAt?: string;
 }
 
 const DETAIL_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-trial-detail`;
@@ -97,6 +101,47 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
     };
   }, [nctId, open]);
 
+  // SEO: when the sheet is open with a loaded trial, set per-trial title +
+  // JSON-LD MedicalStudy. Canonical points to CTG.gov (the authoritative record)
+  // so we don't compete with the official registry for the NCT-id query.
+  const seoActive = open && !!data && !!nctId;
+  const jsonLd = useMemo(() => {
+    if (!data || !nctId) return undefined;
+    const conditionList = data.conditions.length
+      ? data.conditions.map((c) => ({ '@type': 'MedicalCondition', name: cleanIndication(c).clean }))
+      : undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'MedicalStudy',
+      name: data.briefTitle || nctId,
+      alternateName: data.officialTitle || undefined,
+      identifier: nctId,
+      description: (data.briefSummary || '').slice(0, 500),
+      url: data.ctgUrl,
+      sponsor: data.leadSponsor.name
+        ? { '@type': 'Organization', name: cleanSponsor(data.leadSponsor.name).clean }
+        : undefined,
+      status: data.status || undefined,
+      phase: data.phase.length ? data.phase.map((p) => p.replace('PHASE', 'Phase ')).join(', ') : undefined,
+      studySubject: conditionList,
+      studyLocation: data.locations.slice(0, 5).map((l) => ({
+        '@type': 'AdministrativeArea',
+        name: [l.facility, l.city, l.state, l.country].filter(Boolean).join(', '),
+      })),
+    };
+  }, [data, nctId]);
+
+  useSeo({
+    title: seoActive
+      ? `${data!.briefTitle || nctId} (${nctId}) — Clinical Trial Diversity Studio`
+      : 'Clinical Trial Diversity Studio',
+    description: seoActive
+      ? `${data!.status?.replace(/_/g, ' ') || 'Clinical trial'}${data!.phase?.length ? ` · ${data!.phase.join(', ').replace(/PHASE/g, 'Phase ')}` : ''}${data!.conditions?.[0] ? ` · ${cleanIndication(data!.conditions[0]).clean}` : ''}. ${(data!.briefSummary || '').slice(0, 140)}`
+      : undefined,
+    canonical: seoActive ? data!.ctgUrl : undefined,
+    jsonLd: seoActive ? jsonLd : undefined,
+  });
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
@@ -120,14 +165,16 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
               <Sparkles className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'hsl(var(--primary))' }} />
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-semibold" style={{ color: 'hsl(var(--primary))' }}>
-                  Plain language — auto-translated by AI
+                  AI-assisted plain language · Not medical advice
                 </p>
                 <p className="text-[11.5px] text-foreground/75 leading-snug mt-0.5">
-                  Numbers and eligibility paraphrased from the public registry. Always verify on{' '}
+                  Numbers and eligibility paraphrased from the public registry by an AI model — it can
+                  misread or simplify. Always verify on{' '}
                   <a href={data?.ctgUrl ?? `https://clinicaltrials.gov/study/${nctId}`}
                      target="_blank" rel="noreferrer" className="underline">
                     ClinicalTrials.gov
-                  </a>{' '}before acting.
+                  </a>{' '}and talk to your care team.{' '}
+                  <a href="/medical-disclaimer" className="underline">Read full disclaimer</a>.
                 </p>
               </div>
               {plain && (
@@ -524,17 +571,30 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
               </section>
             )}
 
-            {/* CTG.gov link */}
+            {/* CTG.gov link + provenance */}
             <div className="pt-4 border-t border-border/40">
               <Button asChild className="w-full gap-2">
                 <a href={data.ctgUrl} target="_blank" rel="noopener noreferrer">
                   Open original record on ClinicalTrials.gov <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
-              <p className="text-[11px] text-muted-foreground text-center mt-2">
-                <Calendar className="h-3 w-3 inline-block mr-1" />
-                Authoritative source. Use to verify eligibility and contact info.
-              </p>
+              <div className="mt-3 space-y-1 text-center">
+                <p className="text-[11px] text-muted-foreground">
+                  <Calendar className="h-3 w-3 inline-block mr-1" />
+                  Source: ClinicalTrials.gov
+                  {data.lastUpdateSubmitDate && (
+                    <> · Sponsor last updated <span className="font-medium text-foreground/80">{data.lastUpdateSubmitDate}</span></>
+                  )}
+                </p>
+                {data.fetchedAt && (
+                  <p className="text-[10.5px] text-muted-foreground/80">
+                    Fetched live · {new Date(data.fetchedAt).toLocaleString()}
+                  </p>
+                )}
+                <p className="text-[10.5px] text-muted-foreground/80">
+                  Authoritative source — verify eligibility and contact info before acting.
+                </p>
+              </div>
             </div>
           </div>
         )}

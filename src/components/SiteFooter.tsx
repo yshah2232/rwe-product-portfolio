@@ -1,4 +1,5 @@
 import { Linkedin, Github } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import iconLogo from '@/assets/icon-plc-logo.png';
 import syneosLogo from '@/assets/syneos-health-logo.png';
 
@@ -79,9 +80,30 @@ const SiteFooter = () => (
         </div>
       </div>
 
-      {/* Bottom */}
-      <div className="border-t border-border/30 pt-4">
-        <p className="text-[10px] text-muted-foreground/50">© {new Date().getFullYear()} Yash Shah · Clinical Trial Diversity Studio</p>
+      {/* Legal + bottom */}
+      <div className="border-t border-border/30 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <p className="text-[10px] text-muted-foreground/60">
+          © {new Date().getFullYear()} Clinical Trial Diversity Studio · Independent information tool · Not affiliated with NIH or NLM
+        </p>
+        <nav className="flex items-center gap-4 text-[11px]">
+          <Link to="/medical-disclaimer" className="text-muted-foreground hover:text-primary underline-offset-2 hover:underline font-semibold">
+            Medical disclaimer
+          </Link>
+          <Link to="/privacy" className="text-muted-foreground hover:text-primary underline-offset-2 hover:underline">
+            Privacy
+          </Link>
+          <Link to="/terms" className="text-muted-foreground hover:text-primary underline-offset-2 hover:underline">
+            Terms
+          </Link>
+          <a
+            href="https://clinicaltrials.gov/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-primary underline-offset-2 hover:underline"
+          >
+            Source: ClinicalTrials.gov
+          </a>
+        </nav>
       </div>
     </div>
   </footer>
