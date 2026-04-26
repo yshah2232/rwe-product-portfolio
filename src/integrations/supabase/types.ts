@@ -136,6 +136,42 @@ export type Database = {
           },
         ]
       }
+      eligibility_checks: {
+        Row: {
+          checklist: Json
+          created_at: string
+          files_count: number
+          id: string
+          nct_id: string
+          notes: string | null
+          overall_signal: string | null
+          session_id: string
+          total_bytes: number
+        }
+        Insert: {
+          checklist?: Json
+          created_at?: string
+          files_count?: number
+          id?: string
+          nct_id: string
+          notes?: string | null
+          overall_signal?: string | null
+          session_id: string
+          total_bytes?: number
+        }
+        Update: {
+          checklist?: Json
+          created_at?: string
+          files_count?: number
+          id?: string
+          nct_id?: string
+          notes?: string | null
+          overall_signal?: string | null
+          session_id?: string
+          total_bytes?: number
+        }
+        Relationships: []
+      }
       indication_mappings: {
         Row: {
           clean_value: string
@@ -208,9 +244,11 @@ export type Database = {
       plain_language_trials: {
         Row: {
           created_at: string
+          demographics: Json
           generated_at: string
           id: string
           is_recruiting: boolean | null
+          journey_steps: Json
           key_numbers: Json | null
           model_used: string
           nct_id: string
@@ -227,9 +265,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          demographics?: Json
           generated_at?: string
           id?: string
           is_recruiting?: boolean | null
+          journey_steps?: Json
           key_numbers?: Json | null
           model_used?: string
           nct_id: string
@@ -246,9 +286,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          demographics?: Json
           generated_at?: string
           id?: string
           is_recruiting?: boolean | null
+          journey_steps?: Json
           key_numbers?: Json | null
           model_used?: string
           nct_id?: string
