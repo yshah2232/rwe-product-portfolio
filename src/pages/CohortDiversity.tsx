@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+// Tabs removed: ZIP3 toggle dropped (Census ACS doesn't natively support ZIP3)
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionId } from '@/lib/searchSession';
 import { usePageTitle } from '@/hooks/usePageTitle';
