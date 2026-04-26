@@ -259,6 +259,21 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
                     </ul>
                   </div>
                 )}
+
+                {/* Timeline / journey */}
+                {plain.journey_steps && plain.journey_steps.length > 0 && (
+                  <TrialJourney steps={plain.journey_steps} />
+                )}
+
+                {/* Real demographics from posted CTG results */}
+                {plain.demographics && nctId && (
+                  <EnrollmentDemographics demographics={plain.demographics} nctId={nctId} />
+                )}
+
+                {/* Document checklist + AI eligibility self-check */}
+                {plain.doc_checklist && plain.doc_checklist.length > 0 && nctId && (
+                  <EligibilityCheck nctId={nctId} checklist={plain.doc_checklist} />
+                )}
               </section>
             ) : (
               data.briefSummary && (
