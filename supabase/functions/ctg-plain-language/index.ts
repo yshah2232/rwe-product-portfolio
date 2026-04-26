@@ -320,6 +320,9 @@ Deno.serve(async (req) => {
     // 4. AI rewrite
     const plain = await rewriteWithAI(trimmed);
 
+    // 4b. Real demographics — pulled directly from CTG results, no AI involved.
+    const demographics = extractDemographics(study);
+
     // 5. Persist (upsert)
     const { data: stored, error: insErr } = await supabase
       .from("plain_language_trials")
@@ -336,6 +339,9 @@ Deno.serve(async (req) => {
           plain_time_commitment: plain.plain_time_commitment,
           plain_what_happens: plain.plain_what_happens,
           key_numbers: plain.key_numbers,
+          journey_steps: plain.journey_steps,
+          doc_checklist: plain.doc_checklist,
+          demographics,
           is_recruiting: isRecruiting,
           model_used: MODEL,
           generated_at: new Date().toISOString(),
@@ -348,7 +354,7 @@ Deno.serve(async (req) => {
     if (insErr) {
       console.error("plain_language upsert error", insErr);
       // Still return the rewrite even if persistence failed
-      return json({ ...plain, nct_id: nctId, is_recruiting: isRecruiting, cached: false, persisted: false });
+      return json({ ...plain, demographics, nct_id: nctId, is_recruiting: isRecruiting, cached: false, persisted: false });
     }
 
     return json({ ...stored, cached: false });
