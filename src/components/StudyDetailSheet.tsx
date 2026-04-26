@@ -56,6 +56,9 @@ interface TrialDetail {
   overallOfficials?: { name: string; affiliation: string; role: string }[];
   countries: string[];
   ctgUrl: string;
+  lastUpdateSubmitDate?: string;
+  lastUpdatePostDate?: string;
+  fetchedAt?: string;
 }
 
 const DETAIL_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-trial-detail`;
@@ -524,17 +527,30 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
               </section>
             )}
 
-            {/* CTG.gov link */}
+            {/* CTG.gov link + provenance */}
             <div className="pt-4 border-t border-border/40">
               <Button asChild className="w-full gap-2">
                 <a href={data.ctgUrl} target="_blank" rel="noopener noreferrer">
                   Open original record on ClinicalTrials.gov <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
-              <p className="text-[11px] text-muted-foreground text-center mt-2">
-                <Calendar className="h-3 w-3 inline-block mr-1" />
-                Authoritative source. Use to verify eligibility and contact info.
-              </p>
+              <div className="mt-3 space-y-1 text-center">
+                <p className="text-[11px] text-muted-foreground">
+                  <Calendar className="h-3 w-3 inline-block mr-1" />
+                  Source: ClinicalTrials.gov
+                  {data.lastUpdateSubmitDate && (
+                    <> · Sponsor last updated <span className="font-medium text-foreground/80">{data.lastUpdateSubmitDate}</span></>
+                  )}
+                </p>
+                {data.fetchedAt && (
+                  <p className="text-[10.5px] text-muted-foreground/80">
+                    Fetched live · {new Date(data.fetchedAt).toLocaleString()}
+                  </p>
+                )}
+                <p className="text-[10.5px] text-muted-foreground/80">
+                  Authoritative source — verify eligibility and contact info before acting.
+                </p>
+              </div>
             </div>
           </div>
         )}
