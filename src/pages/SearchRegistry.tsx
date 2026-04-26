@@ -24,6 +24,7 @@ import TrustDrawer from '@/components/TrustDrawer';
 import SaveCohortDialog from '@/components/SaveCohortDialog';
 import TrialMap from '@/components/TrialMap';
 import { cleanSponsor, cleanIndication } from '@/lib/canonicalize';
+import { usePlainMode } from '@/contexts/PlainModeContext';
 
 interface RankedTrial {
   nctId: string;
@@ -68,7 +69,7 @@ const ctgUrl = (nct: string) => `https://clinicaltrials.gov/study/${nct}`;
 
 const SearchRegistry = () => {
   usePageTitle('Search Registry — Semantic search across ClinicalTrials.gov');
-
+  const { plainMode } = usePlainMode();
   const [query, setQuery] = useState('');
   const [phase, setPhase] = useState<string>('any');
   const [status, setStatus] = useState<string>('any');
