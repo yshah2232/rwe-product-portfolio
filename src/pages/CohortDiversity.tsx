@@ -100,27 +100,28 @@ const CohortDiversity = () => {
   const loadAll = async () => {
     if (!id) return;
     setLoading(true);
-    const [{ data: c }, { data: t }, { data: l }] = await Promise.all([
+    const [{ data: c }, { data: t }] = await Promise.all([
       supabase.from('saved_cohorts').select('id, session_id, name, refreshed_at, created_at')
         .eq('id', id).maybeSingle(),
       supabase.from('cohort_trials').select('nct_id, conditions_clean')
         .eq('cohort_id', id),
-      supabase.from('normalized_locations').select('*')
-        .in('nct_id', (await supabase.from('cohort_trials').select('nct_id').eq('cohort_id', id)).data?.map(r => r.nct_id) ?? []),
     ]);
     setCohort((c as Cohort) ?? null);
+    const nctIds = ((t ?? []) as any[]).map((r) => r.nct_id);
     const inds = Array.from(new Set(((t ?? []) as any[]).flatMap((r) => r.conditions_clean ?? []).filter(Boolean))) as string[];
     setIndications(inds);
-    setLocs(((l ?? []) as NormLoc[]));
 
-    // Fetch prevalence for cohort indications
-    if (inds.length > 0) {
-      const { data: prev } = await supabase
-        .from('disease_prevalence')
-        .select('*')
-        .in('indication_clean', inds);
-      setPrevalence((prev ?? []) as PrevalenceRow[]);
-    }
+    // Locations + prevalence in parallel
+    const [{ data: l }, { data: prev }] = await Promise.all([
+      nctIds.length > 0
+        ? supabase.from('normalized_locations').select('*').in('nct_id', nctIds)
+        : Promise.resolve({ data: [] as NormLoc[] }),
+      inds.length > 0
+        ? supabase.from('disease_prevalence').select('*').in('indication_clean', inds)
+        : Promise.resolve({ data: [] as PrevalenceRow[] }),
+    ]);
+    setLocs(((l ?? []) as NormLoc[]));
+    setPrevalence((prev ?? []) as PrevalenceRow[]);
     setLoading(false);
   };
 
