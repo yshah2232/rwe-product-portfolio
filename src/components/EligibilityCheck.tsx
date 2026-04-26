@@ -115,15 +115,18 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
         <div className="flex items-center gap-2">
           <FileCheck2 className="h-3.5 w-3.5" style={{ color: 'hsl(var(--primary))' }} />
           <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'hsl(var(--primary))' }}>
-            Documents to bring · optional self-check
+            Documents to bring · AI self-check (not medical advice)
           </p>
         </div>
       </div>
 
       <div className="p-4 space-y-3">
         <p className="text-[12px] text-muted-foreground leading-snug">
-          Bring these to your appointment. You can also drop them here and the AI will flag which criteria they appear to address.{' '}
-          <strong className="text-foreground">Files are not stored</strong> — they're sent for analysis and discarded.
+          Bring these to your appointment. You can also drop them here and an AI model will flag which
+          criteria they appear to address — <strong className="text-foreground">this is not a determination
+          of eligibility</strong>. Only the trial site can confirm whether you qualify.{' '}
+          <strong className="text-foreground">Files are not stored</strong> — they're sent for analysis and discarded.{' '}
+          <a href="/medical-disclaimer" className="underline text-primary">Read full disclaimer</a>.
         </p>
 
         <ul className="space-y-1.5">
