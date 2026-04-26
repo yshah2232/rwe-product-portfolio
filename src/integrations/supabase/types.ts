@@ -205,6 +205,27 @@ export type Database = {
           },
         ]
       }
+      county_fips_lookup: {
+        Row: {
+          county_name: string
+          fips: string
+          source_url: string
+          state_code: string
+        }
+        Insert: {
+          county_name: string
+          fips: string
+          source_url?: string
+          state_code: string
+        }
+        Update: {
+          county_name?: string
+          fips?: string
+          source_url?: string
+          state_code?: string
+        }
+        Relationships: []
+      }
       disease_prevalence: {
         Row: {
           confidence: number
@@ -770,6 +791,27 @@ export type Database = {
           raw_value?: string
           source_note?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      state_fips: {
+        Row: {
+          source_url: string
+          state_code: string
+          state_fips: string
+          state_name: string
+        }
+        Insert: {
+          source_url?: string
+          state_code: string
+          state_fips: string
+          state_name: string
+        }
+        Update: {
+          source_url?: string
+          state_code?: string
+          state_fips?: string
+          state_name?: string
         }
         Relationships: []
       }

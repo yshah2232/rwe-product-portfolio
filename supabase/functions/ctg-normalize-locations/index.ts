@@ -1,20 +1,35 @@
 // ── Geo Normalization for Cohort Trial Sites ──
-// Takes a cohort_id, fetches each trial's site list from CTG.gov,
-// resolves city+state → FIPS county code + ZIP3 via the US Census Geocoder API
-// (free, no key needed). Stores results in normalized_locations (one row per site).
+// Resolves each trial's site list (City, State) to a real county FIPS code.
+//
+// Pipeline:
+//   1. Load cohort_trials → NCT IDs (owner-gated)
+//   2. For each trial, fetch site list from CTG.gov v2
+//   3. For each US site:
+//      a. Call Nominatim (OpenStreetMap) for "city, state, USA" → returns county name + state
+//      b. Look up state_fips + county_fips_lookup tables → 5-digit FIPS
+//   4. Insert one normalized_locations row per site
+//
+// Sources (all real, citable):
+//   - Trial sites: https://clinicaltrials.gov/api/v2
+//   - Geocoding: https://nominatim.openstreetmap.org (OSM, no key, 1 req/sec)
+//   - State FIPS: https://www2.census.gov/geo/docs/reference/state.txt
+//   - County FIPS: https://www2.census.gov/geo/docs/reference/codes2020/national_county2020.txt
+//
+// Nominatim usage policy requires:
+//   - Identifying User-Agent
+//   - Max 1 request per second
+//   - No bulk geocoding (we cap at 50 sites/trial × 10 trials/request = 500 max, throttled)
 //
 // POST /ctg-normalize-locations { cohortId, sessionId? }
-// Owner-gated by sessionId match against saved_cohorts.session_id.
-//
-// Uses Census Geocoder's "geographies/address" endpoint with a fake ZIP-less
-// street; if that fails we fall back to "/onelineaddress" with city+state which
-// still returns county_fips reliably for ~98% of US cities.
 
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
-const CENSUS_GEOCODER = "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress";
+const NOMINATIM_BASE = "https://nominatim.openstreetmap.org/search";
+const USER_AGENT = "ClinicalTrialDiversityStudio/1.0 (research; clinical trial site geocoding)";
+const NOMINATIM_THROTTLE_MS = 1100; // OSM requires ≤1 req/sec; 1.1s for safety
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -26,65 +41,130 @@ interface GeoHit {
   county_name: string | null;
   state_code: string | null;
   zip3: string | null;
-  method: "geocoder" | "state_only" | "unresolved";
+  method: "nominatim_county" | "nominatim_no_county" | "state_only" | "unresolved";
   confidence: number;
 }
 
+// ── In-memory caches for one invocation ──
+// Avoid re-querying Nominatim and DB for the same (city,state) twice.
+const geoCache = new Map<string, GeoHit>();
+let stateFipsByCode: Map<string, string> | null = null;
+let stateFipsByName: Map<string, string> | null = null;
+
+async function loadStateLookups() {
+  if (stateFipsByCode) return;
+  const { data } = await sb.from("state_fips").select("state_code, state_fips, state_name");
+  stateFipsByCode = new Map();
+  stateFipsByName = new Map();
+  for (const r of data ?? []) {
+    stateFipsByCode.set(r.state_code.toUpperCase(), r.state_fips);
+    stateFipsByName.set(r.state_name.toLowerCase(), r.state_code);
+  }
+}
+
+// Normalize a state input that may be "California" or "CA"
+function toStateCode(stateInput: string): string | null {
+  if (!stateInput) return null;
+  const s = stateInput.trim();
+  if (s.length === 2 && stateFipsByCode?.has(s.toUpperCase())) return s.toUpperCase();
+  return stateFipsByName?.get(s.toLowerCase()) ?? null;
+}
+
+async function lookupCountyFips(stateCode: string, rawCountyName: string): Promise<{ fips: string; name: string } | null> {
+  // Nominatim returns names like "Los Angeles County", "New York County", "Baltimore city".
+  // The Census file uses the same casing, so a case-insensitive match works.
+  const cleaned = rawCountyName.trim();
+  const { data } = await sb
+    .from("county_fips_lookup")
+    .select("fips, county_name")
+    .eq("state_code", stateCode)
+    .ilike("county_name", cleaned)
+    .maybeSingle();
+  if (data) return { fips: data.fips, name: data.county_name };
+
+  // Fallback: try without trailing " County" suffix mismatch
+  const stripped = cleaned.replace(/\s+(County|Parish|Borough|Census Area|Municipality|City and Borough)$/i, "");
+  const { data: data2 } = await sb
+    .from("county_fips_lookup")
+    .select("fips, county_name")
+    .eq("state_code", stateCode)
+    .ilike("county_name", `${stripped}%`)
+    .limit(1)
+    .maybeSingle();
+  return data2 ? { fips: data2.fips, name: data2.county_name } : null;
+}
+
+let lastNominatimAt = 0;
+async function nominatimGeocode(city: string, state: string): Promise<{ county?: string; state?: string; postcode?: string } | null> {
+  // Throttle to honor OSM 1 req/sec policy
+  const wait = NOMINATIM_THROTTLE_MS - (Date.now() - lastNominatimAt);
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  lastNominatimAt = Date.now();
+
+  const params = new URLSearchParams({
+    city,
+    state,
+    country: "USA",
+    format: "json",
+    addressdetails: "1",
+    limit: "1",
+  });
+  try {
+    const res = await fetch(`${NOMINATIM_BASE}?${params.toString()}`, {
+      headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+    });
+    if (!res.ok) {
+      console.error(`nominatim ${res.status} for ${city}, ${state}`);
+      return null;
+    }
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return null;
+    return data[0]?.address ?? null;
+  } catch (e) {
+    console.error("nominatim exception", e);
+    return null;
+  }
+}
+
 async function resolveUSLocation(city: string, state: string): Promise<GeoHit> {
-  if (!state) {
+  const stateCode = toStateCode(state);
+  if (!stateCode) {
     return { county_fips: null, county_name: null, state_code: null, zip3: null, method: "unresolved", confidence: 0 };
   }
-
-  // Census Geocoder accepts "city, state" via onelineaddress
-  // benchmark=Public_AR_Current, vintage=Current_Current, layer 86 = counties
-  if (city) {
-    try {
-      const params = new URLSearchParams({
-        address: `${city}, ${state}`,
-        benchmark: "Public_AR_Current",
-        vintage: "Current_Current",
-        format: "json",
-        layers: "all",
-      });
-      const res = await fetch(`${CENSUS_GEOCODER}?${params.toString()}`, {
-        headers: { Accept: "application/json" },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const match = data?.result?.addressMatches?.[0];
-        if (match) {
-          const geos = match.geographies ?? {};
-          const counties = geos["Counties"] ?? geos["2020 Census Counties"] ?? [];
-          const county = counties[0];
-          // ZIP from the matched address
-          const zipMatch = (match.matchedAddress ?? "").match(/\b(\d{5})\b/);
-          const zip3 = zipMatch ? zipMatch[1].slice(0, 3) : null;
-          if (county) {
-            return {
-              county_fips: `${county.STATE}${county.COUNTY}`,
-              county_name: county.NAME ?? null,
-              state_code: county.STUSAB ?? state.toUpperCase().slice(0, 2),
-              zip3,
-              method: "geocoder",
-              confidence: 90,
-            };
-          }
-        }
-      }
-    } catch (e) {
-      console.error("geocoder error", city, state, e);
-    }
+  if (!city) {
+    return { county_fips: null, county_name: null, state_code: stateCode, zip3: null, method: "state_only", confidence: 40 };
   }
 
-  // Fallback: state-only resolution (no county/ZIP)
-  return {
-    county_fips: null,
-    county_name: null,
-    state_code: state.toUpperCase().slice(0, 2),
-    zip3: null,
-    method: "state_only",
-    confidence: 40,
-  };
+  // Check in-memory cache first
+  const key = `${city.toLowerCase()}|${stateCode}`;
+  const cached = geoCache.get(key);
+  if (cached) return cached;
+
+  const addr = await nominatimGeocode(city, state);
+  let hit: GeoHit;
+  if (!addr) {
+    hit = { county_fips: null, county_name: null, state_code: stateCode, zip3: null, method: "state_only", confidence: 40 };
+  } else if (addr.county) {
+    const found = await lookupCountyFips(stateCode, addr.county);
+    const zip3 = addr.postcode ? addr.postcode.replace(/\D/g, "").slice(0, 3) : null;
+    if (found) {
+      hit = {
+        county_fips: found.fips,
+        county_name: found.name,
+        state_code: stateCode,
+        zip3: zip3 || null,
+        method: "nominatim_county",
+        confidence: 90,
+      };
+    } else {
+      hit = { county_fips: null, county_name: addr.county, state_code: stateCode, zip3: zip3 || null, method: "nominatim_no_county", confidence: 60 };
+    }
+  } else {
+    // OSM matched but no county (e.g., independent city, DC). Still useful — keep state.
+    hit = { county_fips: null, county_name: null, state_code: stateCode, zip3: null, method: "state_only", confidence: 40 };
+  }
+  geoCache.set(key, hit);
+  return hit;
 }
 
 Deno.serve(async (req) => {
@@ -97,19 +177,14 @@ Deno.serve(async (req) => {
     const cohortId = (body.cohortId ?? "").toString().trim();
     const sessionId = (body.sessionId ?? "").toString().trim().slice(0, 64);
 
-    if (!cohortId) {
-      return json({ error: "cohortId is required" }, 400);
-    }
+    if (!cohortId) return json({ error: "cohortId is required" }, 400);
 
-    // Fetch cohort to verify ownership and get NCT IDs
     const { data: cohort, error: cohortErr } = await sb
       .from("saved_cohorts")
       .select("id, session_id")
       .eq("id", cohortId)
       .maybeSingle();
-    if (cohortErr || !cohort) {
-      return json({ error: "Cohort not found" }, 404);
-    }
+    if (cohortErr || !cohort) return json({ error: "Cohort not found" }, 404);
     if (sessionId && cohort.session_id !== sessionId) {
       return json({ error: "Not owner of this cohort" }, 403);
     }
@@ -118,24 +193,24 @@ Deno.serve(async (req) => {
       .from("cohort_trials")
       .select("nct_id")
       .eq("cohort_id", cohortId);
-    if (trialsErr) {
-      return json({ error: "Failed to load cohort trials" }, 500);
-    }
+    if (trialsErr) return json({ error: "Failed to load cohort trials" }, 500);
     const nctIds = (trials ?? []).map((t) => t.nct_id);
     if (nctIds.length === 0) {
       return json({ ok: true, normalized: 0, total: 0, locations: 0 });
     }
 
-    // Cap to first 10 trials per request to avoid runaway API usage
+    // Cap to first 10 trials per request to bound runtime (1 req/sec geocoding)
     const targetNctIds = nctIds.slice(0, 10);
+
+    await loadStateLookups();
 
     let totalLocations = 0;
     let resolvedLocations = 0;
+    let countyResolved = 0;
     const errors: string[] = [];
 
     for (const nctId of targetNctIds) {
       try {
-        // Skip if we already normalized this trial (idempotent)
         const { count } = await sb
           .from("normalized_locations")
           .select("id", { count: "exact", head: true })
@@ -152,14 +227,10 @@ Deno.serve(async (req) => {
         }
         const study = await ctgRes.json();
         const locs = (study.protocolSection?.contactsLocationsModule?.locations ?? []) as Array<{
-          facility?: string;
-          city?: string;
-          state?: string;
-          country?: string;
+          facility?: string; city?: string; state?: string; country?: string;
         }>;
 
-        // Cap per-trial site count to first 50 to bound geocoder calls
-        const cappedLocs = locs.slice(0, 50);
+        const cappedLocs = locs.slice(0, 30);
         totalLocations += cappedLocs.length;
 
         const rows = [];
@@ -172,14 +243,12 @@ Deno.serve(async (req) => {
           if (country.toLowerCase() === "united states" || country === "US") {
             geo = await resolveUSLocation(city, state);
             if (geo.method !== "unresolved") resolvedLocations++;
+            if (geo.county_fips) countyResolved++;
           } else {
             geo = {
-              county_fips: null,
-              county_name: null,
-              state_code: state || null,
-              zip3: null,
-              method: "unresolved",
-              confidence: 0,
+              county_fips: null, county_name: null,
+              state_code: state || null, zip3: null,
+              method: "unresolved", confidence: 0,
             };
           }
 
@@ -193,9 +262,7 @@ Deno.serve(async (req) => {
             county_name: geo.county_name,
             county_fips: geo.county_fips,
             zip3: geo.zip3,
-            resolution_method:
-              geo.method === "geocoder" ? "city_state_lookup" :
-              geo.method === "state_only" ? "state_only" : "unresolved",
+            resolution_method: geo.method,
             resolution_confidence: geo.confidence,
           });
         }
@@ -216,6 +283,8 @@ Deno.serve(async (req) => {
       totalTrialsInCohort: nctIds.length,
       totalLocations,
       resolvedLocations,
+      countyResolved,
+      countyResolutionRate: totalLocations > 0 ? Math.round((countyResolved / totalLocations) * 100) : 0,
       errors: errors.slice(0, 10),
     });
   } catch (err) {
