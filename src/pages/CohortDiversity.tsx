@@ -67,7 +67,9 @@ const RACE_GROUPS = [
   { key: 'other_nh', label: 'Other', color: 'hsl(220 9% 60%)' },
 ] as const;
 
-type GeoMode = 'county' | 'zip3';
+// Geo resolution is County-only — Census ACS does not natively support ZIP3.
+// (Earlier ZIP3 toggle was misleading and silently failed; removed.)
+const GEO_MODE = 'county' as const;
 
 const CohortDiversity = () => {
   const { id } = useParams<{ id: string }>();
@@ -79,7 +81,6 @@ const CohortDiversity = () => {
   const [loading, setLoading] = useState(true);
   const [normalizing, setNormalizing] = useState(false);
   const [acsLoading, setAcsLoading] = useState(false);
-  const [geoMode, setGeoMode] = useState<GeoMode>('county');
   usePageTitle(cohort ? `${cohort.name} — Diversity & Access` : 'Diversity & Access');
 
   const isOwner = !!cohort && cohort.session_id === getSessionId();
@@ -90,12 +91,12 @@ const CohortDiversity = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // When geoMode or locs change, refresh ACS for the visible geos
+  // Load ACS whenever locations change
   useEffect(() => {
     if (locs.length === 0) return;
     void loadAcs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geoMode, locs]);
+  }, [locs]);
 
   const loadAll = async () => {
     if (!id) return;
