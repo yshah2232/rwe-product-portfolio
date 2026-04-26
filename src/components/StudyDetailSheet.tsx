@@ -101,6 +101,47 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
     };
   }, [nctId, open]);
 
+  // SEO: when the sheet is open with a loaded trial, set per-trial title +
+  // JSON-LD MedicalStudy. Canonical points to CTG.gov (the authoritative record)
+  // so we don't compete with the official registry for the NCT-id query.
+  const seoActive = open && !!data && !!nctId;
+  const jsonLd = useMemo(() => {
+    if (!data || !nctId) return undefined;
+    const conditionList = data.conditions.length
+      ? data.conditions.map((c) => ({ '@type': 'MedicalCondition', name: cleanIndication(c).clean }))
+      : undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'MedicalStudy',
+      name: data.briefTitle || nctId,
+      alternateName: data.officialTitle || undefined,
+      identifier: nctId,
+      description: (data.briefSummary || '').slice(0, 500),
+      url: data.ctgUrl,
+      sponsor: data.leadSponsor.name
+        ? { '@type': 'Organization', name: cleanSponsor(data.leadSponsor.name).clean }
+        : undefined,
+      status: data.status || undefined,
+      phase: data.phase.length ? data.phase.map((p) => p.replace('PHASE', 'Phase ')).join(', ') : undefined,
+      studySubject: conditionList,
+      studyLocation: data.locations.slice(0, 5).map((l) => ({
+        '@type': 'AdministrativeArea',
+        name: [l.facility, l.city, l.state, l.country].filter(Boolean).join(', '),
+      })),
+    };
+  }, [data, nctId]);
+
+  useSeo({
+    title: seoActive
+      ? `${data!.briefTitle || nctId} (${nctId}) — Clinical Trial Diversity Studio`
+      : 'Clinical Trial Diversity Studio',
+    description: seoActive
+      ? `${data!.status?.replace(/_/g, ' ') || 'Clinical trial'}${data!.phase?.length ? ` · ${data!.phase.join(', ').replace(/PHASE/g, 'Phase ')}` : ''}${data!.conditions?.[0] ? ` · ${cleanIndication(data!.conditions[0]).clean}` : ''}. ${(data!.briefSummary || '').slice(0, 140)}`
+      : undefined,
+    canonical: seoActive ? data!.ctgUrl : undefined,
+    jsonLd: seoActive ? jsonLd : undefined,
+  });
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
