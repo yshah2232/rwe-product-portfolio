@@ -134,7 +134,106 @@ async function rewriteWithAI(sourceJson: unknown): Promise<PlainTrial> {
     plain_time_commitment: String(parsed.plain_time_commitment ?? ""),
     plain_what_happens: String(parsed.plain_what_happens ?? ""),
     key_numbers: Array.isArray(parsed.key_numbers) ? parsed.key_numbers.map(String).slice(0, 8) : [],
+    journey_steps: Array.isArray(parsed.journey_steps)
+      ? parsed.journey_steps.slice(0, 8).map((s: any) => ({
+          label: String(s.label ?? "").slice(0, 30),
+          title: String(s.title ?? "").slice(0, 60),
+          detail: String(s.detail ?? "").slice(0, 200),
+          kind: ["screening","enrollment","treatment","monitoring","followup","end"].includes(s.kind) ? s.kind : "monitoring",
+        }))
+      : [],
+    doc_checklist: Array.isArray(parsed.doc_checklist)
+      ? parsed.doc_checklist.slice(0, 8).map((d: any) => ({
+          label: String(d.label ?? "").slice(0, 80),
+          why: String(d.why ?? "").slice(0, 160),
+        }))
+      : [],
   };
+}
+
+// Pull real demographics from CTG.gov results (BaselineCharacteristicsModule).
+// Returns { reported: false } if the trial has no posted results — never invents.
+function extractDemographics(study: any): any {
+  const baseline = study?.resultsSection?.baselineCharacteristicsModule;
+  if (!baseline || !Array.isArray(baseline.measures) || baseline.measures.length === 0) {
+    return { reported: false, source_note: "Demographics not yet reported by sponsor on ClinicalTrials.gov." };
+  }
+
+  const denoms = baseline.denoms ?? [];
+  let totalParticipants = 0;
+  for (const d of denoms) {
+    if (d?.units === "Participants" && Array.isArray(d.counts)) {
+      for (const c of d.counts) {
+        const v = parseInt(c.value ?? "0", 10);
+        if (!isNaN(v)) totalParticipants = Math.max(totalParticipants, v);
+      }
+    }
+  }
+
+  const out: any = { reported: true, source_note: "From this trial's posted results on ClinicalTrials.gov." };
+  if (totalParticipants > 0) out.total_participants = totalParticipants;
+
+  const sumByCategory = (m: any): Record<string, number> => {
+    const acc: Record<string, number> = {};
+    for (const cls of m.classes ?? []) {
+      for (const cat of cls.categories ?? []) {
+        const t = String(cat.title ?? "").trim();
+        let n = 0;
+        for (const meas of cat.measurements ?? []) {
+          const v = parseFloat(meas.value);
+          if (!isNaN(v)) n += v;
+        }
+        if (t) acc[t] = (acc[t] ?? 0) + n;
+      }
+    }
+    return acc;
+  };
+
+  for (const m of baseline.measures) {
+    const title = String(m.title ?? "").toLowerCase();
+    if (title.includes("sex") || title.includes("gender")) {
+      const counts = sumByCategory(m);
+      const total = Object.values(counts).reduce((s, v) => s + v, 0);
+      if (total > 0) {
+        out.sex = {
+          female_pct: counts["Female"] !== undefined ? Math.round((counts["Female"] / total) * 1000) / 10 : undefined,
+          male_pct: counts["Male"] !== undefined ? Math.round((counts["Male"] / total) * 1000) / 10 : undefined,
+        };
+      }
+    } else if (title.includes("age") && title.includes("categorical")) {
+      const counts = sumByCategory(m);
+      const total = Object.values(counts).reduce((s, v) => s + v, 0);
+      const under = (counts["<=18 years"] ?? 0) + (counts["Between 18 and 65 years"] ?? 0) + (counts["<18 years"] ?? 0);
+      const over = (counts[">=65 years"] ?? 0) + (counts[">65 years"] ?? 0);
+      if (total > 0) {
+        out.age = {
+          under_65_pct: under > 0 ? Math.round((under / total) * 1000) / 10 : undefined,
+          over_65_pct: over > 0 ? Math.round((over / total) * 1000) / 10 : undefined,
+        };
+      }
+    } else if (title.includes("race")) {
+      const counts = sumByCategory(m);
+      const total = Object.values(counts).reduce((s, v) => s + v, 0);
+      if (total > 0) {
+        const pcts: Record<string, number> = {};
+        for (const [k, v] of Object.entries(counts)) {
+          if (v > 0) pcts[k] = Math.round((v / total) * 1000) / 10;
+        }
+        out.race = pcts;
+      }
+    } else if (title.includes("ethnicity")) {
+      const counts = sumByCategory(m);
+      const total = Object.values(counts).reduce((s, v) => s + v, 0);
+      if (total > 0) {
+        const pcts: Record<string, number> = {};
+        for (const [k, v] of Object.entries(counts)) {
+          if (v > 0) pcts[k] = Math.round((v / total) * 1000) / 10;
+        }
+        out.ethnicity = pcts;
+      }
+    }
+  }
+  return out;
 }
 
 Deno.serve(async (req) => {
