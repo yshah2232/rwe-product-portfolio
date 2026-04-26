@@ -130,11 +130,11 @@ const CohortDiversity = () => {
     setAcsLoading(true);
     const usGeos = locs.filter((l) => l.raw_country.toLowerCase() === 'united states' || l.raw_country === 'US');
     const ids = Array.from(new Set(
-      usGeos.map((l) => geoMode === 'county' ? l.county_fips : l.zip3).filter(Boolean)
+      usGeos.map((l) => l.county_fips).filter(Boolean)
     )) as string[];
 
     const geos: Array<{ type: string; id: string }> = [{ type: 'national', id: 'US' }];
-    ids.slice(0, 28).forEach((gid) => geos.push({ type: geoMode, id: gid }));
+    ids.slice(0, 28).forEach((gid) => geos.push({ type: 'county', id: gid }));
 
     try {
       const res = await fetch(ACS_URL, {
@@ -188,7 +188,7 @@ const CohortDiversity = () => {
   const cohortAcs = useMemo(() => {
     const usLocs = locs.filter((l) => l.raw_country.toLowerCase() === 'united states' || l.raw_country === 'US');
     const ids = Array.from(new Set(
-      usLocs.map((l) => geoMode === 'county' ? l.county_fips : l.zip3).filter(Boolean)
+      usLocs.map((l) => l.county_fips).filter(Boolean)
     )) as string[];
     if (ids.length === 0) return null;
 
@@ -200,7 +200,7 @@ const CohortDiversity = () => {
     let incomeWeighted = 0, incomeWeight = 0;
     let matched = 0;
     for (const gid of ids) {
-      const row = acs[`${geoMode}:${gid}`];
+      const row = acs[`county:${gid}`];
       if (!row || !row.total_population) continue;
       matched++;
       sums.total += row.total_population;
@@ -226,7 +226,7 @@ const CohortDiversity = () => {
       median_income: incomeWeight > 0 ? Math.round(incomeWeighted / incomeWeight) : null,
       uniqueGeos: matched,
     };
-  }, [locs, acs, geoMode]);
+  }, [locs, acs]);
 
   const national = acs['national:US'];
 
@@ -272,8 +272,8 @@ const CohortDiversity = () => {
 
   const usSiteCount = useMemo(() =>
     locs.filter((l) => (l.raw_country.toLowerCase() === 'united states' || l.raw_country === 'US') &&
-      (geoMode === 'county' ? l.county_fips : l.zip3)).length,
-  [locs, geoMode]);
+      l.county_fips).length,
+  [locs]);
 
   if (loading) {
     return (
@@ -308,19 +308,13 @@ const CohortDiversity = () => {
             sites, compared against the US national average and disease-prevalence benchmarks.
           </p>
           <div className="flex flex-wrap items-center gap-3 mt-4">
-            <Tabs value={geoMode} onValueChange={(v) => setGeoMode(v as GeoMode)}>
-              <TabsList>
-                <TabsTrigger value="county">County (FIPS)</TabsTrigger>
-                <TabsTrigger value="zip3">ZIP3</TabsTrigger>
-              </TabsList>
-            </Tabs>
             {acsLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
             <Badge variant="outline" className="text-[10px]">
-              {usSiteCount} US site{usSiteCount === 1 ? '' : 's'} resolved
+              {usSiteCount} US site{usSiteCount === 1 ? '' : 's'} resolved to county
             </Badge>
             {cohortAcs && (
               <Badge variant="outline" className="text-[10px]">
-                {cohortAcs.uniqueGeos} unique {geoMode}{cohortAcs.uniqueGeos === 1 ? '' : 's'}
+                {cohortAcs.uniqueGeos} unique count{cohortAcs.uniqueGeos === 1 ? 'y' : 'ies'}
               </Badge>
             )}
             {indications.length > 0 && (
@@ -371,7 +365,7 @@ const CohortDiversity = () => {
               </p>
               {!cohortAcs ? (
                 <div className="text-center py-10 text-sm text-muted-foreground border border-dashed border-border/60 rounded-xl">
-                  {acsLoading ? 'Loading demographics…' : `No US ${geoMode} data resolved yet.`}
+                  {acsLoading ? 'Loading demographics…' : 'No US county data resolved yet.'}
                 </div>
               ) : (
                 <RaceComparisonChart
