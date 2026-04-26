@@ -190,7 +190,7 @@ const CohortDiversity = () => {
     )) as string[];
     if (ids.length === 0) return null;
 
-    const sums: Record<string, number> = {
+    const sums = {
       total: 0, white_nh: 0, black_nh: 0, hispanic: 0, asian_nh: 0,
       aian_nh: 0, nhpi_nh: 0, multi_nh: 0, other_nh: 0,
       under18: 0, age_18_64: 0, age_65plus: 0,
