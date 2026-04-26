@@ -5,7 +5,7 @@
 // When PlainMode is ON, also fetches the AI-rewritten plain-language version
 // from ctg-plain-language and shows it at the top with a switch to view raw.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ExternalLink, Loader2, MapPin, Users, Calendar, FlaskConical, AlertCircle, Sparkles, Phone, Mail } from 'lucide-react';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
@@ -20,6 +20,7 @@ import EligibilityCheck from '@/components/EligibilityCheck';
 import { cleanSponsor, cleanIndication, cleanAsset } from '@/lib/canonicalize';
 import { usePlainMode } from '@/contexts/PlainModeContext';
 import { usePlainTrial } from '@/lib/usePlainTrial';
+import { useSeo } from '@/hooks/useSeo';
 
 interface TrialDetail {
   nctId: string;
