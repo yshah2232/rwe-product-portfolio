@@ -245,6 +245,7 @@ export type Database = {
         Row: {
           created_at: string
           demographics: Json
+          doc_checklist: Json
           generated_at: string
           id: string
           is_recruiting: boolean | null
@@ -266,6 +267,7 @@ export type Database = {
         Insert: {
           created_at?: string
           demographics?: Json
+          doc_checklist?: Json
           generated_at?: string
           id?: string
           is_recruiting?: boolean | null
@@ -287,6 +289,7 @@ export type Database = {
         Update: {
           created_at?: string
           demographics?: Json
+          doc_checklist?: Json
           generated_at?: string
           id?: string
           is_recruiting?: boolean | null
