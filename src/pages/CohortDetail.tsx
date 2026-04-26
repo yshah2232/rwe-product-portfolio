@@ -6,7 +6,7 @@ import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Loader2, RefreshCw, ExternalLink, Trash2, Calendar, MapPin, Building2,
-  Stethoscope, FlaskConical,
+  Stethoscope, FlaskConical, Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -224,6 +224,11 @@ const CohortDetail = () => {
             </div>
             {isOwner && (
               <div className="flex items-center gap-2">
+                <Button asChild variant="default" className="gap-2">
+                  <Link to={`/cohorts/${cohort.id}/diversity`}>
+                    <Users className="h-4 w-4" /> Diversity & Access
+                  </Link>
+                </Button>
                 <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="gap-2">
                   {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                   Refresh from CTG.gov
@@ -232,6 +237,13 @@ const CohortDetail = () => {
                   <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                 </Button>
               </div>
+            )}
+            {!isOwner && (
+              <Button asChild variant="outline" className="gap-2">
+                <Link to={`/cohorts/${cohort.id}/diversity`}>
+                  <Users className="h-4 w-4" /> View diversity overlay
+                </Link>
+              </Button>
             )}
           </div>
           {!isOwner && (

@@ -13,6 +13,7 @@ import DataMethod from "./pages/DataMethod";
 import SearchRegistry from "./pages/SearchRegistry";
 import Cohorts from "./pages/Cohorts";
 import CohortDetail from "./pages/CohortDetail";
+import CohortDiversity from "./pages/CohortDiversity";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import MedicalDisclaimer from "./pages/MedicalDisclaimer";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/search-registry" element={<SearchRegistry />} />
               <Route path="/cohorts" element={<Cohorts />} />
               <Route path="/cohorts/:id" element={<CohortDetail />} />
+              <Route path="/cohorts/:id/diversity" element={<CohortDiversity />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/medical-disclaimer" element={<MedicalDisclaimer />} />
