@@ -44,6 +44,30 @@ export type Database = {
         }
         Relationships: []
       }
+      audience_selections: {
+        Row: {
+          audience: string
+          created_at: string
+          id: string
+          plain_mode_default: boolean
+          session_id: string
+        }
+        Insert: {
+          audience: string
+          created_at?: string
+          id?: string
+          plain_mode_default?: boolean
+          session_id: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          id?: string
+          plain_mode_default?: boolean
+          session_id?: string
+        }
+        Relationships: []
+      }
       cohort_trials: {
         Row: {
           added_at: string
@@ -178,6 +202,66 @@ export type Database = {
           suggested_clean?: string
           updated_at?: string
           vote_count?: number
+        }
+        Relationships: []
+      }
+      plain_language_trials: {
+        Row: {
+          created_at: string
+          generated_at: string
+          id: string
+          is_recruiting: boolean | null
+          key_numbers: Json | null
+          model_used: string
+          nct_id: string
+          plain_condition: string | null
+          plain_design: string | null
+          plain_eligibility: string | null
+          plain_intervention: string | null
+          plain_summary: string
+          plain_time_commitment: string | null
+          plain_title: string
+          plain_what_happens: string | null
+          source_updated_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string
+          id?: string
+          is_recruiting?: boolean | null
+          key_numbers?: Json | null
+          model_used?: string
+          nct_id: string
+          plain_condition?: string | null
+          plain_design?: string | null
+          plain_eligibility?: string | null
+          plain_intervention?: string | null
+          plain_summary: string
+          plain_time_commitment?: string | null
+          plain_title: string
+          plain_what_happens?: string | null
+          source_updated_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string
+          id?: string
+          is_recruiting?: boolean | null
+          key_numbers?: Json | null
+          model_used?: string
+          nct_id?: string
+          plain_condition?: string | null
+          plain_design?: string | null
+          plain_eligibility?: string | null
+          plain_intervention?: string | null
+          plain_summary?: string
+          plain_time_commitment?: string | null
+          plain_title?: string
+          plain_what_happens?: string | null
+          source_updated_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
