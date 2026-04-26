@@ -123,14 +123,16 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
               <Sparkles className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'hsl(var(--primary))' }} />
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-semibold" style={{ color: 'hsl(var(--primary))' }}>
-                  Plain language — auto-translated by AI
+                  AI-assisted plain language · Not medical advice
                 </p>
                 <p className="text-[11.5px] text-foreground/75 leading-snug mt-0.5">
-                  Numbers and eligibility paraphrased from the public registry. Always verify on{' '}
+                  Numbers and eligibility paraphrased from the public registry by an AI model — it can
+                  misread or simplify. Always verify on{' '}
                   <a href={data?.ctgUrl ?? `https://clinicaltrials.gov/study/${nctId}`}
                      target="_blank" rel="noreferrer" className="underline">
                     ClinicalTrials.gov
-                  </a>{' '}before acting.
+                  </a>{' '}and talk to your care team.{' '}
+                  <a href="/medical-disclaimer" className="underline">Read full disclaimer</a>.
                 </p>
               </div>
               {plain && (
