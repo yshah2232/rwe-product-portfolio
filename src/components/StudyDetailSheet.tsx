@@ -6,7 +6,7 @@
 // from ctg-plain-language and shows it at the top with a switch to view raw.
 
 import { useEffect, useState } from 'react';
-import { ExternalLink, Loader2, MapPin, Users, Calendar, FlaskConical, AlertCircle, Sparkles } from 'lucide-react';
+import { ExternalLink, Loader2, MapPin, Users, Calendar, FlaskConical, AlertCircle, Sparkles, Phone, Mail } from 'lucide-react';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from '@/components/ui/sheet';
@@ -14,6 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import TrustDrawer from '@/components/TrustDrawer';
+import TrialJourney from '@/components/TrialJourney';
+import EnrollmentDemographics from '@/components/EnrollmentDemographics';
+import EligibilityCheck from '@/components/EligibilityCheck';
 import { cleanSponsor, cleanIndication, cleanAsset } from '@/lib/canonicalize';
 import { usePlainMode } from '@/contexts/PlainModeContext';
 import { usePlainTrial } from '@/lib/usePlainTrial';
@@ -45,7 +48,12 @@ interface TrialDetail {
   primaryCompletionDate: string;
   leadSponsor: { name: string; class: string };
   collaborators: { name: string; class: string }[];
-  locations: { facility: string; city: string; state: string; country: string; zip: string; status: string }[];
+  locations: {
+    facility: string; city: string; state: string; country: string; zip: string; status: string;
+    contactName?: string; contactRole?: string; contactPhone?: string; contactEmail?: string;
+  }[];
+  centralContacts?: { name: string; role: string; phone: string; email: string }[];
+  overallOfficials?: { name: string; affiliation: string; role: string }[];
   countries: string[];
   ctgUrl: string;
 }
