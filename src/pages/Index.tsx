@@ -17,8 +17,11 @@ import {
   HeartPulse,
   Microscope,
   AlertTriangle,
+  HeartHandshake,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { usePlainMode } from '@/contexts/PlainModeContext';
 
 const anim = (delay: number) => ({
   initial: { opacity: 0, y: 12 },
@@ -67,6 +70,8 @@ const users = [
 
 const Index = () => {
   const navigate = useNavigate();
+  const { audience, plainMode, setPlainMode } = usePlainMode();
+  const showPatientEntry = plainMode || audience === 'patient';
   usePageTitle('Clinical Trial Diversity Studio — Equitable trial planning on real registry data');
 
   return (
