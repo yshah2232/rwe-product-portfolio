@@ -107,7 +107,52 @@ const Index = () => {
           </div>
         </div>
 
-        {/* HERO CTA — Search Registry */}
+        {/* For patients & families — only when audience=patient or plain mode is on */}
+        {showPatientEntry && (
+          <motion.section
+            {...anim(0.04)}
+            className="rounded-sm border-2 p-6 md:p-7"
+            style={{
+              borderColor: 'hsl(var(--primary) / 0.35)',
+              background: 'linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--background)) 100%)',
+            }}
+          >
+            <div className="flex flex-col md:flex-row md:items-center gap-5">
+              <div className="flex items-center justify-center w-12 h-12 rounded-sm shrink-0" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                <HeartHandshake className="h-6 w-6 text-white" strokeWidth={2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(var(--primary))' }}>
+                  <Sparkles className="h-3 w-3" /> For patients &amp; families
+                </div>
+                <h2 className="text-[20px] md:text-[22px] font-bold leading-tight" style={{ color: 'hsl(var(--primary))' }}>
+                  Looking for a clinical trial you (or someone you love) might join?
+                </h2>
+                <p className="mt-2 text-[14px] text-foreground/80 leading-relaxed max-w-2xl">
+                  Search the official registry in everyday words. We'll only show studies that are
+                  <strong> currently recruiting</strong>, and rewrite each one in plain language so you
+                  can understand what's involved before talking to a doctor.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 shrink-0 md:min-w-[200px]">
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    setPlainMode(true);
+                    track('cta_click', { location: 'patient_entry', target: '/search-registry' });
+                    navigate('/search-registry');
+                  }}
+                  className="gap-2 text-[14px] font-semibold rounded-sm"
+                >
+                  <Search className="h-4 w-4" /> Find a trial <ArrowRight className="h-4 w-4" />
+                </Button>
+                <p className="text-[10.5px] text-muted-foreground text-center leading-snug">
+                  Not medical advice. Always confirm with a clinician.
+                </p>
+              </div>
+            </div>
+          </motion.section>
+        )}
         <motion.section
           {...anim(0.05)}
           className="ctg-panel p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6"
