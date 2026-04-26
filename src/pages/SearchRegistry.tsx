@@ -517,6 +517,18 @@ const SearchRegistry = () => {
                         >
                           {trial.briefTitle}
                         </button>
+                        {plainMode && (
+                          <button
+                            onClick={() => {
+                              setOpenNct(trial.nctId);
+                              setSheetOpen(true);
+                              trackInteraction(trial, idx + 1, 'card_click');
+                            }}
+                            className="mt-1.5 inline-flex items-center gap-1 text-[11.5px] font-semibold text-primary hover:underline"
+                          >
+                            <Sparkles className="h-3 w-3" /> Open in plain language
+                          </button>
+                        )}
                       </div>
                       <div className="shrink-0 text-right">
                         <div
