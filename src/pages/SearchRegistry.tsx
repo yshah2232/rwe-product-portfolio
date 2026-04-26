@@ -251,15 +251,30 @@ const SearchRegistry = () => {
             <p className="text-[12px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'hsl(var(--link))' }}>
               Home &nbsp;›&nbsp; Search the Registry
             </p>
-            <h1 className="ctg-hero-title">
-              Search ClinicalTrials.gov by meaning, not just keywords.
-            </h1>
-            <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
-              Type a clinical scenario in plain language. We pull live candidates from the CTG.gov v2 API
-              and re-rank them semantically — so &ldquo;elderly lung tumor&rdquo; finds NSCLC trials in
-              patients ≥65 even when those exact words never appear in the protocol. Every result deep-links
-              to the authoritative CTG.gov page.
-            </p>
+            {plainMode ? (
+              <>
+                <h1 className="ctg-hero-title">
+                  Find clinical trials in plain language.
+                </h1>
+                <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
+                  Type the health problem you (or someone you care about) are facing — in everyday words.
+                  We'll search the official ClinicalTrials.gov registry and rewrite each study so you can
+                  read it without a medical degree. Only studies that are <strong>currently recruiting</strong> are shown.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="ctg-hero-title">
+                  Search ClinicalTrials.gov by meaning, not just keywords.
+                </h1>
+                <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
+                  Type a clinical scenario in plain language. We pull live candidates from the CTG.gov v2 API
+                  and re-rank them semantically — so &ldquo;elderly lung tumor&rdquo; finds NSCLC trials in
+                  patients ≥65 even when those exact words never appear in the protocol. Every result deep-links
+                  to the authoritative CTG.gov page.
+                </p>
+              </>
+            )}
           </motion.div>
         </div>
       </section>
