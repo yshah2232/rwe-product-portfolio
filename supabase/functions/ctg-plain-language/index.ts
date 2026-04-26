@@ -54,22 +54,31 @@ STRICT RULES:
 - If the source is missing information, say "Not specified by the study" — do not guess.
 - Do NOT give medical advice. Do NOT recommend joining or avoiding any trial.
 - Be neutral and factual.
-- For "key_numbers" array: extract real numbers from the source and put them in human terms. Examples:
-  * "1 in 3 participants will receive the placebo (inactive look-alike)" — only if source confirms 2:1 randomization
-  * "About ${"{n}"} people will join in total"
-  * "Visits about every X weeks for about Y months"
+- For "key_numbers" array: extract real numbers from the source and put them in human terms.
+- For "journey_steps": build a chronological participant journey. Use ONLY information from the source (eligibility, design, cycle length, follow-up duration). Each step has:
+   - "label": short marker like "Day 0", "Week 1", "Day 21", "Month 3", "Year 1", "End of study". If a specific timing is not in the source, use ordinal markers like "Step 1", "Step 2".
+   - "title": short title (≤6 words) e.g. "Screening visit", "First treatment cycle", "Imaging check-in", "Follow-up call"
+   - "detail": one sentence (≤140 chars) describing what happens
+   - "kind": one of "screening" | "enrollment" | "treatment" | "monitoring" | "followup" | "end"
+   Aim for 4–7 steps. Do not invent procedures the source doesn't mention. If the source is too thin, return fewer steps.
+- For "doc_checklist": list documents a participant might bring to their doctor to confirm eligibility for THIS trial (e.g., "Pathology report confirming Stage IV NSCLC", "Record of prior platinum chemotherapy", "Recent imaging (CT or MRI) within last 60 days"). Each item: { "label": short doc name, "why": one short reason tied to a specific eligibility criterion }. 3–6 items. Only items that are clearly traceable to a stated criterion. If criteria are too vague, return [].
 - Return JSON only, matching this exact shape:
 {
   "plain_title": "string (one sentence, ≤120 chars)",
-  "plain_summary": "string (2-3 sentences, what the study is asking)",
-  "plain_condition": "string (the health problem in everyday words)",
-  "plain_intervention": "string (what's being tested, in everyday words)",
-  "plain_eligibility": "string (who can join, 2-4 short bullet-style sentences separated by ' • ')",
-  "plain_design": "string (one sentence about how the study works)",
-  "plain_time_commitment": "string (one sentence about visits & duration, or 'Not specified by the study')",
-  "plain_what_happens": "string (1-2 sentences about what a participant actually does)",
-  "key_numbers": ["string", "string", ...]
+  "plain_summary": "string (2-3 sentences)",
+  "plain_condition": "string",
+  "plain_intervention": "string",
+  "plain_eligibility": "string (2-4 short sentences separated by ' • ')",
+  "plain_design": "string (one sentence)",
+  "plain_time_commitment": "string",
+  "plain_what_happens": "string (1-2 sentences)",
+  "key_numbers": ["string", ...],
+  "journey_steps": [{"label":"string","title":"string","detail":"string","kind":"string"}],
+  "doc_checklist": [{"label":"string","why":"string"}]
 }`;
+
+interface JourneyStep { label: string; title: string; detail: string; kind: string }
+interface DocItem { label: string; why: string }
 
 interface PlainTrial {
   plain_title: string;
@@ -81,6 +90,8 @@ interface PlainTrial {
   plain_time_commitment: string;
   plain_what_happens: string;
   key_numbers: string[];
+  journey_steps: JourneyStep[];
+  doc_checklist: DocItem[];
 }
 
 async function rewriteWithAI(sourceJson: unknown): Promise<PlainTrial> {
