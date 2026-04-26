@@ -77,6 +77,8 @@ Deno.serve(async (req) => {
     const desc = ps.descriptionModule ?? {};
     const contacts = ps.contactsLocationsModule ?? {};
     const locs = (contacts.locations ?? []) as any[];
+    const centralContacts = (contacts.centralContacts ?? []) as any[];
+    const overallOfficials = (contacts.overallOfficials ?? []) as any[];
 
     const out = {
       nctId: id.nctId ?? nctId,
@@ -109,13 +111,35 @@ Deno.serve(async (req) => {
       primaryCompletionDate: status.primaryCompletionDateStruct?.date ?? "",
       leadSponsor: { name: sponsor.name ?? "", class: sponsor.class ?? "" },
       collaborators: (collaborators as any[]).map((c) => ({ name: c.name ?? "", class: c.class ?? "" })),
-      locations: locs.map((l: any) => ({
-        facility: l.facility ?? "",
-        city: l.city ?? "",
-        state: l.state ?? "",
-        country: l.country ?? "",
-        zip: l.zip ?? "",
-        status: l.status ?? "",
+      locations: locs.map((l: any) => {
+        // CTG.gov v2 nests per-site contacts here. Phone/email may be missing
+        // — we surface what's there, never invent or fall back to web search.
+        const siteContacts = (l.contacts ?? []) as any[];
+        const primary = siteContacts[0] ?? null;
+        return {
+          facility: l.facility ?? "",
+          city: l.city ?? "",
+          state: l.state ?? "",
+          country: l.country ?? "",
+          zip: l.zip ?? "",
+          status: l.status ?? "",
+          contactName: primary?.name ?? "",
+          contactRole: primary?.role ?? "",
+          contactPhone: primary?.phone ?? "",
+          contactEmail: primary?.email ?? "",
+        };
+      }),
+      // Central contact for the whole study (often the only contact info available)
+      centralContacts: centralContacts.map((c: any) => ({
+        name: c.name ?? "",
+        role: c.role ?? "",
+        phone: c.phone ?? "",
+        email: c.email ?? "",
+      })),
+      overallOfficials: overallOfficials.map((o: any) => ({
+        name: o.name ?? "",
+        affiliation: o.affiliation ?? "",
+        role: o.role ?? "",
       })),
       countries: Array.from(new Set(locs.map((l: any) => l.country).filter(Boolean))) as string[],
       ctgUrl: `https://clinicaltrials.gov/study/${nctId}`,
