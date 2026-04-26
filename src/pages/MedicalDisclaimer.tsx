@@ -1,22 +1,16 @@
 // Medical Disclaimer — template copy.
 // Routes: /medical-disclaimer
 
-import { useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSeo } from '@/hooks/useSeo';
 
 const MedicalDisclaimer = () => {
-  usePageTitle('Medical Disclaimer — Clinical Trial Diversity Studio');
-
-  useEffect(() => {
-    const meta = document.querySelector('meta[name="description"]');
-    const prev = meta?.getAttribute('content') ?? '';
-    meta?.setAttribute(
-      'content',
+  useSeo({
+    title: 'Medical Disclaimer — Clinical Trial Diversity Studio',
+    description:
       'Important: This site is informational only. It is not medical advice. Always consult a qualified healthcare professional.',
-    );
-    return () => { if (meta && prev) meta.setAttribute('content', prev); };
-  }, []);
+    canonical: '/medical-disclaimer',
+  });
 
   return (
     <article className="max-w-3xl mx-auto px-6 md:px-10 py-12">

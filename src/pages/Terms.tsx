@@ -1,21 +1,15 @@
 // Terms of Service — template copy. Edit before legal review.
 // Routes: /terms
 
-import { useEffect } from 'react';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSeo } from '@/hooks/useSeo';
 
 const Terms = () => {
-  usePageTitle('Terms of Service — Clinical Trial Diversity Studio');
-
-  useEffect(() => {
-    const meta = document.querySelector('meta[name="description"]');
-    const prev = meta?.getAttribute('content') ?? '';
-    meta?.setAttribute(
-      'content',
+  useSeo({
+    title: 'Terms of Service — Clinical Trial Diversity Studio',
+    description:
       'Terms governing use of Clinical Trial Diversity Studio — an information tool built on public ClinicalTrials.gov data.',
-    );
-    return () => { if (meta && prev) meta.setAttribute('content', prev); };
-  }, []);
+    canonical: '/terms',
+  });
 
   return (
     <article className="max-w-3xl mx-auto px-6 md:px-10 py-12 prose prose-sm">

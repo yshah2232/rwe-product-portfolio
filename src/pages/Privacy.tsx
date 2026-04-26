@@ -1,21 +1,15 @@
 // Privacy Policy — template copy. Edit before legal review.
 // Routes: /privacy
 
-import { useEffect } from 'react';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSeo } from '@/hooks/useSeo';
 
 const Privacy = () => {
-  usePageTitle('Privacy Policy — Clinical Trial Diversity Studio');
-
-  useEffect(() => {
-    const meta = document.querySelector('meta[name="description"]');
-    const prev = meta?.getAttribute('content') ?? '';
-    meta?.setAttribute(
-      'content',
+  useSeo({
+    title: 'Privacy Policy — Clinical Trial Diversity Studio',
+    description:
       'How Clinical Trial Diversity Studio handles search queries, uploaded documents, and anonymous usage signals.',
-    );
-    return () => { if (meta && prev) meta.setAttribute('content', prev); };
-  }, []);
+    canonical: '/privacy',
+  });
 
   return (
     <article className="max-w-3xl mx-auto px-6 md:px-10 py-12">
