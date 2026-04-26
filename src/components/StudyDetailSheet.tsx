@@ -442,34 +442,85 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
 
             <Separator />
 
+            {/* Central study contacts (often the only contact info available) */}
+            {data.centralContacts && data.centralContacts.length > 0 && (
+              <section>
+                <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/80 mb-2 flex items-center gap-1.5">
+                  <Phone className="h-3 w-3" /> Study contact
+                </p>
+                <div className="space-y-2">
+                  {data.centralContacts.map((c, i) => (
+                    <div key={i} className="rounded-sm border border-border/60 bg-card p-2.5 text-[12px]">
+                      <p className="text-foreground font-medium">{c.name || 'Study coordinator'}{c.role && <span className="text-muted-foreground font-normal ml-1">· {c.role}</span>}</p>
+                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11.5px]">
+                        {c.phone && (
+                          <a href={`tel:${c.phone}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                            <Phone className="h-3 w-3" /> {c.phone}
+                          </a>
+                        )}
+                        {c.email && (
+                          <a href={`mailto:${c.email}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                            <Mail className="h-3 w-3" /> {c.email}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Locations */}
             {data.locations.length > 0 && (
               <section>
                 <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/80 mb-2 flex items-center gap-1.5">
                   <MapPin className="h-3 w-3" /> Locations ({data.locations.length})
                 </p>
-                <div className="max-h-72 overflow-y-auto space-y-1.5 pr-2">
-                  {data.locations.slice(0, 50).map((l, i) => (
-                    <div key={i} className="text-[12px] flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-foreground truncate">{l.facility || '—'}</p>
-                        <p className="text-muted-foreground text-[11px]">
-                          {[l.city, l.state, l.country].filter(Boolean).join(', ')}
-                        </p>
+                <div className="max-h-80 overflow-y-auto space-y-2 pr-2">
+                  {data.locations.slice(0, 50).map((l, i) => {
+                    const hasContact = !!(l.contactPhone || l.contactEmail || l.contactName);
+                    return (
+                      <div key={i} className="text-[12px] py-2 border-b border-border/30 last:border-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-foreground font-medium truncate">{l.facility || '—'}</p>
+                            <p className="text-muted-foreground text-[11px]">
+                              {[l.city, l.state, l.country].filter(Boolean).join(', ')}
+                            </p>
+                          </div>
+                          {l.status && (
+                            <Badge variant="outline" className="text-[10px] py-0 h-5 shrink-0">
+                              {l.status.replace(/_/g, ' ')}
+                            </Badge>
+                          )}
+                        </div>
+                        {hasContact && (
+                          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] pl-0.5">
+                            {l.contactName && <span className="text-muted-foreground">{l.contactName}</span>}
+                            {l.contactPhone && (
+                              <a href={`tel:${l.contactPhone}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                                <Phone className="h-3 w-3" /> {l.contactPhone}
+                              </a>
+                            )}
+                            {l.contactEmail && (
+                              <a href={`mailto:${l.contactEmail}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                                <Mail className="h-3 w-3" /> {l.contactEmail}
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {l.status && (
-                        <Badge variant="outline" className="text-[10px] py-0 h-5 shrink-0">
-                          {l.status.replace(/_/g, ' ')}
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {data.locations.length > 50 && (
                   <p className="text-[11px] text-muted-foreground mt-2 italic">
                     Showing first 50 of {data.locations.length}. Full list on CTG.gov.
                   </p>
                 )}
+                <p className="text-[10.5px] text-muted-foreground mt-2 italic">
+                  Sites do not publish their own landing pages on CTG.gov. Use the contact above (or the central study contact) to reach the recruiting team directly.
+                </p>
               </section>
             )}
 
