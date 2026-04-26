@@ -397,7 +397,7 @@ const SearchRegistry = () => {
 
           {data && !loading && (
             <>
-              <div className="flex flex-wrap items-baseline justify-between gap-4 mb-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-4 mb-3">
                 <div>
                   <h2 className="font-display text-[26px] md:text-[28px] font-semibold text-foreground tracking-tight">
                     {data.results.length} re-ranked results
@@ -422,6 +422,18 @@ const SearchRegistry = () => {
                   </p>
                 </div>
               </div>
+
+              {/* Source + freshness attribution */}
+              <p className="text-[11.5px] text-muted-foreground mb-6 flex items-center gap-1.5">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/60" />
+                Source: <a
+                  href="https://clinicaltrials.gov/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-foreground/80 hover:text-primary underline-offset-2 hover:underline"
+                >ClinicalTrials.gov</a> · Live API · Fetched {new Date().toLocaleString()} ·
+                Re-ranking is AI-assisted — not a clinical recommendation.
+              </p>
 
               {/* View toggle */}
               <div className="flex items-center gap-1 mb-6 p-1 rounded-lg border border-border/60 bg-muted/40 w-fit">
