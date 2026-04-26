@@ -3,6 +3,28 @@
 
 import { useEffect, useState } from 'react';
 
+export interface JourneyStep {
+  label: string;
+  title: string;
+  detail: string;
+  kind: 'screening' | 'enrollment' | 'treatment' | 'monitoring' | 'followup' | 'end' | string;
+}
+
+export interface DocChecklistItem {
+  label: string;
+  why?: string;
+}
+
+export interface Demographics {
+  reported: boolean;
+  source_note: string;
+  total_participants?: number;
+  sex?: { female_pct?: number; male_pct?: number };
+  age?: { mean?: number; median?: number; under_65_pct?: number; over_65_pct?: number };
+  race?: Record<string, number>;
+  ethnicity?: Record<string, number>;
+}
+
 export interface PlainTrial {
   nct_id: string;
   plain_title: string;
@@ -14,6 +36,9 @@ export interface PlainTrial {
   plain_time_commitment: string;
   plain_what_happens: string;
   key_numbers: string[];
+  journey_steps: JourneyStep[];
+  doc_checklist: DocChecklistItem[];
+  demographics: Demographics;
   is_recruiting: boolean;
   cached?: boolean;
 }

@@ -54,22 +54,31 @@ STRICT RULES:
 - If the source is missing information, say "Not specified by the study" — do not guess.
 - Do NOT give medical advice. Do NOT recommend joining or avoiding any trial.
 - Be neutral and factual.
-- For "key_numbers" array: extract real numbers from the source and put them in human terms. Examples:
-  * "1 in 3 participants will receive the placebo (inactive look-alike)" — only if source confirms 2:1 randomization
-  * "About ${"{n}"} people will join in total"
-  * "Visits about every X weeks for about Y months"
+- For "key_numbers" array: extract real numbers from the source and put them in human terms.
+- For "journey_steps": build a chronological participant journey. Use ONLY information from the source (eligibility, design, cycle length, follow-up duration). Each step has:
+   - "label": short marker like "Day 0", "Week 1", "Day 21", "Month 3", "Year 1", "End of study". If a specific timing is not in the source, use ordinal markers like "Step 1", "Step 2".
+   - "title": short title (≤6 words) e.g. "Screening visit", "First treatment cycle", "Imaging check-in", "Follow-up call"
+   - "detail": one sentence (≤140 chars) describing what happens
+   - "kind": one of "screening" | "enrollment" | "treatment" | "monitoring" | "followup" | "end"
+   Aim for 4–7 steps. Do not invent procedures the source doesn't mention. If the source is too thin, return fewer steps.
+- For "doc_checklist": list documents a participant might bring to their doctor to confirm eligibility for THIS trial (e.g., "Pathology report confirming Stage IV NSCLC", "Record of prior platinum chemotherapy", "Recent imaging (CT or MRI) within last 60 days"). Each item: { "label": short doc name, "why": one short reason tied to a specific eligibility criterion }. 3–6 items. Only items that are clearly traceable to a stated criterion. If criteria are too vague, return [].
 - Return JSON only, matching this exact shape:
 {
   "plain_title": "string (one sentence, ≤120 chars)",
-  "plain_summary": "string (2-3 sentences, what the study is asking)",
-  "plain_condition": "string (the health problem in everyday words)",
-  "plain_intervention": "string (what's being tested, in everyday words)",
-  "plain_eligibility": "string (who can join, 2-4 short bullet-style sentences separated by ' • ')",
-  "plain_design": "string (one sentence about how the study works)",
-  "plain_time_commitment": "string (one sentence about visits & duration, or 'Not specified by the study')",
-  "plain_what_happens": "string (1-2 sentences about what a participant actually does)",
-  "key_numbers": ["string", "string", ...]
+  "plain_summary": "string (2-3 sentences)",
+  "plain_condition": "string",
+  "plain_intervention": "string",
+  "plain_eligibility": "string (2-4 short sentences separated by ' • ')",
+  "plain_design": "string (one sentence)",
+  "plain_time_commitment": "string",
+  "plain_what_happens": "string (1-2 sentences)",
+  "key_numbers": ["string", ...],
+  "journey_steps": [{"label":"string","title":"string","detail":"string","kind":"string"}],
+  "doc_checklist": [{"label":"string","why":"string"}]
 }`;
+
+interface JourneyStep { label: string; title: string; detail: string; kind: string }
+interface DocItem { label: string; why: string }
 
 interface PlainTrial {
   plain_title: string;
@@ -81,6 +90,8 @@ interface PlainTrial {
   plain_time_commitment: string;
   plain_what_happens: string;
   key_numbers: string[];
+  journey_steps: JourneyStep[];
+  doc_checklist: DocItem[];
 }
 
 async function rewriteWithAI(sourceJson: unknown): Promise<PlainTrial> {
@@ -123,7 +134,106 @@ async function rewriteWithAI(sourceJson: unknown): Promise<PlainTrial> {
     plain_time_commitment: String(parsed.plain_time_commitment ?? ""),
     plain_what_happens: String(parsed.plain_what_happens ?? ""),
     key_numbers: Array.isArray(parsed.key_numbers) ? parsed.key_numbers.map(String).slice(0, 8) : [],
+    journey_steps: Array.isArray(parsed.journey_steps)
+      ? parsed.journey_steps.slice(0, 8).map((s: any) => ({
+          label: String(s.label ?? "").slice(0, 30),
+          title: String(s.title ?? "").slice(0, 60),
+          detail: String(s.detail ?? "").slice(0, 200),
+          kind: ["screening","enrollment","treatment","monitoring","followup","end"].includes(s.kind) ? s.kind : "monitoring",
+        }))
+      : [],
+    doc_checklist: Array.isArray(parsed.doc_checklist)
+      ? parsed.doc_checklist.slice(0, 8).map((d: any) => ({
+          label: String(d.label ?? "").slice(0, 80),
+          why: String(d.why ?? "").slice(0, 160),
+        }))
+      : [],
   };
+}
+
+// Pull real demographics from CTG.gov results (BaselineCharacteristicsModule).
+// Returns { reported: false } if the trial has no posted results — never invents.
+function extractDemographics(study: any): any {
+  const baseline = study?.resultsSection?.baselineCharacteristicsModule;
+  if (!baseline || !Array.isArray(baseline.measures) || baseline.measures.length === 0) {
+    return { reported: false, source_note: "Demographics not yet reported by sponsor on ClinicalTrials.gov." };
+  }
+
+  const denoms = baseline.denoms ?? [];
+  let totalParticipants = 0;
+  for (const d of denoms) {
+    if (d?.units === "Participants" && Array.isArray(d.counts)) {
+      for (const c of d.counts) {
+        const v = parseInt(c.value ?? "0", 10);
+        if (!isNaN(v)) totalParticipants = Math.max(totalParticipants, v);
+      }
+    }
+  }
+
+  const out: any = { reported: true, source_note: "From this trial's posted results on ClinicalTrials.gov." };
+  if (totalParticipants > 0) out.total_participants = totalParticipants;
+
+  const sumByCategory = (m: any): Record<string, number> => {
+    const acc: Record<string, number> = {};
+    for (const cls of m.classes ?? []) {
+      for (const cat of cls.categories ?? []) {
+        const t = String(cat.title ?? "").trim();
+        let n = 0;
+        for (const meas of cat.measurements ?? []) {
+          const v = parseFloat(meas.value);
+          if (!isNaN(v)) n += v;
+        }
+        if (t) acc[t] = (acc[t] ?? 0) + n;
+      }
+    }
+    return acc;
+  };
+
+  for (const m of baseline.measures) {
+    const title = String(m.title ?? "").toLowerCase();
+    if (title.includes("sex") || title.includes("gender")) {
+      const counts = sumByCategory(m);
+      const total = Object.values(counts).reduce((s, v) => s + v, 0);
+      if (total > 0) {
+        out.sex = {
+          female_pct: counts["Female"] !== undefined ? Math.round((counts["Female"] / total) * 1000) / 10 : undefined,
+          male_pct: counts["Male"] !== undefined ? Math.round((counts["Male"] / total) * 1000) / 10 : undefined,
+        };
+      }
+    } else if (title.includes("age") && title.includes("categorical")) {
+      const counts = sumByCategory(m);
+      const total = Object.values(counts).reduce((s, v) => s + v, 0);
+      const under = (counts["<=18 years"] ?? 0) + (counts["Between 18 and 65 years"] ?? 0) + (counts["<18 years"] ?? 0);
+      const over = (counts[">=65 years"] ?? 0) + (counts[">65 years"] ?? 0);
+      if (total > 0) {
+        out.age = {
+          under_65_pct: under > 0 ? Math.round((under / total) * 1000) / 10 : undefined,
+          over_65_pct: over > 0 ? Math.round((over / total) * 1000) / 10 : undefined,
+        };
+      }
+    } else if (title.includes("race")) {
+      const counts = sumByCategory(m);
+      const total = Object.values(counts).reduce((s, v) => s + v, 0);
+      if (total > 0) {
+        const pcts: Record<string, number> = {};
+        for (const [k, v] of Object.entries(counts)) {
+          if (v > 0) pcts[k] = Math.round((v / total) * 1000) / 10;
+        }
+        out.race = pcts;
+      }
+    } else if (title.includes("ethnicity")) {
+      const counts = sumByCategory(m);
+      const total = Object.values(counts).reduce((s, v) => s + v, 0);
+      if (total > 0) {
+        const pcts: Record<string, number> = {};
+        for (const [k, v] of Object.entries(counts)) {
+          if (v > 0) pcts[k] = Math.round((v / total) * 1000) / 10;
+        }
+        out.ethnicity = pcts;
+      }
+    }
+  }
+  return out;
 }
 
 Deno.serve(async (req) => {
@@ -210,6 +320,9 @@ Deno.serve(async (req) => {
     // 4. AI rewrite
     const plain = await rewriteWithAI(trimmed);
 
+    // 4b. Real demographics — pulled directly from CTG results, no AI involved.
+    const demographics = extractDemographics(study);
+
     // 5. Persist (upsert)
     const { data: stored, error: insErr } = await supabase
       .from("plain_language_trials")
@@ -226,6 +339,9 @@ Deno.serve(async (req) => {
           plain_time_commitment: plain.plain_time_commitment,
           plain_what_happens: plain.plain_what_happens,
           key_numbers: plain.key_numbers,
+          journey_steps: plain.journey_steps,
+          doc_checklist: plain.doc_checklist,
+          demographics,
           is_recruiting: isRecruiting,
           model_used: MODEL,
           generated_at: new Date().toISOString(),
@@ -238,7 +354,7 @@ Deno.serve(async (req) => {
     if (insErr) {
       console.error("plain_language upsert error", insErr);
       // Still return the rewrite even if persistence failed
-      return json({ ...plain, nct_id: nctId, is_recruiting: isRecruiting, cached: false, persisted: false });
+      return json({ ...plain, demographics, nct_id: nctId, is_recruiting: isRecruiting, cached: false, persisted: false });
     }
 
     return json({ ...stored, cached: false });
