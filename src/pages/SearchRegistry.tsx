@@ -118,7 +118,9 @@ const SearchRegistry = () => {
 
     const params = new URLSearchParams({ q: q.trim(), sid: sessionId });
     if (phase !== 'any') params.set('phase', phase);
-    if (status !== 'any') params.set('status', status);
+    // Plain mode forces "Recruiting only" so non-clinical visitors don't see closed trials.
+    const effectiveStatus = plainMode ? 'RECRUITING' : status;
+    if (effectiveStatus !== 'any') params.set('status', effectiveStatus);
     if (countryUS) params.set('countryUS', 'true');
 
     try {
