@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { WorldProvider } from "@/contexts/WorldContext";
+import { PlainModeProvider } from "@/contexts/PlainModeContext";
 import SiteLayout from "@/components/SiteLayout";
+import AudienceModal from "@/components/AudienceModal";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import DataMethod from "./pages/DataMethod";
@@ -19,9 +21,11 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <WorldProvider>
+        <PlainModeProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AudienceModal />
           <Routes>
             <Route element={<SiteLayout />}>
               <Route path="/" element={<Index />} />
@@ -44,6 +48,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </PlainModeProvider>
       </WorldProvider>
     </TooltipProvider>
   </QueryClientProvider>

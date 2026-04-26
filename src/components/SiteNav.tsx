@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronRight, Info, ChevronUp, ChevronDown } from 'lucide-react';
+import PlainModeToggle from '@/components/PlainModeToggle';
 
 const navLinks = [
   { label: 'Home', to: '/' },
@@ -48,15 +49,18 @@ const SiteNav = () => {
               </div>
             </div>
           </Link>
-          <button
-            type="button"
-            aria-label="Toggle menu"
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((v) => !v)}
-            className="md:hidden p-1.5 rounded-sm border border-white/40"
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <PlainModeToggle />
+            <button
+              type="button"
+              aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen((v) => !v)}
+              className="md:hidden p-1.5 rounded-sm border border-white/40"
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
       </div>
 

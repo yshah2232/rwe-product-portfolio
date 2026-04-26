@@ -1,9 +1,12 @@
 // Study Detail Sheet — pulls full trial detail from ctg-trial-detail edge fn,
 // shows eligibility, sponsor, locations, interventions, with TrustDrawer on
 // canonicalized fields. Deep links to the authoritative CTG.gov page.
+//
+// When PlainMode is ON, also fetches the AI-rewritten plain-language version
+// from ctg-plain-language and shows it at the top with a switch to view raw.
 
 import { useEffect, useState } from 'react';
-import { ExternalLink, Loader2, MapPin, Users, Calendar, FlaskConical, AlertCircle } from 'lucide-react';
+import { ExternalLink, Loader2, MapPin, Users, Calendar, FlaskConical, AlertCircle, Sparkles } from 'lucide-react';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from '@/components/ui/sheet';
@@ -12,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import TrustDrawer from '@/components/TrustDrawer';
 import { cleanSponsor, cleanIndication, cleanAsset } from '@/lib/canonicalize';
+import { usePlainMode } from '@/contexts/PlainModeContext';
+import { usePlainTrial } from '@/lib/usePlainTrial';
 
 interface TrialDetail {
   nctId: string;
@@ -57,6 +62,10 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
   const [data, setData] = useState<TrialDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { plainMode } = usePlainMode();
+  const [showRaw, setShowRaw] = useState(false);
+  const { data: plain, loading: plainLoading } = usePlainTrial(nctId, plainMode && open);
+  const usePlain = plainMode && !showRaw && !!plain;
 
   useEffect(() => {
     if (!open || !nctId) return;
@@ -85,14 +94,48 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
       <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader className="text-left">
           <SheetTitle className="font-display text-xl pr-8">
-            {data?.briefTitle ?? (loading ? 'Loading…' : nctId ?? 'Trial')}
+            {usePlain && plain
+              ? plain.plain_title
+              : data?.briefTitle ?? (loading ? 'Loading…' : nctId ?? 'Trial')}
           </SheetTitle>
           <SheetDescription>
             <span className="font-mono text-xs text-primary">{nctId}</span>
-            {data?.officialTitle && data.officialTitle !== data.briefTitle && (
+            {!usePlain && data?.officialTitle && data.officialTitle !== data.briefTitle && (
               <span className="block mt-1 text-[12px]">{data.officialTitle}</span>
             )}
           </SheetDescription>
+
+          {/* Plain mode banner + raw toggle */}
+          {plainMode && (
+            <div className="mt-3 rounded-sm border p-3 flex items-start gap-2.5"
+                 style={{ backgroundColor: 'hsl(var(--accent))', borderColor: 'hsl(var(--primary) / 0.3)' }}>
+              <Sparkles className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'hsl(var(--primary))' }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold" style={{ color: 'hsl(var(--primary))' }}>
+                  Plain language — auto-translated by AI
+                </p>
+                <p className="text-[11.5px] text-foreground/75 leading-snug mt-0.5">
+                  Numbers and eligibility paraphrased from the public registry. Always verify on{' '}
+                  <a href={data?.ctgUrl ?? `https://clinicaltrials.gov/study/${nctId}`}
+                     target="_blank" rel="noreferrer" className="underline">
+                    ClinicalTrials.gov
+                  </a>{' '}before acting.
+                </p>
+              </div>
+              {plain && (
+                <button
+                  onClick={() => setShowRaw((v) => !v)}
+                  className="text-[11px] font-semibold underline shrink-0 mt-0.5"
+                  style={{ color: 'hsl(var(--primary))' }}
+                >
+                  {showRaw ? 'Show plain' : 'Show clinical'}
+                </button>
+              )}
+              {plainLoading && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0 mt-0.5" style={{ color: 'hsl(var(--primary))' }} />
+              )}
+            </div>
+          )}
         </SheetHeader>
 
         {loading && (
@@ -136,16 +179,90 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
               </div>
             )}
 
-            {/* Brief summary */}
-            {data.briefSummary && (
-              <section>
-                <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/80 mb-2">
-                  Brief summary
-                </p>
-                <p className="text-[13.5px] text-foreground leading-relaxed whitespace-pre-line">
-                  {data.briefSummary}
-                </p>
+            {/* Brief summary — plain or clinical */}
+            {usePlain && plain ? (
+              <section className="space-y-4">
+                <div>
+                  <p className="text-[11px] font-semibold tracking-wider uppercase mb-2" style={{ color: 'hsl(var(--primary))' }}>
+                    What this study is asking
+                  </p>
+                  <p className="text-[14px] text-foreground leading-relaxed">
+                    {plain.plain_summary}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {plain.plain_condition && (
+                    <div className="rounded-sm border border-border bg-card p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Health problem</p>
+                      <p className="text-[13px] text-foreground leading-snug">{plain.plain_condition}</p>
+                    </div>
+                  )}
+                  {plain.plain_intervention && (
+                    <div className="rounded-sm border border-border bg-card p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">What's being tested</p>
+                      <p className="text-[13px] text-foreground leading-snug">{plain.plain_intervention}</p>
+                    </div>
+                  )}
+                  {plain.plain_design && (
+                    <div className="rounded-sm border border-border bg-card p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">How the study works</p>
+                      <p className="text-[13px] text-foreground leading-snug">{plain.plain_design}</p>
+                    </div>
+                  )}
+                  {plain.plain_time_commitment && (
+                    <div className="rounded-sm border border-border bg-card p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Time commitment</p>
+                      <p className="text-[13px] text-foreground leading-snug">{plain.plain_time_commitment}</p>
+                    </div>
+                  )}
+                </div>
+
+                {plain.plain_what_happens && (
+                  <div>
+                    <p className="text-[11px] font-semibold tracking-wider uppercase mb-2" style={{ color: 'hsl(var(--primary))' }}>
+                      What participants actually do
+                    </p>
+                    <p className="text-[13.5px] text-foreground leading-relaxed">{plain.plain_what_happens}</p>
+                  </div>
+                )}
+
+                {plain.plain_eligibility && (
+                  <div>
+                    <p className="text-[11px] font-semibold tracking-wider uppercase mb-2" style={{ color: 'hsl(var(--primary))' }}>
+                      Who can join
+                    </p>
+                    <p className="text-[13.5px] text-foreground leading-relaxed">{plain.plain_eligibility}</p>
+                  </div>
+                )}
+
+                {plain.key_numbers.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold tracking-wider uppercase mb-2" style={{ color: 'hsl(var(--primary))' }}>
+                      Key numbers
+                    </p>
+                    <ul className="space-y-1.5 text-[13px] text-foreground/85">
+                      {plain.key_numbers.map((n, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-primary mt-1">•</span>
+                          <span>{n}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </section>
+            ) : (
+              data.briefSummary && (
+                <section>
+                  <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/80 mb-2">
+                    Brief summary
+                  </p>
+                  <p className="text-[13.5px] text-foreground leading-relaxed whitespace-pre-line">
+                    {data.briefSummary}
+                  </p>
+                </section>
+              )
             )}
 
             {/* Sponsor */}

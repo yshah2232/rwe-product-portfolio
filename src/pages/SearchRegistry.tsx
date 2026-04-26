@@ -24,6 +24,7 @@ import TrustDrawer from '@/components/TrustDrawer';
 import SaveCohortDialog from '@/components/SaveCohortDialog';
 import TrialMap from '@/components/TrialMap';
 import { cleanSponsor, cleanIndication } from '@/lib/canonicalize';
+import { usePlainMode } from '@/contexts/PlainModeContext';
 
 interface RankedTrial {
   nctId: string;
@@ -68,7 +69,7 @@ const ctgUrl = (nct: string) => `https://clinicaltrials.gov/study/${nct}`;
 
 const SearchRegistry = () => {
   usePageTitle('Search Registry — Semantic search across ClinicalTrials.gov');
-
+  const { plainMode } = usePlainMode();
   const [query, setQuery] = useState('');
   const [phase, setPhase] = useState<string>('any');
   const [status, setStatus] = useState<string>('any');
@@ -117,7 +118,9 @@ const SearchRegistry = () => {
 
     const params = new URLSearchParams({ q: q.trim(), sid: sessionId });
     if (phase !== 'any') params.set('phase', phase);
-    if (status !== 'any') params.set('status', status);
+    // Plain mode forces "Recruiting only" so non-clinical visitors don't see closed trials.
+    const effectiveStatus = plainMode ? 'RECRUITING' : status;
+    if (effectiveStatus !== 'any') params.set('status', effectiveStatus);
     if (countryUS) params.set('countryUS', 'true');
 
     try {
@@ -248,15 +251,30 @@ const SearchRegistry = () => {
             <p className="text-[12px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'hsl(var(--link))' }}>
               Home &nbsp;›&nbsp; Search the Registry
             </p>
-            <h1 className="ctg-hero-title">
-              Search ClinicalTrials.gov by meaning, not just keywords.
-            </h1>
-            <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
-              Type a clinical scenario in plain language. We pull live candidates from the CTG.gov v2 API
-              and re-rank them semantically — so &ldquo;elderly lung tumor&rdquo; finds NSCLC trials in
-              patients ≥65 even when those exact words never appear in the protocol. Every result deep-links
-              to the authoritative CTG.gov page.
-            </p>
+            {plainMode ? (
+              <>
+                <h1 className="ctg-hero-title">
+                  Find clinical trials in plain language.
+                </h1>
+                <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
+                  Type the health problem you (or someone you care about) are facing — in everyday words.
+                  We'll search the official ClinicalTrials.gov registry and rewrite each study so you can
+                  read it without a medical degree. Only studies that are <strong>currently recruiting</strong> are shown.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="ctg-hero-title">
+                  Search ClinicalTrials.gov by meaning, not just keywords.
+                </h1>
+                <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
+                  Type a clinical scenario in plain language. We pull live candidates from the CTG.gov v2 API
+                  and re-rank them semantically — so &ldquo;elderly lung tumor&rdquo; finds NSCLC trials in
+                  patients ≥65 even when those exact words never appear in the protocol. Every result deep-links
+                  to the authoritative CTG.gov page.
+                </p>
+              </>
+            )}
           </motion.div>
         </div>
       </section>
@@ -298,18 +316,25 @@ const SearchRegistry = () => {
                   <SelectItem value="PHASE4">Phase 4</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="h-9 w-[180px] text-xs">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any status</SelectItem>
-                  <SelectItem value="RECRUITING">Recruiting</SelectItem>
-                  <SelectItem value="ACTIVE_NOT_RECRUITING">Active, not recruiting</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="NOT_YET_RECRUITING">Not yet recruiting</SelectItem>
-                </SelectContent>
-              </Select>
+              {plainMode ? (
+                <span className="inline-flex items-center gap-1.5 h-9 px-3 rounded-sm border border-primary/30 bg-primary/10 text-[11.5px] font-semibold text-primary">
+                  <Sparkles className="h-3 w-3" />
+                  Recruiting only (Plain mode)
+                </span>
+              ) : (
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger className="h-9 w-[180px] text-xs">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any status</SelectItem>
+                    <SelectItem value="RECRUITING">Recruiting</SelectItem>
+                    <SelectItem value="ACTIVE_NOT_RECRUITING">Active, not recruiting</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="NOT_YET_RECRUITING">Not yet recruiting</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
               <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                 <input
                   type="checkbox"
@@ -492,6 +517,18 @@ const SearchRegistry = () => {
                         >
                           {trial.briefTitle}
                         </button>
+                        {plainMode && (
+                          <button
+                            onClick={() => {
+                              setOpenNct(trial.nctId);
+                              setSheetOpen(true);
+                              trackInteraction(trial, idx + 1, 'card_click');
+                            }}
+                            className="mt-1.5 inline-flex items-center gap-1 text-[11.5px] font-semibold text-primary hover:underline"
+                          >
+                            <Sparkles className="h-3 w-3" /> Open in plain language
+                          </button>
+                        )}
                       </div>
                       <div className="shrink-0 text-right">
                         <div
