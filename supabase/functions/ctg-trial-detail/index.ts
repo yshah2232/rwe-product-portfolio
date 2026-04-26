@@ -143,6 +143,10 @@ Deno.serve(async (req) => {
       })),
       countries: Array.from(new Set(locs.map((l: any) => l.country).filter(Boolean))) as string[],
       ctgUrl: `https://clinicaltrials.gov/study/${nctId}`,
+      // Provenance — when the sponsor last updated the record on CTG.gov, and when we fetched it.
+      lastUpdateSubmitDate: status.lastUpdateSubmitDate ?? status.lastUpdatePostDateStruct?.date ?? "",
+      lastUpdatePostDate: status.lastUpdatePostDateStruct?.date ?? "",
+      fetchedAt: new Date().toISOString(),
     };
 
     return new Response(JSON.stringify(out), {
