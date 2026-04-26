@@ -316,18 +316,25 @@ const SearchRegistry = () => {
                   <SelectItem value="PHASE4">Phase 4</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="h-9 w-[180px] text-xs">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any status</SelectItem>
-                  <SelectItem value="RECRUITING">Recruiting</SelectItem>
-                  <SelectItem value="ACTIVE_NOT_RECRUITING">Active, not recruiting</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="NOT_YET_RECRUITING">Not yet recruiting</SelectItem>
-                </SelectContent>
-              </Select>
+              {plainMode ? (
+                <span className="inline-flex items-center gap-1.5 h-9 px-3 rounded-sm border border-primary/30 bg-primary/10 text-[11.5px] font-semibold text-primary">
+                  <Sparkles className="h-3 w-3" />
+                  Recruiting only (Plain mode)
+                </span>
+              ) : (
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger className="h-9 w-[180px] text-xs">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any status</SelectItem>
+                    <SelectItem value="RECRUITING">Recruiting</SelectItem>
+                    <SelectItem value="ACTIVE_NOT_RECRUITING">Active, not recruiting</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="NOT_YET_RECRUITING">Not yet recruiting</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
               <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                 <input
                   type="checkbox"
