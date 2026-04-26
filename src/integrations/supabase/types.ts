@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      acs_cache: {
+        Row: {
+          acs_year: number
+          expires_at: string
+          fetched_at: string
+          geo_id: string
+          geo_type: string
+          id: string
+          median_household_income: number | null
+          pop_age_18_64: number | null
+          pop_age_65plus: number | null
+          pop_age_under18: number | null
+          pop_aian_nh: number | null
+          pop_asian_nh: number | null
+          pop_black_nh: number | null
+          pop_hispanic: number | null
+          pop_multi_nh: number | null
+          pop_nhpi_nh: number | null
+          pop_other_nh: number | null
+          pop_white_nh: number | null
+          source_url: string
+          total_population: number | null
+        }
+        Insert: {
+          acs_year: number
+          expires_at?: string
+          fetched_at?: string
+          geo_id: string
+          geo_type: string
+          id?: string
+          median_household_income?: number | null
+          pop_age_18_64?: number | null
+          pop_age_65plus?: number | null
+          pop_age_under18?: number | null
+          pop_aian_nh?: number | null
+          pop_asian_nh?: number | null
+          pop_black_nh?: number | null
+          pop_hispanic?: number | null
+          pop_multi_nh?: number | null
+          pop_nhpi_nh?: number | null
+          pop_other_nh?: number | null
+          pop_white_nh?: number | null
+          source_url: string
+          total_population?: number | null
+        }
+        Update: {
+          acs_year?: number
+          expires_at?: string
+          fetched_at?: string
+          geo_id?: string
+          geo_type?: string
+          id?: string
+          median_household_income?: number | null
+          pop_age_18_64?: number | null
+          pop_age_65plus?: number | null
+          pop_age_under18?: number | null
+          pop_aian_nh?: number | null
+          pop_asian_nh?: number | null
+          pop_black_nh?: number | null
+          pop_hispanic?: number | null
+          pop_multi_nh?: number | null
+          pop_nhpi_nh?: number | null
+          pop_other_nh?: number | null
+          pop_white_nh?: number | null
+          source_url?: string
+          total_population?: number | null
+        }
+        Relationships: []
+      }
       asset_mappings: {
         Row: {
           clean_value: string
@@ -136,6 +205,51 @@ export type Database = {
           },
         ]
       }
+      disease_prevalence: {
+        Row: {
+          confidence: number
+          created_at: string
+          id: string
+          indication_clean: string
+          metric_type: string
+          notes: string | null
+          population_group: string
+          prevalence_per_100k: number | null
+          source_name: string
+          source_url: string
+          source_year: number
+          updated_at: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          indication_clean: string
+          metric_type?: string
+          notes?: string | null
+          population_group: string
+          prevalence_per_100k?: number | null
+          source_name: string
+          source_url: string
+          source_year: number
+          updated_at?: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          indication_clean?: string
+          metric_type?: string
+          notes?: string | null
+          population_group?: string
+          prevalence_per_100k?: number | null
+          source_name?: string
+          source_url?: string
+          source_year?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       eligibility_checks: {
         Row: {
           checklist: Json
@@ -238,6 +352,63 @@ export type Database = {
           suggested_clean?: string
           updated_at?: string
           vote_count?: number
+        }
+        Relationships: []
+      }
+      normalized_locations: {
+        Row: {
+          county_fips: string | null
+          county_name: string | null
+          created_at: string
+          id: string
+          nct_id: string
+          raw_city: string | null
+          raw_country: string
+          raw_facility: string | null
+          raw_state: string | null
+          resolution_confidence: number
+          resolution_method: string
+          resolved_at: string
+          source_field: string
+          state_code: string | null
+          updated_at: string
+          zip3: string | null
+        }
+        Insert: {
+          county_fips?: string | null
+          county_name?: string | null
+          created_at?: string
+          id?: string
+          nct_id: string
+          raw_city?: string | null
+          raw_country: string
+          raw_facility?: string | null
+          raw_state?: string | null
+          resolution_confidence?: number
+          resolution_method?: string
+          resolved_at?: string
+          source_field?: string
+          state_code?: string | null
+          updated_at?: string
+          zip3?: string | null
+        }
+        Update: {
+          county_fips?: string | null
+          county_name?: string | null
+          created_at?: string
+          id?: string
+          nct_id?: string
+          raw_city?: string | null
+          raw_country?: string
+          raw_facility?: string | null
+          raw_state?: string | null
+          resolution_confidence?: number
+          resolution_method?: string
+          resolved_at?: string
+          source_field?: string
+          state_code?: string | null
+          updated_at?: string
+          zip3?: string | null
         }
         Relationships: []
       }
