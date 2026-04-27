@@ -252,7 +252,7 @@ const SearchRegistry = () => {
               Home &nbsp;›&nbsp; Search the Registry
             </p>
             {plainMode ? (
-              <>
+              <div key="hero-plain">
                 <h1 className="ctg-hero-title">
                   Find clinical trials in plain language.
                 </h1>
@@ -261,9 +261,9 @@ const SearchRegistry = () => {
                   We'll search the official ClinicalTrials.gov registry and rewrite each study so you can
                   read it without a medical degree. Only studies that are <strong>currently recruiting</strong> are shown.
                 </p>
-              </>
+              </div>
             ) : (
-              <>
+              <div key="hero-clinical">
                 <h1 className="ctg-hero-title">
                   Search ClinicalTrials.gov by meaning, not just keywords.
                 </h1>
@@ -273,7 +273,7 @@ const SearchRegistry = () => {
                   patients ≥65 even when those exact words never appear in the protocol. Every result deep-links
                   to the authoritative CTG.gov page.
                 </p>
-              </>
+              </div>
             )}
           </motion.div>
         </div>
@@ -317,12 +317,12 @@ const SearchRegistry = () => {
                 </SelectContent>
               </Select>
               {plainMode ? (
-                <span className="inline-flex items-center gap-1.5 h-9 px-3 rounded-sm border border-primary/30 bg-primary/10 text-[11.5px] font-semibold text-primary">
+                <span key="status-plain" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-sm border border-primary/30 bg-primary/10 text-[11.5px] font-semibold text-primary">
                   <Sparkles className="h-3 w-3" />
                   Recruiting only (Plain mode)
                 </span>
               ) : (
-                <Select value={status} onValueChange={setStatus}>
+                <Select key="status-clinical" value={status} onValueChange={setStatus}>
                   <SelectTrigger className="h-9 w-[180px] text-xs">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
