@@ -178,6 +178,7 @@ Deno.serve(async (req) => {
     const sessionId = (body.sessionId ?? "").toString().trim().slice(0, 64);
 
     if (!cohortId) return json({ error: "cohortId is required" }, 400);
+    if (!sessionId) return json({ error: "sessionId is required" }, 400);
 
     const { data: cohort, error: cohortErr } = await sb
       .from("saved_cohorts")
@@ -185,7 +186,7 @@ Deno.serve(async (req) => {
       .eq("id", cohortId)
       .maybeSingle();
     if (cohortErr || !cohort) return json({ error: "Cohort not found" }, 404);
-    if (sessionId && cohort.session_id !== sessionId) {
+    if (cohort.session_id !== sessionId) {
       return json({ error: "Not owner of this cohort" }, 403);
     }
 

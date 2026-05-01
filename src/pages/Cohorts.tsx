@@ -51,12 +51,24 @@ const Cohorts = () => {
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete cohort "${name}"? This cannot be undone.`)) return;
-    const { error } = await supabase.from('saved_cohorts').delete().eq('id', id);
-    if (error) {
-      toast.error('Failed to delete');
-    } else {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-cohort-delete`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ cohortId: id, sessionId: getSessionId() }),
+        },
+      );
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? 'Failed to delete');
       toast.success('Cohort deleted');
       setCohorts((prev) => prev.filter((c) => c.id !== id));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to delete');
     }
   };
 
