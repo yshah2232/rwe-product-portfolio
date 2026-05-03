@@ -155,10 +155,11 @@ const SearchRegistry = () => {
         }
         lastSearchRef.current = { id: body.searchEventId ?? null, query: q.trim(), at: now };
 
-        // Trigger the outcome modal once after the 2nd search of a session
-        if (sessionSearchCount.current >= 2 && !outcomeShown) {
+        // Trigger the outcome modal sooner — after the FIRST search, ~2.5s in.
+        // Previously waited for the 2nd search; ~88% of sessions never got there.
+        if (sessionSearchCount.current >= 1 && !outcomeShown) {
           setOutcomeShown(true);
-          setTimeout(() => setOutcomeOpen(true), 4000);
+          setTimeout(() => setOutcomeOpen(true), 2500);
         }
       }
     } catch (e) {
@@ -237,6 +238,28 @@ const SearchRegistry = () => {
   };
 
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  // Deep-link from homepage hero search: ?q=...
+  const [searchParams, setSearchParams] = useSearchParams();
+  const didConsumeQuery = useRef(false);
+  useEffect(() => {
+    if (didConsumeQuery.current) return;
+    const q = searchParams.get('q');
+    if (q && q.trim().length >= 3) {
+      didConsumeQuery.current = true;
+      setQuery(q);
+      runSearch(q);
+      // Clean the URL so a refresh doesn't re-fire
+      const next = new URLSearchParams(searchParams);
+      next.delete('q');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // "Did you mean?" — only when results are sparse or zero.
+  const correction =
+    data && data.results.length <= 2 ? suggestCorrection(data.query) : null;
 
   return (
     <div className="bg-background min-h-screen">
