@@ -4,11 +4,13 @@ import { Menu, X, ChevronRight, Info, ChevronUp, ChevronDown } from 'lucide-reac
 import PlainModeToggle from '@/components/PlainModeToggle';
 
 const navLinks = [
-  { label: 'Home', to: '/' },
-  { label: 'Search Registry', to: '/search-registry' },
-  { label: 'Cohorts', to: '/cohorts' },
-  { label: 'Data & Method', to: '/data-method' },
-  { label: 'About', to: '/about' },
+  { label: 'Home', to: '/', disabled: false },
+  { label: 'Search Registry', to: '/search-registry', disabled: false },
+  // Cohorts hidden from primary nav — feature still works at /cohorts but is
+  // not the focus right now (kept as deep link for in-flow Save action).
+  { label: 'Cohorts', to: '/cohorts', disabled: true },
+  { label: 'Data & Method', to: '/data-method', disabled: false },
+  { label: 'About', to: '/about', disabled: false },
 ];
 
 const BANNER_AUTO_HIDE_MS = 45000;
@@ -119,6 +121,21 @@ const SiteNav = () => {
                 link.to === '/'
                   ? pathname === '/'
                   : pathname === link.to || pathname.startsWith(link.to + '/');
+              if (link.disabled) {
+                return (
+                  <span
+                    key={link.to}
+                    aria-disabled="true"
+                    title="Temporarily hidden — focusing on Search Registry"
+                    className="px-4 py-3 text-[14px] font-semibold border-b-2 border-transparent text-foreground/30 cursor-not-allowed select-none inline-flex items-center gap-1.5"
+                  >
+                    {link.label}
+                    <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground">
+                      Soon
+                    </span>
+                  </span>
+                );
+              }
               return (
                 <Link
                   key={link.to}
@@ -146,6 +163,17 @@ const SiteNav = () => {
                 link.to === '/'
                   ? pathname === '/'
                   : pathname === link.to || pathname.startsWith(link.to + '/');
+              if (link.disabled) {
+                return (
+                  <span
+                    key={link.to}
+                    aria-disabled="true"
+                    className="px-2 py-3 text-[14px] font-semibold border-b border-border text-foreground/30"
+                  >
+                    {link.label} <span className="text-[10px] ml-1">(soon)</span>
+                  </span>
+                );
+              }
               return (
                 <Link
                   key={link.to}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { suggestCorrection } from '@/lib/typoSuggest';
 import { motion } from 'framer-motion';
 import {
   Search, Loader2, ExternalLink, Sparkles, AlertCircle, Info, Filter,
@@ -154,10 +155,11 @@ const SearchRegistry = () => {
         }
         lastSearchRef.current = { id: body.searchEventId ?? null, query: q.trim(), at: now };
 
-        // Trigger the outcome modal once after the 2nd search of a session
-        if (sessionSearchCount.current >= 2 && !outcomeShown) {
+        // Trigger the outcome modal sooner — after the FIRST search, ~2.5s in.
+        // Previously waited for the 2nd search; ~88% of sessions never got there.
+        if (sessionSearchCount.current >= 1 && !outcomeShown) {
           setOutcomeShown(true);
-          setTimeout(() => setOutcomeOpen(true), 4000);
+          setTimeout(() => setOutcomeOpen(true), 2500);
         }
       }
     } catch (e) {
@@ -236,6 +238,28 @@ const SearchRegistry = () => {
   };
 
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  // Deep-link from homepage hero search: ?q=...
+  const [searchParams, setSearchParams] = useSearchParams();
+  const didConsumeQuery = useRef(false);
+  useEffect(() => {
+    if (didConsumeQuery.current) return;
+    const q = searchParams.get('q');
+    if (q && q.trim().length >= 3) {
+      didConsumeQuery.current = true;
+      setQuery(q);
+      runSearch(q);
+      // Clean the URL so a refresh doesn't re-fire
+      const next = new URLSearchParams(searchParams);
+      next.delete('q');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // "Did you mean?" — only when results are sparse or zero.
+  const correction =
+    data && data.results.length <= 2 ? suggestCorrection(data.query) : null;
 
   return (
     <div className="bg-background min-h-screen">
@@ -422,6 +446,25 @@ const SearchRegistry = () => {
                   </p>
                 </div>
               </div>
+
+              {/* Did you mean? — typo / fuzzy correction */}
+              {correction && (
+                <div className="mb-4 flex items-center gap-2 text-[13.5px] text-foreground/85 bg-accent/40 border border-primary/20 rounded-md px-3 py-2">
+                  <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span>Did you mean</span>
+                  <button
+                    onClick={() => {
+                      setQuery(correction);
+                      runSearch(correction);
+                      track('did_you_mean_click', { from: data.query, to: correction });
+                    }}
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    {correction}
+                  </button>
+                  <span className="text-muted-foreground">?</span>
+                </div>
+              )}
 
               {/* Source + freshness attribution */}
               <p className="text-[11.5px] text-muted-foreground mb-6 flex items-center gap-1.5">

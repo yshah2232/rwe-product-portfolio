@@ -118,6 +118,26 @@ Deno.serve(async (req) => {
       return json({ error: "Query too long (max 200 characters)." }, 400);
     }
 
+    // ── Bot / scraper mitigation ──
+    // Cheap, non-CAPTCHA filter that blocks the worst offenders BEFORE we
+    // spend an LLM call. Real browsers always send a non-empty user-agent
+    // and an Accept-Language header. Headless scrapers usually don't.
+    const acceptLang = req.headers.get("accept-language") ?? "";
+    const uaLower = userAgent.toLowerCase();
+    const KNOWN_BOTS = [
+      "bot", "crawler", "spider", "scrapy", "curl/", "wget", "python-requests",
+      "httpclient", "axios/", "go-http-client", "java/", "okhttp", "headlesschrome",
+      "phantomjs", "selenium", "puppeteer", "playwright",
+    ];
+    if (!userAgent || !acceptLang || KNOWN_BOTS.some((b) => uaLower.includes(b))) {
+      // Silent 200 with empty results — don't tip off scrapers that we filtered them.
+      return json({
+        query, totalCount: 0, candidatesFetched: 0, results: [],
+        sessionId, searchEventId: null,
+        usage: { rateLimitRemaining: 0 },
+      });
+    }
+
     // ── Rate limit ──
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
