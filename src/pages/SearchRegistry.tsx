@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { suggestCorrection } from '@/lib/typoSuggest';
 import { motion } from 'framer-motion';
 import {
   Search, Loader2, ExternalLink, Sparkles, AlertCircle, Info, Filter,
