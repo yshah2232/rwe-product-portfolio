@@ -447,6 +447,25 @@ const SearchRegistry = () => {
                 </div>
               </div>
 
+              {/* Did you mean? — typo / fuzzy correction */}
+              {correction && (
+                <div className="mb-4 flex items-center gap-2 text-[13.5px] text-foreground/85 bg-accent/40 border border-primary/20 rounded-md px-3 py-2">
+                  <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span>Did you mean</span>
+                  <button
+                    onClick={() => {
+                      setQuery(correction);
+                      runSearch(correction);
+                      track('did_you_mean_click', { from: data.query, to: correction });
+                    }}
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    {correction}
+                  </button>
+                  <span className="text-muted-foreground">?</span>
+                </div>
+              )}
+
               {/* Source + freshness attribution */}
               <p className="text-[11.5px] text-muted-foreground mb-6 flex items-center gap-1.5">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/60" />
