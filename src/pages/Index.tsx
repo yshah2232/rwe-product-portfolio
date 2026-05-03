@@ -74,7 +74,20 @@ const Index = () => {
   const navigate = useNavigate();
   const { audience, plainMode, setPlainMode } = usePlainMode();
   const showPatientEntry = plainMode || audience === 'patient';
+  const [heroQuery, setHeroQuery] = useState('');
   usePageTitle('Clinical Trial Diversity Studio — Equitable trial planning on real registry data');
+
+  const launchSearch = (q: string) => {
+    const trimmed = q.trim();
+    if (trimmed.length < 3) {
+      // Still navigate, but without a prefilled query
+      track('cta_click', { location: 'hero_search_empty', target: '/search-registry' });
+      navigate('/search-registry');
+      return;
+    }
+    track('cta_click', { location: 'hero_search', target: '/search-registry', q: trimmed });
+    navigate(`/search-registry?q=${encodeURIComponent(trimmed)}`);
+  };
 
   return (
     <div className="bg-background">
@@ -89,6 +102,30 @@ const Index = () => {
               The Clinical Trial Diversity Studio turns the messy public registry into
               saved, explainable planning workflows — search studies, build canonical cohorts,
               evaluate diversity and access context, and prioritize sites.
+            </p>
+
+            {/* Inline live search — drives traffic straight into Search Registry */}
+            <form
+              onSubmit={(e) => { e.preventDefault(); launchSearch(heroQuery); }}
+              className="mt-6 flex flex-col sm:flex-row gap-2 max-w-2xl"
+            >
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={heroQuery}
+                  onChange={(e) => setHeroQuery(e.target.value)}
+                  placeholder="Try: GLP-1 weight loss with cardiovascular risk"
+                  className="pl-10 h-12 text-[15px] bg-background border-primary/30"
+                  maxLength={200}
+                  aria-label="Search ClinicalTrials.gov"
+                />
+              </div>
+              <Button type="submit" size="lg" className="gap-2 h-12 px-6 rounded-sm font-semibold">
+                <Sparkles className="h-4 w-4" /> Search the Registry
+              </Button>
+            </form>
+            <p className="mt-2 text-[12px] text-muted-foreground">
+              Live ClinicalTrials.gov data · semantic re-ranking · every result deep-links to CTG.gov
             </p>
           </div>
         </div>
