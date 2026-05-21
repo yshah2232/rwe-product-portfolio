@@ -119,23 +119,79 @@ Deno.serve(async (req) => {
     }
 
     // ── Bot / scraper mitigation ──
-    // Cheap, non-CAPTCHA filter that blocks the worst offenders BEFORE we
-    // spend an LLM call. Real browsers always send a non-empty user-agent
-    // and an Accept-Language header. Headless scrapers usually don't.
+    // Layered defenses (cheapest → most expensive) so we drop scrapers
+    // BEFORE spending an LLM call. None of this is foolproof, but it
+    // raises the cost of trivial scraping that skews analytics + bills.
     const acceptLang = req.headers.get("accept-language") ?? "";
+    const referer = (req.headers.get("referer") ?? req.headers.get("referrer") ?? "").toLowerCase();
+    const origin = (req.headers.get("origin") ?? "").toLowerCase();
     const uaLower = userAgent.toLowerCase();
+
+    // 1) User-agent blocklist — common scraper/library signatures.
     const KNOWN_BOTS = [
       "bot", "crawler", "spider", "scrapy", "curl/", "wget", "python-requests",
       "httpclient", "axios/", "go-http-client", "java/", "okhttp", "headlesschrome",
-      "phantomjs", "selenium", "puppeteer", "playwright",
+      "phantomjs", "selenium", "puppeteer", "playwright", "node-fetch", "libwww",
+      "ahrefsbot", "semrushbot", "mj12bot", "dotbot", "petalbot", "bytespider",
+      "facebookexternalhit", "embedly", "slurp", "yandex", "duckduckbot",
     ];
-    if (!userAgent || !acceptLang || KNOWN_BOTS.some((b) => uaLower.includes(b))) {
-      // Silent 200 with empty results — don't tip off scrapers that we filtered them.
-      return json({
-        query, totalCount: 0, candidatesFetched: 0, results: [],
-        sessionId, searchEventId: null,
-        usage: { rateLimitRemaining: 0 },
-      });
+
+    // 2) Referrer blocklist — referrer-spam farms + scrapers seen in our analytics.
+    const KNOWN_REFERRER_SPAM = [
+      "excite.com", "lullar.com", "qsensei.com", "heapr.com",
+      "magportal.com", "fooxx.com", "hispavista.com", "blindsearch.fejus.com",
+      "fejus.com", "semalt.com", "buttons-for-website.com", "darodar.com",
+      "ilovevitaly.com", "trafficmonetizer", "free-share-buttons", "best-seo-",
+    ];
+
+    // 3) Origin allowlist — accept only our own front-ends. Missing origin
+    // (server-to-server tools) is treated as suspect.
+    const ORIGIN_ALLOWLIST = [
+      "lovable.app", "lovable.dev", "ysclin.xyz", "localhost", "127.0.0.1",
+    ];
+
+    const isBotUA = !userAgent || KNOWN_BOTS.some((b) => uaLower.includes(b));
+    const missingHeaders = !acceptLang;
+    const isReferrerSpam = !!referer && KNOWN_REFERRER_SPAM.some((r) => referer.includes(r));
+    const isOriginOk = !!origin && ORIGIN_ALLOWLIST.some((o) => origin.includes(o));
+    const isOriginSuspect = !isOriginOk;
+
+    const suspicious = isBotUA || missingHeaders || isReferrerSpam || isOriginSuspect;
+
+    if (suspicious) {
+      // 4) Optional Turnstile escape hatch — if the client supplies a valid
+      // Cloudflare Turnstile token AND TURNSTILE_SECRET is set, allow through.
+      // Otherwise silently return empty results (don't tip off scrapers).
+      const turnstileSecret = Deno.env.get("TURNSTILE_SECRET");
+      const turnstileToken = req.headers.get("x-turnstile-token") ?? url.searchParams.get("ts") ?? "";
+      let passedChallenge = false;
+      if (turnstileSecret && turnstileToken) {
+        try {
+          const v = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ secret: turnstileSecret, response: turnstileToken }),
+          });
+          const vd = await v.json();
+          passedChallenge = !!vd.success;
+        } catch (e) {
+          console.error("turnstile verify failed", e);
+        }
+      }
+
+      if (!passedChallenge) {
+        console.log("blocked suspicious request", {
+          isBotUA, missingHeaders, isReferrerSpam, isOriginSuspect,
+          uaSnippet: uaLower.slice(0, 60), referer: referer.slice(0, 80), origin,
+        });
+        return json({
+          query, totalCount: 0, candidatesFetched: 0, results: [],
+          sessionId, searchEventId: null,
+          usage: { rateLimitRemaining: 0 },
+          // Frontend may render a Turnstile widget when challenge === "turnstile".
+          challenge: isOriginSuspect ? null : "turnstile",
+        });
+      }
     }
 
     // ── Rate limit ──
