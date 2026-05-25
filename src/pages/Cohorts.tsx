@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionId } from '@/lib/searchSession';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSeo } from '@/hooks/useSeo';
 import { toast } from 'sonner';
 
 interface CohortRow {
@@ -25,7 +25,11 @@ interface CohortRow {
 }
 
 const Cohorts = () => {
-  usePageTitle('Saved Cohorts — Clinical Trial Diversity Studio');
+  useSeo({
+    title: 'Saved Cohorts — Clinical Trial Diversity Studio',
+    description: 'Reusable trial cohorts grouped by therapeutic area or program, with canonicalized sponsors and indications for apples-to-apples comparison.',
+    canonical: '/cohorts',
+  });
   const [cohorts, setCohorts] = useState<CohortRow[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSeo } from '@/hooks/useSeo';
 import { Database, Filter, Layers, MapPin, RefreshCw, ShieldCheck, ExternalLink, ArrowRight, Search, Check, X, Sparkles, Wand2, Brain, GitMerge } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,11 @@ const pipeline = [
 
 const DataMethod = () => {
   const navigate = useNavigate();
-  usePageTitle('Data & Method — Clinical Trial Diversity Studio');
+  useSeo({
+    title: 'Data & Method — Clinical Trial Diversity Studio',
+    description: 'Data sources, canonicalization rules, trust scoring, and AI reporting standards behind Clinical Trial Diversity Studio.',
+    canonical: '/data-method',
+  });
 
   return (
     <div className="bg-background">

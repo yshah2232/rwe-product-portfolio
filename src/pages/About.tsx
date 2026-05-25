@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Linkedin, Github, Mail, Handshake } from 'lucide-react';
 import iconLogo from '@/assets/icon-plc-logo.png';
 import syneosLogo from '@/assets/syneos-health-logo.png';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSeo } from '@/hooks/useSeo';
 
 const anim = (delay: number) => ({
   initial: { opacity: 0, y: 12 },
@@ -11,7 +11,11 @@ const anim = (delay: number) => ({
 });
 
 const About = () => {
-  usePageTitle('PM Profile — Clinical Trial Diversity Studio');
+  useSeo({
+    title: 'About — Clinical Trial Diversity Studio',
+    description: 'About the maintainer and the product positioning behind Clinical Trial Diversity Studio — equitable trial planning on real registry data.',
+    canonical: '/about',
+  });
   return (
   <div className="max-w-3xl mx-auto px-6 md:px-10 py-12 md:py-16 space-y-12">
     <motion.div {...anim(0.1)}>
