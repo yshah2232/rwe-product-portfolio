@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionId } from '@/lib/searchSession';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSeo } from '@/hooks/useSeo';
 import { toast } from 'sonner';
 import StudyDetailSheet from '@/components/StudyDetailSheet';
 import TrustDrawer from '@/components/TrustDrawer';
@@ -61,7 +61,13 @@ const CohortDetail = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [openNct, setOpenNct] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  usePageTitle(cohort ? `${cohort.name} — Cohort` : 'Cohort');
+  useSeo({
+    title: cohort ? `${cohort.name} — Cohort` : 'Cohort — Clinical Trial Diversity Studio',
+    description: cohort
+      ? `Cohort detail for ${cohort.name}: trials, sponsors, sites, and diversity overlay built on live ClinicalTrials.gov and U.S. Census data.`
+      : 'Cohort detail view with trials, sponsors, sites, and diversity overlay.',
+    noindex: true,
+  });
 
   const isOwner = !!cohort && cohort.session_id === getSessionId();
 

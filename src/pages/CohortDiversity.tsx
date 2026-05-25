@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 // Tabs removed: ZIP3 toggle dropped (Census ACS doesn't natively support ZIP3)
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionId } from '@/lib/searchSession';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSeo } from '@/hooks/useSeo';
 import { toast } from 'sonner';
 
 const NORMALIZE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-normalize-locations`;
@@ -81,7 +81,13 @@ const CohortDiversity = () => {
   const [loading, setLoading] = useState(true);
   const [normalizing, setNormalizing] = useState(false);
   const [acsLoading, setAcsLoading] = useState(false);
-  usePageTitle(cohort ? `${cohort.name} — Diversity & Access` : 'Diversity & Access');
+  useSeo({
+    title: cohort ? `${cohort.name} — Diversity & Access` : 'Diversity & Access',
+    description: cohort
+      ? `Diversity and access overlay for ${cohort.name}: cohort composition vs national U.S. Census ACS demographics and disease prevalence.`
+      : 'Diversity and access overlay: cohort composition vs national U.S. Census ACS demographics and disease prevalence.',
+    noindex: true,
+  });
 
   const isOwner = !!cohort && cohort.session_id === getSessionId();
 

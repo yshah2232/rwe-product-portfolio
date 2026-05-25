@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSeo } from '@/hooks/useSeo';
 import { track } from '@/lib/track';
 import {
   ArrowRight,
@@ -75,7 +75,11 @@ const Index = () => {
   const { audience, plainMode, setPlainMode } = usePlainMode();
   const showPatientEntry = plainMode || audience === 'patient';
   const [heroQuery, setHeroQuery] = useState('');
-  usePageTitle('Clinical Trial Diversity Studio — Equitable trial planning on real registry data');
+  useSeo({
+    title: 'Clinical Trial Diversity Studio — Search ClinicalTrials.gov',
+    description: 'Search ClinicalTrials.gov in plain English, build canonical cohorts, and see diversity and access overlays from live U.S. Census data.',
+    canonical: '/',
+  });
 
   const launchSearch = (q: string) => {
     const trimmed = q.trim();

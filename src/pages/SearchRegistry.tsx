@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { useSeo } from '@/hooks/useSeo';
 import { track } from '@/lib/track';
 import { getSessionId, sendSignal } from '@/lib/searchSession';
 import { toast } from 'sonner';
@@ -69,7 +69,11 @@ const exampleQueries = [
 const ctgUrl = (nct: string) => `https://clinicaltrials.gov/study/${nct}`;
 
 const SearchRegistry = () => {
-  usePageTitle('Search Registry — Semantic search across ClinicalTrials.gov');
+  useSeo({
+    title: 'Search Registry — Clinical Trial Diversity Studio',
+    description: 'Plain-language search across live ClinicalTrials.gov. Filter by condition, phase, status, sponsor, and geography with AI-rewritten summaries.',
+    canonical: '/search-registry',
+  });
   const { plainMode } = usePlainMode();
   const [query, setQuery] = useState('');
   const [phase, setPhase] = useState<string>('any');
