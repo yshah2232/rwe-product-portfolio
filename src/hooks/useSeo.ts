@@ -9,7 +9,7 @@ interface SeoOptions {
   noindex?: boolean;
 }
 
-const SITE_ORIGIN = 'https://rwe-ctg-new.lovable.app'; // canonical published origin
+const SITE_ORIGIN = 'https://ysclin.xyz'; // canonical published origin
 
 const ensureMeta = (selector: string, attr: 'name' | 'property', key: string) => {
   let el = document.head.querySelector<HTMLMetaElement>(selector);
