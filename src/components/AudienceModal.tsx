@@ -18,8 +18,13 @@ const AudienceModal = () => {
   const [agreed, setAgreed] = useState(true); // pre-checked by default
 
   // Defer the open by 700ms so the page renders first — feels less aggressive.
+  // Also auto-close if the prompt becomes "seen" elsewhere (e.g. user picked
+  // an intent chip on the hero), so we don't ask the same question twice.
   useEffect(() => {
-    if (audiencePromptSeen) return;
+    if (audiencePromptSeen) {
+      setOpen(false);
+      return;
+    }
     const t = setTimeout(() => setOpen(true), 700);
     return () => clearTimeout(t);
   }, [audiencePromptSeen]);

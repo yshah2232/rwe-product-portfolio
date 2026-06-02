@@ -25,7 +25,7 @@ const OPTIONS: { id: Intent; label: string; icon: typeof Stethoscope }[] = [
 ];
 
 const HeroIntentChips = () => {
-  const { setPlainMode } = usePlainMode();
+  const { setPlainMode, markAudiencePromptSeen } = usePlainMode();
   const [intent, setIntent] = useState<Intent | null>(null);
   const [editing, setEditing] = useState(false);
 
@@ -43,7 +43,6 @@ const HeroIntentChips = () => {
 
     track('hero_intent_select', { intent: id });
 
-    // Persist for segmentation. audience_selections.audience is plain text.
     supabase.from('audience_selections').insert({
       session_id: getSessionId(),
       audience: id,
@@ -52,8 +51,11 @@ const HeroIntentChips = () => {
       if (error) console.warn('[intent] insert failed', error.message);
     });
 
-    // Match AudienceModal behavior: patient → enable plain language.
     if (id === 'patient') setPlainMode(true);
+
+    // Dismiss the first-visit Audience modal so visitors aren't asked the
+    // same question twice. Safe to call even if already seen.
+    markAudiencePromptSeen();
   };
 
   if (intent && !editing) {
