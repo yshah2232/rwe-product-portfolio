@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import HeroIntentChips from '@/components/HeroIntentChips';
 import { usePlainMode } from '@/contexts/PlainModeContext';
 
 const anim = (delay: number) => ({
@@ -131,6 +132,7 @@ const Index = () => {
             <p className="mt-2 text-[12px] text-muted-foreground">
               Live ClinicalTrials.gov data · semantic re-ranking · every result deep-links to CTG.gov
             </p>
+            <HeroIntentChips />
           </div>
         </div>
       </section>
