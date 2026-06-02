@@ -96,43 +96,98 @@ const Index = () => {
 
   return (
     <div className="bg-background">
-      {/* CTG.gov-style page hero band */}
+      {/* CTG.gov-style page hero band — two-column with analytical visual */}
       <section className="ctg-hero">
         <div className="ctg-hero-inner">
-          <div className="max-w-4xl">
-            <h1 className="ctg-hero-title">
-              A trustworthy place to plan trials from real ClinicalTrials.gov data.
-            </h1>
-            <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
-              The Clinical Trial Diversity Studio turns the messy public registry into
-              saved, explainable planning workflows — search studies, build canonical cohorts,
-              evaluate diversity and access context, and prioritize sites.
-            </p>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            <div className="lg:col-span-7">
+              <h1 className="ctg-hero-title">
+                A trustworthy place to plan trials from real ClinicalTrials.gov data.
+              </h1>
+              <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-2xl">
+                The Clinical Trial Diversity Studio turns the messy public registry into
+                saved, explainable planning workflows — search studies, build canonical cohorts,
+                evaluate diversity and access context, and prioritize sites.
+              </p>
 
-            {/* Inline live search — drives traffic straight into Search Registry */}
-            <form
-              onSubmit={(e) => { e.preventDefault(); launchSearch(heroQuery); }}
-              className="mt-6 flex flex-col sm:flex-row gap-2 max-w-2xl"
-            >
-              <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  value={heroQuery}
-                  onChange={(e) => setHeroQuery(e.target.value)}
-                  placeholder="Try: GLP-1 weight loss with cardiovascular risk"
-                  className="pl-10 h-12 text-[15px] bg-background border-primary/30"
-                  maxLength={200}
-                  aria-label="Search ClinicalTrials.gov"
-                />
-              </div>
-              <Button type="submit" size="lg" className="gap-2 h-12 px-6 rounded-sm font-semibold">
-                <Sparkles className="h-4 w-4" /> Search the Registry
-              </Button>
-            </form>
-            <p className="mt-2 text-[12px] text-muted-foreground">
-              Live ClinicalTrials.gov data · semantic re-ranking · every result deep-links to CTG.gov
-            </p>
-            <HeroIntentChips />
+              {/* Inline live search — drives traffic straight into Search Registry */}
+              <form
+                onSubmit={(e) => { e.preventDefault(); launchSearch(heroQuery); }}
+                className="mt-6 flex flex-col sm:flex-row gap-2 max-w-2xl"
+              >
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={heroQuery}
+                    onChange={(e) => setHeroQuery(e.target.value)}
+                    placeholder="Try: GLP-1 weight loss with cardiovascular risk"
+                    className="pl-10 h-12 text-[15px] bg-background border-primary/30"
+                    maxLength={200}
+                    aria-label="Search ClinicalTrials.gov"
+                  />
+                </div>
+                <Button type="submit" size="lg" className="gap-2 h-12 px-6 rounded-sm font-semibold">
+                  <Sparkles className="h-4 w-4" /> Search the Registry
+                </Button>
+              </form>
+              <p className="mt-2 text-[12px] text-muted-foreground">
+                Live ClinicalTrials.gov data · semantic re-ranking · every result deep-links to CTG.gov
+              </p>
+              <HeroIntentChips />
+            </div>
+
+            {/* Analytical visual artifact — abstract cohort dot-cluster */}
+            <div className="hidden lg:block lg:col-span-5">
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="relative rounded-sm border border-primary/15 bg-background/70 backdrop-blur-sm p-7 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="inline-flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-wider" style={{ color: 'hsl(var(--primary))' }}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    Registry pulse · Live
+                  </div>
+                  <span className="text-[10.5px] text-muted-foreground font-medium">cohort × diversity</span>
+                </div>
+
+                <div className="grid grid-cols-8 gap-2.5">
+                  {Array.from({ length: 32 }).map((_, i) => {
+                    const intensities = ['bg-primary/10','bg-primary/20','bg-primary/35','bg-primary/55','bg-primary/80','bg-primary'];
+                    const seed = (i * 73) % intensities.length;
+                    return (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.6 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.2 + i * 0.012, duration: 0.3 }}
+                        className={`aspect-square rounded-full ${intensities[seed]}`}
+                      />
+                    );
+                  })}
+                </div>
+
+                <div className="mt-6 space-y-2.5">
+                  <div className="h-1.5 w-3/4 rounded-sm bg-primary/15" />
+                  <div className="h-1.5 w-1/2 rounded-sm bg-primary/10" />
+                  <div className="h-1.5 w-2/3 rounded-sm bg-primary/15" />
+                </div>
+
+                <div className="mt-6 pt-5 border-t border-primary/10 flex items-end justify-between">
+                  <div>
+                    <div className="text-[24px] font-bold leading-none" style={{ color: 'hsl(var(--primary))' }}>500K+</div>
+                    <div className="mt-1 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">studies indexed</div>
+                  </div>
+                  <div>
+                    <div className="text-[24px] font-bold leading-none" style={{ color: 'hsl(var(--primary))' }}>v2 API</div>
+                    <div className="mt-1 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">live · cached 1h</div>
+                  </div>
+                </div>
+
+                <div className="absolute -bottom-8 -right-8 h-40 w-40 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
