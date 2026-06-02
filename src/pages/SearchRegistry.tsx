@@ -308,7 +308,7 @@ const SearchRegistry = () => {
       </section>
 
       {/* Search */}
-      <section className="px-6 md:px-10 lg:px-16 py-10 border-b border-border/50">
+      <section className="px-4 md:px-6 lg:px-16 py-10 border-b border-border/50">
         <div className="max-w-5xl mx-auto">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex gap-2">
@@ -407,7 +407,7 @@ const SearchRegistry = () => {
       </section>
 
       {/* Results */}
-      <section className="px-6 md:px-10 lg:px-16 py-10">
+      <section className="px-4 md:px-6 lg:px-16 py-10">
         <div className="max-w-5xl mx-auto">
           {error && (
             <div className="flex items-start gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/30 mb-6">

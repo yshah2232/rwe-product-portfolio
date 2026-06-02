@@ -84,7 +84,7 @@ const DataMethod = () => {
       </section>
 
       {/* CTG.gov vs Search Registry — why this is better */}
-      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24 border-b border-border/50 bg-muted/30">
+      <section className="px-4 md:px-6 lg:px-16 py-20 md:py-24 border-b border-border/50 bg-muted/30">
         <div className="max-w-5xl mx-auto">
           <motion.div {...anim(0.05)} className="mb-12 max-w-2xl">
             <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-3">
@@ -237,7 +237,7 @@ const DataMethod = () => {
       </section>
 
       {/* CANONICALIZATION — how cleaned values are derived */}
-      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24 border-b border-border/50">
+      <section className="px-4 md:px-6 lg:px-16 py-20 md:py-24 border-b border-border/50">
         <div className="max-w-5xl mx-auto">
           <motion.div {...anim(0.05)} className="mb-10 max-w-3xl">
             <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-3">
@@ -363,7 +363,7 @@ const DataMethod = () => {
       </section>
 
       {/* RELEVANCE SCORING — how the LLM reranker decides */}
-      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24 border-b border-border/50 bg-muted/30">
+      <section className="px-4 md:px-6 lg:px-16 py-20 md:py-24 border-b border-border/50 bg-muted/30">
         <div className="max-w-5xl mx-auto">
           <motion.div {...anim(0.05)} className="mb-10 max-w-3xl">
             <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-3">
@@ -441,7 +441,7 @@ Be strict:
         </div>
       </section>
 
-      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24">
+      <section className="px-4 md:px-6 lg:px-16 py-20 md:py-24">
         <div className="max-w-5xl mx-auto">
           <motion.div {...anim(0.05)} className="mb-12">
             <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-3">Pipeline</p>
@@ -474,7 +474,7 @@ Be strict:
       </section>
 
       {/* API REQUEST */}
-      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24 border-t border-border/50 bg-muted/30">
+      <section className="px-4 md:px-6 lg:px-16 py-20 md:py-24 border-t border-border/50 bg-muted/30">
         <div className="max-w-5xl mx-auto">
           <motion.div {...anim(0.05)} className="mb-10 max-w-2xl">
             <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-3">The request</p>
@@ -539,7 +539,7 @@ Be strict:
       </section>
 
       {/* FIELDS RETURNED */}
-      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24 border-t border-border/50">
+      <section className="px-4 md:px-6 lg:px-16 py-20 md:py-24 border-t border-border/50">
         <div className="max-w-5xl mx-auto">
           <motion.div {...anim(0.05)} className="mb-10 max-w-2xl">
             <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-3">The response</p>
@@ -573,7 +573,7 @@ Be strict:
       </section>
 
       {/* CONDITIONS WE SEED */}
-      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24 border-t border-border/50 bg-muted/30">
+      <section className="px-4 md:px-6 lg:px-16 py-20 md:py-24 border-t border-border/50 bg-muted/30">
         <div className="max-w-5xl mx-auto">
           <motion.div {...anim(0.05)} className="mb-10 max-w-2xl">
             <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-primary/80 mb-3">Seeded cohorts</p>
@@ -600,7 +600,7 @@ Be strict:
       </section>
 
       {/* GUARANTEES */}
-      <section className="px-6 md:px-10 lg:px-16 py-20 md:py-24 border-t border-border/50">
+      <section className="px-4 md:px-6 lg:px-16 py-20 md:py-24 border-t border-border/50">
         <div className="max-w-5xl mx-auto">
           <motion.div {...anim(0.05)} className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-border/60 border border-border/60 rounded-2xl overflow-hidden">
             <div className="bg-card p-7">

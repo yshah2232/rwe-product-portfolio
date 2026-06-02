@@ -33,7 +33,7 @@ const SiteNav = () => {
         className="w-full"
         style={{ backgroundColor: 'hsl(var(--gov-band-bg))', color: 'hsl(var(--gov-band-fg))' }}
       >
-        <div className="max-w-6xl mx-auto px-6 md:px-10 py-4 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3 group">
             <div
               className="flex items-center justify-center h-10 w-10 rounded-sm font-bold text-[13px] tracking-wider shrink-0"
@@ -73,7 +73,7 @@ const SiteNav = () => {
         role="region"
         aria-label="About this product"
       >
-        <div className="max-w-6xl mx-auto px-6 md:px-10 py-2 flex items-start gap-3">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-2 flex items-start gap-3">
           <Info className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'hsl(var(--primary))' }} />
           <div className="flex-1 min-w-0">
             {bannerExpanded ? (
@@ -114,7 +114,7 @@ const SiteNav = () => {
 
       {/* Nav row */}
       <div className="bg-background">
-        <div className="max-w-6xl mx-auto px-6 md:px-10">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
           <nav className="hidden md:flex items-center gap-1 -mb-px">
             {navLinks.map((link) => {
               const isActive =
@@ -157,7 +157,7 @@ const SiteNav = () => {
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-background">
-          <div className="max-w-6xl mx-auto px-6 py-2 flex flex-col">
+          <div className="max-w-7xl mx-auto px-6 py-2 flex flex-col">
             {navLinks.map((link) => {
               const isActive =
                 link.to === '/'

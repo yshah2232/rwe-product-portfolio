@@ -148,7 +148,7 @@ const ClinicalTrials = () => {
   const activeCfg = AREAS.find(a => a.key === activeArea)!;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 md:px-10 py-12 md:py-16 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-16 space-y-10">
       <motion.header
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
