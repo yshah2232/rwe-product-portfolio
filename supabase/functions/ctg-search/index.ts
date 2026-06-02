@@ -205,13 +205,14 @@ Deno.serve(async (req) => {
     }
 
     // ── 1. Fetch candidates from CTG.gov ──
-    // CTG's query.cond does keyword matching, not NL understanding.
-    // We strip stopwords/filler so a natural-language query still finds candidates;
-    // semantic re-rank then handles the meaning.
+    // CTG's keyword params AND every token by default, so a long natural-
+    // language query collapses to zero hits. We strip filler, then OR the
+    // remaining tokens, and use query.term (all-field) for broader recall.
+    // Semantic re-rank handles precision across the OR'd candidate pool.
     const ctgQuery = simplifyForCTG(query);
 
     const ctgParams = new URLSearchParams();
-    ctgParams.set("query.cond", ctgQuery);
+    ctgParams.set("query.term", ctgQuery);
     ctgParams.set("pageSize", "25");
     ctgParams.set("format", "json");
     ctgParams.set("countTotal", "true");
@@ -469,10 +470,9 @@ function json(body: unknown, status = 200) {
   });
 }
 
-// Lightweight NL → keyword condition cleaner.
-// CTG.gov's query.cond is keyword based; long natural-language queries
-// often return 0 hits. We strip filler words so candidates can be fetched,
-// then the LLM re-ranks by full semantic meaning of the original query.
+// Lightweight NL → Essie keyword query.
+// CTG.gov ANDs all tokens by default, so we strip filler and OR the rest.
+// The LLM re-ranker tightens precision afterwards.
 const STOPWORDS = new Set([
   "a","an","the","and","or","but","of","in","on","for","with","without","who","that","which","is","are","was","were",
   "be","been","being","to","from","by","at","as","it","this","these","those","i","we","you","they","them","their",
@@ -480,16 +480,22 @@ const STOPWORDS = new Set([
   "already","had","have","has","not","no","do","does","did","can","could","would","should","may","might",
   "advanced","early","late","mild","moderate","severe","new","old","over","under","more","less","than",
   "people","person","adult","adults","group","groups","using","use","used","about","across","into","versus","vs",
+  // colloquial filler that wrecks CTG keyword matching
+  "near","me","my","mom","dad","mother","father","son","daughter","wife","husband","kid","child","children",
+  "pill","drug","medicine","medication","cure","treatment","therapy","test","scan",
+  "line","second","third","first","fourth","post","pre","after","before","during",
 ]);
 
 function simplifyForCTG(q: string): string {
+  // Preserve hyphenated alphanumerics (KRAS-G12C, GLP-1, APOE4, NSCLC)
   const tokens = q
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s-]/gu, " ")
     .split(/\s+/)
     .filter(Boolean)
     .filter((t) => !STOPWORDS.has(t) && t.length > 1);
-  // Keep up to 6 most meaningful tokens to avoid CTG over-narrowing
-  const cleaned = tokens.slice(0, 6).join(" ");
-  return cleaned || q; // fallback to original if everything got stripped
+  if (tokens.length === 0) return q;
+  const top = Array.from(new Set(tokens)).slice(0, 8);
+  // 1 token → pass through. Multiple → OR-join so any-match wins.
+  return top.length === 1 ? top[0] : top.map((t) => `"${t}"`).join(" OR ");
 }
