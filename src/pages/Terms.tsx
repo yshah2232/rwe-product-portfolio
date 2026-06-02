@@ -12,7 +12,7 @@ const Terms = () => {
   });
 
   return (
-    <article className="max-w-3xl mx-auto px-6 md:px-10 py-12 prose prose-sm">
+    <article className="max-w-3xl mx-auto px-4 md:px-6 py-12 prose prose-sm">
       <header className="mb-10">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Legal</p>
         <h1 className="font-display text-[32px] md:text-[40px] font-bold leading-tight tracking-tight">

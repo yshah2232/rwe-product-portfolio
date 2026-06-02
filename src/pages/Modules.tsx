@@ -84,7 +84,7 @@ const Modules = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-5xl mx-auto px-6 md:px-10 py-12 md:py-16 space-y-12">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-12 md:py-16 space-y-12">
       <motion.div {...anim(0.1)}>
         <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">Modules</h1>
         <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">

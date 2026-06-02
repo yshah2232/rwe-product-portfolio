@@ -5,7 +5,7 @@ import syneosLogo from '@/assets/syneos-health-logo.png';
 
 const SiteFooter = () => (
   <footer className="border-t border-border/40 bg-muted/20">
-    <div className="max-w-6xl mx-auto px-6 md:px-10 py-12 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 space-y-10">
       {/* Experience header */}
       <section>
         <div className="flex items-baseline gap-4 mb-6">

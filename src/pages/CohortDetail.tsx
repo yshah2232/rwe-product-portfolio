@@ -205,7 +205,7 @@ const CohortDetail = () => {
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
-      <section className="px-6 md:px-10 lg:px-16 pt-12 pb-8 border-b border-border/50">
+      <section className="px-4 md:px-6 lg:px-16 pt-12 pb-8 border-b border-border/50">
         <div className="max-w-5xl mx-auto">
           <Link
             to="/cohorts"
@@ -274,7 +274,7 @@ const CohortDetail = () => {
       </section>
 
       {/* Summary cards */}
-      <section className="px-6 md:px-10 lg:px-16 py-8 border-b border-border/50 bg-muted/20">
+      <section className="px-4 md:px-6 lg:px-16 py-8 border-b border-border/50 bg-muted/20">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <SummaryCard
             icon={<Building2 className="h-4 w-4 text-primary" />}
@@ -304,7 +304,7 @@ const CohortDetail = () => {
       </section>
 
       {/* Trials list */}
-      <section className="px-6 md:px-10 lg:px-16 py-10">
+      <section className="px-4 md:px-6 lg:px-16 py-10">
         <div className="max-w-5xl mx-auto">
           <h2 className="font-display text-2xl font-medium text-foreground mb-4">
             Included trials ({trials.length})

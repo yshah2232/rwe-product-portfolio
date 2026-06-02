@@ -78,7 +78,7 @@ const HeatmapAnalytics = () => {
   }, [rows]);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 md:px-10 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-6">
       <header>
         <h1 className="text-2xl font-bold" style={{ color: 'hsl(var(--primary))' }}>
           Interaction Heatmap

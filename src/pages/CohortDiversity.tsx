@@ -300,7 +300,7 @@ const CohortDiversity = () => {
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
-      <section className="px-6 md:px-10 lg:px-16 pt-12 pb-6 border-b border-border/50">
+      <section className="px-4 md:px-6 lg:px-16 pt-12 pb-6 border-b border-border/50">
         <div className="max-w-5xl mx-auto">
           <Link to={`/cohorts/${cohort.id}`}
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-5">
@@ -334,7 +334,7 @@ const CohortDiversity = () => {
 
       {/* No locations yet — prompt normalization */}
       {locs.length === 0 && (
-        <section className="px-6 md:px-10 lg:px-16 py-10">
+        <section className="px-4 md:px-6 lg:px-16 py-10">
           <div className="max-w-2xl mx-auto rounded-xl border border-border/60 bg-card p-6 text-center">
             <MapPin className="h-8 w-8 text-muted-foreground/60 mx-auto mb-3" />
             <p className="font-display text-xl text-foreground">Site locations not yet resolved</p>
@@ -359,7 +359,7 @@ const CohortDiversity = () => {
       {/* Diversity comparisons */}
       {locs.length > 0 && (
         <>
-          <section className="px-6 md:px-10 lg:px-16 py-8 border-b border-border/50 bg-muted/20">
+          <section className="px-4 md:px-6 lg:px-16 py-8 border-b border-border/50 bg-muted/20">
             <div className="max-w-5xl mx-auto">
               <h2 className="font-display text-xl font-medium text-foreground mb-1 flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" /> Race & Ethnicity
@@ -383,7 +383,7 @@ const CohortDiversity = () => {
             </div>
           </section>
 
-          <section className="px-6 md:px-10 lg:px-16 py-8 border-b border-border/50">
+          <section className="px-4 md:px-6 lg:px-16 py-8 border-b border-border/50">
             <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
               <AgeCard cohort={cohortAcs} national={national} />
               <IncomeCard cohort={cohortAcs} national={national} />
@@ -391,7 +391,7 @@ const CohortDiversity = () => {
           </section>
 
           {/* Resolved locations table */}
-          <section className="px-6 md:px-10 lg:px-16 py-8">
+          <section className="px-4 md:px-6 lg:px-16 py-8">
             <div className="max-w-5xl mx-auto">
               <h2 className="font-display text-lg font-medium text-foreground mb-3 flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-primary" /> Resolved sites ({locs.length})

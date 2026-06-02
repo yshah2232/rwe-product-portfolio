@@ -37,7 +37,7 @@ export default function DataDictionary() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-6 md:px-10 py-12 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 space-y-10">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

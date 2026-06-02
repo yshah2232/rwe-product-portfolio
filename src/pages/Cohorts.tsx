@@ -101,7 +101,7 @@ const Cohorts = () => {
         </div>
       </section>
 
-      <section className="px-6 md:px-10 lg:px-16 py-10">
+      <section className="px-4 md:px-6 lg:px-16 py-10">
         <div className="max-w-5xl mx-auto">
           {loading && (
             <div className="flex items-center justify-center py-20 text-muted-foreground">

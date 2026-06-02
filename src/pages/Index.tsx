@@ -137,7 +137,7 @@ const Index = () => {
         </div>
       </section>
 
-      <div className="max-w-6xl mx-auto px-6 md:px-10 py-8 md:py-10 space-y-10">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10 space-y-10">
         {/* Yellow gov-style disclaimer */}
         <div className="ctg-warning flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" style={{ color: 'hsl(var(--warning-border))' }} />
