@@ -815,6 +815,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ui_interactions: {
+        Row: {
+          created_at: string
+          element_id: string | null
+          element_text: string | null
+          event_type: string
+          id: string
+          path: string
+          scroll_depth_pct: number | null
+          selector: string | null
+          session_id: string
+          viewport_h: number | null
+          viewport_w: number | null
+          x_norm: number | null
+          y_norm: number | null
+        }
+        Insert: {
+          created_at?: string
+          element_id?: string | null
+          element_text?: string | null
+          event_type: string
+          id?: string
+          path: string
+          scroll_depth_pct?: number | null
+          selector?: string | null
+          session_id: string
+          viewport_h?: number | null
+          viewport_w?: number | null
+          x_norm?: number | null
+          y_norm?: number | null
+        }
+        Update: {
+          created_at?: string
+          element_id?: string | null
+          element_text?: string | null
+          event_type?: string
+          id?: string
+          path?: string
+          scroll_depth_pct?: number | null
+          selector?: string | null
+          session_id?: string
+          viewport_h?: number | null
+          viewport_w?: number | null
+          x_norm?: number | null
+          y_norm?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

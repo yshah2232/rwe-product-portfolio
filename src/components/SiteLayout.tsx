@@ -6,6 +6,7 @@ import AgentChatbot from '@/components/AgentChatbot';
 import StickyCTA from '@/components/StickyCTA';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { track } from '@/lib/track';
+import { installHeatmap, setHeatmapPath } from '@/lib/heatmap';
 import { usePlainMode } from '@/contexts/PlainModeContext';
 
 const SiteLayout = () => {
@@ -13,6 +14,8 @@ const SiteLayout = () => {
   const { plainMode } = usePlainMode();
 
   useEffect(() => {
+    installHeatmap();
+    setHeatmapPath(pathname);
     track('page_view', { path: pathname });
   }, [pathname]);
 
