@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { WorldProvider } from "@/contexts/WorldContext";
 import { PlainModeProvider } from "@/contexts/PlainModeContext";
 import SiteLayout from "@/components/SiteLayout";
 import AudienceModal from "@/components/AudienceModal";
@@ -25,7 +24,6 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <WorldProvider>
         <PlainModeProvider>
         <Toaster />
         <Sonner />
@@ -59,7 +57,6 @@ const App = () => (
           </Routes>
         </BrowserRouter>
         </PlainModeProvider>
-      </WorldProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
