@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useSeo } from '@/hooks/useSeo';
 
 type Row = {
@@ -90,6 +89,35 @@ const HeatmapAnalytics = () => {
       });
     return buckets;
   }, [rows]);
+
+  if (!password) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-6">
+        <form
+          className="ctg-panel p-4 max-w-sm space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setAuthError(null);
+            setPassword(pwInput);
+          }}
+        >
+          <label htmlFor="admin-pw" className="text-sm font-semibold block">Admin password</label>
+          <input
+            id="admin-pw"
+            type="password"
+            value={pwInput}
+            onChange={(e) => setPwInput(e.target.value)}
+            className="w-full border border-border rounded-sm px-2 py-1.5 bg-background text-sm"
+            autoComplete="current-password"
+          />
+          {authError && <p className="text-sm text-destructive">{authError}</p>}
+          <button type="submit" className="px-3 py-1.5 rounded-sm text-sm font-semibold bg-primary text-primary-foreground">
+            View analytics
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-6">
