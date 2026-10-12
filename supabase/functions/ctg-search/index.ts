@@ -423,7 +423,7 @@ Return a relevance score and a one-sentence reason for each candidate.`;
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
-          "Cache-Control": "public, s-maxage=3600",
+          "Cache-Control": "no-store",
         },
       },
     );

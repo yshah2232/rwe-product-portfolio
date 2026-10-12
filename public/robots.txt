@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://ysclin.xyz/sitemap.xml
+Sitemap: https://rwe-ctg-new.lovable.app/sitemap.xml

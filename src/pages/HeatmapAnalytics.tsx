@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useSeo } from '@/hooks/useSeo';
 
 type Row = {
@@ -27,28 +26,42 @@ const HeatmapAnalytics = () => {
   const [path, setPath] = useState<string>('/');
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [password, setPassword] = useState('');
+  const [pwInput, setPwInput] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!password) return;
     let cancelled = false;
     setLoading(true);
-    const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
-    supabase
-      .from('ui_interactions')
-      .select('id, path, event_type, x_norm, y_norm, scroll_depth_pct, selector, element_text, created_at')
-      .eq('path', path)
-      .gte('created_at', since)
-      .order('created_at', { ascending: false })
-      .limit(5000)
-      .then(({ data, error }) => {
+    const url = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/analytics-heatmap?path=${encodeURIComponent(path)}`;
+    fetch(url, {
+      headers: {
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        'x-admin-password': password,
+      },
+    })
+      .then(async (res) => {
         if (cancelled) return;
-        if (error) console.warn(error);
-        setRows((data as Row[]) || []);
+        if (res.status === 401) {
+          setPassword('');
+          setAuthError('Incorrect password.');
+          return;
+        }
+        const json = await res.json().catch(() => ({}));
+        setRows((json.rows as Row[]) || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.warn(err);
+        setRows([]);
         setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [path]);
+  }, [path, password]);
 
   const clicks = rows.filter((r) => r.event_type === 'click' || r.event_type === 'rage_click');
   const rageClicks = rows.filter((r) => r.event_type === 'rage_click');
@@ -76,6 +89,35 @@ const HeatmapAnalytics = () => {
       });
     return buckets;
   }, [rows]);
+
+  if (!password) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-6">
+        <form
+          className="ctg-panel p-4 max-w-sm space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setAuthError(null);
+            setPassword(pwInput);
+          }}
+        >
+          <label htmlFor="admin-pw" className="text-sm font-semibold block">Admin password</label>
+          <input
+            id="admin-pw"
+            type="password"
+            value={pwInput}
+            onChange={(e) => setPwInput(e.target.value)}
+            className="w-full border border-border rounded-sm px-2 py-1.5 bg-background text-sm"
+            autoComplete="current-password"
+          />
+          {authError && <p className="text-sm text-destructive">{authError}</p>}
+          <button type="submit" className="px-3 py-1.5 rounded-sm text-sm font-semibold bg-primary text-primary-foreground">
+            View analytics
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-6">
