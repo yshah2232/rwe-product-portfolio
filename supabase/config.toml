@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.ctg-cohort-delete]
 verify_jwt = false
+
+[functions.analytics-heatmap]
+verify_jwt = false

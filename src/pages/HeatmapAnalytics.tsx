@@ -27,28 +27,42 @@ const HeatmapAnalytics = () => {
   const [path, setPath] = useState<string>('/');
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [password, setPassword] = useState('');
+  const [pwInput, setPwInput] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!password) return;
     let cancelled = false;
     setLoading(true);
-    const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
-    supabase
-      .from('ui_interactions')
-      .select('id, path, event_type, x_norm, y_norm, scroll_depth_pct, selector, element_text, created_at')
-      .eq('path', path)
-      .gte('created_at', since)
-      .order('created_at', { ascending: false })
-      .limit(5000)
-      .then(({ data, error }) => {
+    const url = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/analytics-heatmap?path=${encodeURIComponent(path)}`;
+    fetch(url, {
+      headers: {
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        'x-admin-password': password,
+      },
+    })
+      .then(async (res) => {
         if (cancelled) return;
-        if (error) console.warn(error);
-        setRows((data as Row[]) || []);
+        if (res.status === 401) {
+          setPassword('');
+          setAuthError('Incorrect password.');
+          return;
+        }
+        const json = await res.json().catch(() => ({}));
+        setRows((json.rows as Row[]) || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.warn(err);
+        setRows([]);
         setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [path]);
+  }, [path, password]);
 
   const clicks = rows.filter((r) => r.event_type === 'click' || r.event_type === 'rage_click');
   const rageClicks = rows.filter((r) => r.event_type === 'rage_click');
