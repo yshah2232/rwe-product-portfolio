@@ -50,7 +50,6 @@ AI is deliberately **not** used for cohort refresh, location normalization or sp
 |---|---|
 | Search: per-IP limits | 6 per minute, 30 per day |
 | Search: candidates sent to the model | 25 maximum, 10 returned; one model call per search |
-| Search: identical-query cache | 1 hour |
 | Plain language: per-IP limit | 8 per minute, and only counted on a cache miss |
 | Eligibility check: per-IP limit | 4 per minute; 6 files and 8 MB maximum |
 | Query length | 3 to 200 characters |
@@ -79,6 +78,7 @@ AI is deliberately **not** used for cohort refresh, location normalization or sp
 | Recall ceiling from keyword retrieval | A trial phrased very differently from the query is never a candidate | Measure on the labelled set; add query expansion or a hybrid retriever if recall is the bottleneck |
 | A preview model in production | Plain language runs on `gemini-3-flash-preview`, which can change or be retired | Pin to a stable model once available; keep the cache so a model change does not rewrite every trial at once |
 | Stale plain-language cache | Rewrites persist until regenerated | Regenerate when the source record's last-update date changes |
+| No search-result cache | The code comment describes a 1-hour cache, but responses are sent with `no-store`, so every identical search calls the model again | Cache ranked results per normalized query for an hour; the cheapest cost win available |
 | Rate limits reset on cold start | The limiter is in memory per function instance | Acceptable for a demo; move to a shared store before real traffic |
 | Overtrust in the eligibility check | A patient may read `likely_meets` as "eligible" | Default-to-unclear, quoted evidence, and the mandatory site-confirmation line; test wording with patients |
 | Unvalidated audiences | Neither persona has been confirmed in research | 5 to 8 interviews per audience before building further (see README) |
