@@ -150,7 +150,7 @@ const CohortBarriers = () => {
     for (const { b } of rows.scored) {
       if (b.barrier_score == null) d.unknown++;
       else if (b.barrier_score >= 150) d.high++;
-      else if (b.barrier_score >= 100) d.medium ??= 0, d.moderate++;
+      else if (b.barrier_score >= 100) d.moderate++;
       else d.low++;
     }
     return d;

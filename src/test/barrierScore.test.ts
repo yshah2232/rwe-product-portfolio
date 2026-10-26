@@ -9,13 +9,13 @@ import { computeBarrierScore, barrierLevelLabel } from '@/lib/barrierScore';
 describe('computeBarrierScore', () => {
   it('scores a county with both rates well above national as high', () => {
     const r = computeBarrierScore(
-      { pct: 12.9, nationalPct: 8.6 },   // ~1.5x national LEP
+      { pct: 12.9, nationalPct: 8.6 },   // 1.5x national LEP
       { pct: 18.75, nationalPct: 12.5 }, // 1.5x national poverty
     );
-    expect(r.languageAccess.ratio).toBeCloseTo(100, 0); // capped at 100? 12.9/8.6=150 -> capped 100
+    expect(r.languageAccess.ratio).toBeCloseTo(150, 0);
     expect(r.languageAccess.level).toBe('high');
     expect(r.socioeconomicStrain.level).toBe('high');
-    expect(r.barrierScore).toBe(100);
+    expect(r.barrierScore).toBe(100); // contributions capped at 100 each
   });
 
   it('does not inflate the score past the cap when a county dwarfs national', () => {
@@ -23,9 +23,9 @@ describe('computeBarrierScore', () => {
       { pct: 40, nationalPct: 8.6 },
       { pct: 5, nationalPct: 12.5 },
     );
-    expect(r.languageAccess.ratio).toBe(100); // capped, not 465
+    expect(r.languageAccess.ratio).toBeCloseTo(465.1, 1); // uncapped ratio, capped contribution
     expect(r.socioeconomicStrain.level).toBe('low');
-    expect(r.barrierScore).toBe(53); // mean(100, ~40)
+    expect(r.barrierScore).toBe(70); // mean(100, 40)
   });
 
   it('classifies at-national and below-national rates', () => {
