@@ -477,6 +477,8 @@ const SearchRegistry = () => {
                 </div>
               )}
 
+              <SearchDiagnostics interpretation={data.interpretation} retrieval={data.retrieval} warnings={data.warnings} />
+
               {/* Source + freshness attribution */}
               <p className="text-[11.5px] text-muted-foreground mb-6 flex items-center gap-1.5">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/60" />
