@@ -55,15 +55,15 @@ describe('adaptive retrieval limits', () => {
 
 describe("location parsing (any urban or rural place)", () => {
   it("reads lowercase 'near boston'", () => {
-    expect(parseQueryIntent("lung cancer trials near boston").location).toBe("Boston");
+    expect(parseQuery("lung cancer trials near boston").location).toBe("Boston");
   });
   it("skips the rural qualifier and keeps the state", () => {
-    expect(parseQueryIntent("diabetes study in rural Ohio").location).toBe("Ohio");
+    expect(parseQuery("diabetes study in rural Ohio").location).toBe("Ohio");
   });
   it("reads a small town name", () => {
-    expect(parseQueryIntent("breast cancer near Bozeman Montana").location).toBe("Bozeman Montana");
+    expect(parseQuery("breast cancer near Bozeman Montana").location).toBe("Bozeman Montana");
   });
   it("does not treat 'in patients' as a place", () => {
-    expect(parseQueryIntent("KRAS G12C in patients after chemo").location).toBeNull();
+    expect(parseQuery("KRAS G12C in patients after chemo").location).toBeNull();
   });
 });
