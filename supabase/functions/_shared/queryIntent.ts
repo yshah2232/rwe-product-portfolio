@@ -51,7 +51,7 @@ const FILLER = new Set([
   "study","studies","patients","patient","people","adults","near","me","my","phase","recruiting","currently","open",
   "enrolling","mutation","mutant","mutated","positive","carriers","carrier","line","second","third","first","therapy",
   "treatment","prior","previously","treated","after","already","had","refractory","failed","progressed","pill","drug",
-  "medicine","for","looking","find","any","new","not","yet","completed",
+  "medicine","for","looking","find","any","new","not","yet","completed","early","late","advanced","elderly","mild","moderate","severe","stage",
 ]);
 
 export function parseQuery(raw: string): QueryIntent {
@@ -142,8 +142,14 @@ const norm = (s: string) => s.toLowerCase().replace(/[\s\-]+/g, " ");
 
 function snippetAround(text: string, needle: string): string | null {
   const nt = norm(text);
-  const idx = nt.indexOf(norm(needle));
-  if (idx < 0) return null;
+  let idx = nt.indexOf(norm(needle));
+  if (idx < 0) {
+    // Multi word concept: every significant word must appear in the field.
+    const words = norm(needle).split(" ").filter((w) => w.length >= 4);
+    if (words.length < 2 || !words.every((w) => nt.includes(w))) return null;
+    idx = nt.indexOf(words[0]);
+    needle = words[0];
+  }
   // norm() keeps length 1:1 except collapsed whitespace; approximate on original.
   const start = Math.max(0, idx - 40);
   return (start > 0 ? "…" : "") + text.slice(start, idx + needle.length + 40).replace(/\s+/g, " ").trim() + "…";

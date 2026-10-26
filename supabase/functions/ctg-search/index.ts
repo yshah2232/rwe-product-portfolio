@@ -279,19 +279,24 @@ Deno.serve(async (req) => {
       // Pass 1: targeted for complex queries, broad (original behaviour) for simple ones.
       await runPass(isComplex && hasTargeted ? targeted : broad);
       let cands = shapeAll();
+      const weakNow = () => isWeak(cands.length, coverageOf(cands));
+      if (weakNow()) adaptiveReasons.push(`first pass weak (${cands.length} candidates)`);
+      if (isComplex) adaptiveReasons.push(`complex query (${intent.complexity} concept types)`);
       // Pass 2: only when the query is complex or the first pool is weak.
-      if (isWeak(cands.length, coverageOf(cands)) || isComplex) {
-        if (isWeak(cands.length, coverageOf(cands))) adaptiveReasons.push(`first pass weak (${cands.length} candidates)`);
-        if (isComplex) adaptiveReasons.push(`complex query (${intent.complexity} concept types)`);
-        const second = passes[0].label === "targeted" ? broad : (hasTargeted ? targeted : null);
-        if (second) await runPass(second);
+      if (weakNow() || isComplex) {
+        if (passes[0].label === "targeted" && passes[0].returned < 10 && intent.biomarkers.length && intent.conditionTerms.length > 1) {
+          // Relax condition wording but keep the biomarker requirement.
+          await runPass({ label: "targeted-relaxed", cond: intent.conditionTerms.map((t) => `"${t}"`).join(" OR "), term: targeted.term });
+        } else if (passes[0].label === "targeted") await runPass(broad);
+        else if (hasTargeted && isComplex) await runPass(targeted);
         else if (nextToken) await runPass({ ...nextToken.pass, label: `${nextToken.pass.label}-page2`, pageToken: nextToken.token });
         cands = shapeAll();
       }
-      // Pass 3: one more page only if still weak.
-      if (isWeak(cands.length, coverageOf(cands)) && nextToken && passes.length < RETRIEVAL_LIMITS.MAX_CTG_CALLS) {
-        adaptiveReasons.push("still weak after second pass");
-        await runPass({ ...nextToken.pass, label: `${nextToken.pass.label}-next`, pageToken: nextToken.token });
+      // Pass 3: only if still weak, or a complex query has not tried broad recall yet.
+      if ((weakNow() || (isComplex && !passes.some((p) => p.label === "broad"))) && passes.length < RETRIEVAL_LIMITS.MAX_CTG_CALLS) {
+        if (weakNow()) adaptiveReasons.push("still weak after second pass");
+        if (!passes.some((p) => p.label === "broad")) await runPass(broad);
+        else if (nextToken) await runPass({ ...nextToken.pass, label: `${nextToken.pass.label}-next`, pageToken: nextToken.token });
       }
     } catch (e) {
       if (e instanceof CtgError) return json({ error: `CTG.gov error [${e.status}]`, detail: e.detail.slice(0, 300) }, 502);
@@ -325,17 +330,19 @@ Deno.serve(async (req) => {
       title: c.briefTitle.slice(0, 180),
       conds: c.conditions.slice(0, 4).join("; ").slice(0, 140),
       intv: c.interventions.slice(0, 4).join("; ").slice(0, 140),
+      phase: c.phase.join(",") || "not stated",
+      status: c.status || "not stated",
       elig: c.ground.eligibility.replace(/\s+/g, " ").slice(0, candidates.length > 40 ? 220 : 400),
     }));
 
     const systemPrompt = `You are a clinical trial relevance scorer. Score each candidate 0-100 for how well it matches the *meaning* of the query. Consider synonyms, abbreviations, drug classes, and disease equivalents. Be strict: 90+ excellent, 60-89 solid, 30-59 tangential, <30 poor.
-GROUNDING RULES (mandatory): Your reason may only mention attributes that appear in the candidate's title, conditions, interventions or eligibility text shown to you. Never infer locations, biomarkers, eligibility requirements, phases or prior treatments that are not written there. For each candidate also return 1-3 short verbatim quotes (copied exactly) with the field they came from (title, conditions, interventions, eligibility). If a query concept is absent from the record, say it is not stated.`;
+GROUNDING RULES (mandatory): Your reason may only mention attributes that appear in the candidate's title, conditions, interventions or eligibility text shown to you. Never infer, guess or call "implied" any locations, biomarkers, eligibility requirements, phases or prior treatments that are not written there. For each candidate also return 1-3 short verbatim quotes (copied exactly) with the field they came from (title, conditions, interventions, eligibility, phase, status). Site locations are NOT shown to you, so never comment on location. If a query concept is absent from the record, say it is not stated.`;
 
     const userPrompt = `User query: "${query}"
 
 Candidates:
 ${compactList
-  .map((c) => `[${c.idx}] ${c.nct} | title: ${c.title} | conditions: ${c.conds} | interventions: ${c.intv} | eligibility: ${c.elig}`)
+  .map((c) => `[${c.idx}] ${c.nct} | title: ${c.title} | conditions: ${c.conds} | interventions: ${c.intv} | phase: ${c.phase} | status: ${c.status} | eligibility: ${c.elig}`)
   .join("\n")}
 
 Return a relevance score, a one-sentence grounded reason, and verbatim quotes for each candidate.`;
@@ -370,7 +377,7 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
                         items: {
                           type: "object",
                           properties: {
-                            field: { type: "string", enum: ["title", "conditions", "interventions", "eligibility"] },
+                            field: { type: "string", enum: ["title", "conditions", "interventions", "eligibility", "phase", "status"] },
                             quote: { type: "string" },
                           },
                           required: ["field", "quote"],
