@@ -71,15 +71,31 @@ export function parseQuery(raw: string): QueryIntent {
   }
   for (const t of priorTreatments) q = q.replace(t, " ");
 
-  // Location: "near X" / "in X" where X is a US state, "us", or capitalised place from the raw text.
+  // Location: "near X" / "in X" where X is a US state, "us", or a place name (urban or rural).
+  // "rural"/"urban" qualifiers are skipped; the place itself is sent to CTG.gov as query.locn.
   let location: string | null = null;
-  const locM = raw.match(/\b(?:near|in|around|within)\s+([A-Z][A-Za-z.]+(?:\s+[A-Z][A-Za-z.]+){0,2})/);
-  if (locM && !/^(Phase|Patients?|Adults?|Children)$/.test(locM[1])) location = locM[1].trim();
+  const LOC_STOP = /^(phase|patients?|adults?|children|kids|people|women|men|the|a|an|my|elderly|trials?|studies|recruiting|early|late|stage|after|with|for|who|that|and|or)$/i;
+  const rawNoQual = raw.replace(/\b(rural|urban|suburban|small[- ]town)\s+/gi, "");
+  const locM = rawNoQual.match(/\b(?:near|in|around|within)\s+([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,2})/);
+  if (locM && !LOC_STOP.test(locM[1].split(/\s+/)[0])) location = locM[1].trim();
   if (!location) {
-    const st = US_STATES.find((s) => new RegExp(`\\b(?:near|in) ${s}\\b`).test(q));
+    // lowercase "near boston" / "around tulsa": "near"/"around" are unambiguous location cues
+    const lowM = rawNoQual.match(/\b(?:near|around)\s+([a-z][a-z.'-]+(?:\s+[a-z][a-z.'-]+){0,2})/i);
+    if (lowM) {
+      const words: string[] = [];
+      for (const w of lowM[1].split(/\s+/)) { if (LOC_STOP.test(w)) break; words.push(w); }
+      if (words.length) location = words.join(" ").replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+  }
+  if (!location) {
+    const qNoQual = q.replace(/\b(rural|urban|suburban)\s+/g, "");
+    const st = US_STATES.find((s) => new RegExp(`\\b(?:near|in|around) ${s}\\b`).test(qNoQual));
     if (st) location = st.replace(/\b\w/g, (c) => c.toUpperCase());
   }
-  if (location) q = q.replace(new RegExp(`\\b(near|in|around|within) ${location.toLowerCase()}\\b`), " ");
+  if (location) {
+    q = q.replace(new RegExp(`\\b(near|in|around|within)\\s+(?:(?:rural|urban|suburban)\\s+)?${location.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`), " ");
+    q = q.replace(/\b(rural|urban|suburban)\b/g, " ");
+  }
 
   const tokens = q.split(/[\s,.;]+/).filter(Boolean);
   const biomarkers: string[] = [];
