@@ -44,28 +44,28 @@ interface GeoRequest { type: "county" | "zip3" | "state" | "national"; id: strin
 
 function buildCensusUrl(geo: GeoRequest): string | null {
   const get = `NAME,${VARS.join(",")}`;
+  let url: string | null = null;
   if (geo.type === "national") {
-    return `${CENSUS_BASE}?get=${get}&for=us:1`;
-  }
-  if (geo.type === "state") {
+    url = `${CENSUS_BASE}?get=${get}&for=us:1`;
+  } else if (geo.type === "state") {
     // state=FIPS state code (2 digits)
-    return `${CENSUS_BASE}?get=${get}&for=state:${encodeURIComponent(geo.id)}`;
-  }
-  if (geo.type === "county") {
+    url = `${CENSUS_BASE}?get=${get}&for=state:${encodeURIComponent(geo.id)}`;
+  } else if (geo.type === "county") {
     // id is 5-digit FIPS: state(2)+county(3)
     const stateFips = geo.id.slice(0, 2);
     const countyFips = geo.id.slice(2);
     if (stateFips.length !== 2 || countyFips.length !== 3) return null;
-    return `${CENSUS_BASE}?get=${get}&for=county:${countyFips}&in=state:${stateFips}`;
-  }
-  if (geo.type === "zip3") {
+    url = `${CENSUS_BASE}?get=${get}&for=county:${countyFips}&in=state:${stateFips}`;
+  } else if (geo.type === "zip3") {
     // ZIP3 isn't a native Census geography. Approximate by querying the
     // first ZCTA5 starting with the ZIP3, then aggregate up to ZIP3 if needed.
     // For simplicity, query all ZCTAs (national) starting with that prefix.
     const zip3 = geo.id.padStart(3, "0").slice(0, 3);
-    return `${CENSUS_BASE}?get=${get}&for=zip%20code%20tabulation%20area:${zip3}*`;
+    url = `${CENSUS_BASE}?get=${get}&for=zip%20code%20tabulation%20area:${zip3}*`;
   }
-  return null;
+  if (!url) return null;
+  if (!CENSUS_API_KEY) return null; // Census now rejects keyless requests
+  return `${url}&key=${encodeURIComponent(CENSUS_API_KEY)}`;
 }
 
 function parseRow(headers: string[], row: string[]) {
