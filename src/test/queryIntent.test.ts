@@ -52,3 +52,18 @@ describe('adaptive retrieval limits', () => {
     expect(RETRIEVAL_LIMITS.MAX_CTG_CALLS).toBe(3);
   });
 });
+
+describe("location parsing (any urban or rural place)", () => {
+  it("reads lowercase 'near boston'", () => {
+    expect(parseQuery("lung cancer trials near boston").location).toBe("Boston");
+  });
+  it("skips the rural qualifier and keeps the state", () => {
+    expect(parseQuery("diabetes study in rural Ohio").location).toBe("Ohio");
+  });
+  it("reads a small town name", () => {
+    expect(parseQuery("breast cancer near Bozeman Montana").location).toBe("Bozeman Montana");
+  });
+  it("does not treat 'in patients' as a place", () => {
+    expect(parseQuery("KRAS G12C in patients after chemo").location).toBeNull();
+  });
+});
