@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSeo } from '@/hooks/useSeo';
 import { getSessionId } from '@/lib/searchSession';
+import { useAdminAccess } from '@/contexts/AdminAccessContext';
 
 type EvalCase = { id: string; query: string; expected_concepts: string[]; notes: string | null; created_at: string };
 type EvalRun = { id: string; case_id: string; top5_ncts: string[]; relevant_in_top5: boolean; relevant_rank: number | null; candidates_fetched: number | null; retrieval_passes: number | null; notes: string | null; created_at: string };
 type Result = { nctId: string; briefTitle: string; conditions: string[]; interventions: string[]; status: string; phase: string[]; semanticScore: number; semanticReason: string };
 type RunState = { loading: boolean; error?: string; results?: Result[]; candidates?: number; passes?: number; warnings?: { code: string; message: string }[] };
 
-const EVAL_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-eval`;
 const SEARCH_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-search`;
 const KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
@@ -17,9 +17,8 @@ const mentions = (r: Result, concept: string) =>
 
 const SearchEvaluation = () => {
   useSeo({ title: 'Search Evaluation — Internal', description: 'Internal search quality evaluation.', canonical: '/analytics/search-eval', noindex: true });
-  const [password, setPassword] = useState('');
-  const [pwInput, setPwInput] = useState('');
-  const [authError, setAuthError] = useState<string | null>(null);
+  const { request } = useAdminAccess();
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [cases, setCases] = useState<EvalCase[]>([]);
   const [runs, setRuns] = useState<EvalRun[]>([]);
   const [newQuery, setNewQuery] = useState('');
@@ -30,16 +29,15 @@ const SearchEvaluation = () => {
   const [rankPick, setRankPick] = useState<Record<string, string>>({});
 
   const call = useCallback(async (method: string, body?: unknown, qs = '') => {
-    const res = await fetch(`${EVAL_URL}${qs}`, {
+    const res = await request('search-eval', {
       method,
-      headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, 'x-admin-password': password, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined,
-    });
-    if (res.status === 401) { setPassword(''); setAuthError('Incorrect password.'); throw new Error('unauthorized'); }
+    }, qs);
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(typeof json.error === 'string' ? json.error : JSON.stringify(json.error));
     return json;
-  }, [password]);
+  }, [request]);
 
   const load = useCallback(async () => {
     const j = await call('GET');
@@ -47,7 +45,7 @@ const SearchEvaluation = () => {
     setRuns(j.runs ?? []);
   }, [call]);
 
-  useEffect(() => { if (password) load().catch(() => {}); }, [password, load]);
+  useEffect(() => { load().catch((err) => setLoadError(err.message)); }, [load]);
 
   const latestRun = useMemo(() => {
     const m = new Map<string, EvalRun>();
@@ -105,23 +103,10 @@ const SearchEvaluation = () => {
     await load();
   };
 
-  if (!password) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
-        <form className="ctg-panel p-4 max-w-sm space-y-3" onSubmit={(e) => { e.preventDefault(); setAuthError(null); setPassword(pwInput); }}>
-          <label htmlFor="eval-pw" className="text-sm font-semibold block">Admin password</label>
-          <input id="eval-pw" type="password" value={pwInput} onChange={(e) => setPwInput(e.target.value)}
-            className="w-full border border-border rounded-sm px-2 py-1.5 bg-background text-sm" autoComplete="current-password" />
-          {authError && <p className="text-sm text-destructive">{authError}</p>}
-          <button type="submit" className="px-3 py-1.5 rounded-sm text-sm font-semibold bg-primary text-primary-foreground">Open search evaluation</button>
-        </form>
-      </div>
-    );
-  }
-
   const input = 'w-full border border-border rounded-sm px-2 py-1.5 bg-background text-sm';
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-6">
+      {loadError && <p role="alert" className="text-sm text-destructive">{loadError}</p>}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Search evaluation</h1>
         <p className="text-sm text-muted-foreground mt-1">

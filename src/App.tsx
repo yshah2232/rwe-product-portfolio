@@ -19,6 +19,10 @@ import MedicalDisclaimer from "./pages/MedicalDisclaimer";
 import NotFound from "./pages/NotFound";
 import HeatmapAnalytics from "./pages/HeatmapAnalytics";
 import SearchEvaluation from "./pages/SearchEvaluation";
+import AdminLogin from "./pages/AdminLogin";
+import AdminOverview from "./pages/AdminOverview";
+import AdminLayout from "./components/AdminLayout";
+import { AdminAccessProvider } from "./contexts/AdminAccessContext";
 
 const queryClient = new QueryClient();
 
@@ -29,8 +33,15 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AdminAccessProvider>
           <AudienceModal />
           <Routes>
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route element={<AdminLayout />}>
+              <Route path="/admin" element={<AdminOverview />} />
+              <Route path="/analytics/heatmap" element={<HeatmapAnalytics />} />
+              <Route path="/analytics/search-eval" element={<SearchEvaluation />} />
+            </Route>
             <Route element={<SiteLayout />}>
               <Route path="/" element={<Index />} />
               <Route path="/home" element={<Navigate to="/" replace />} />
@@ -47,8 +58,6 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/medical-disclaimer" element={<MedicalDisclaimer />} />
-              <Route path="/analytics/heatmap" element={<HeatmapAnalytics />} />
-              <Route path="/analytics/search-eval" element={<SearchEvaluation />} />
               {/* Deactivated legacy synthetic dashboards */}
               <Route path="/dashboard" element={<Navigate to="/search-registry" replace />} />
               <Route path="/journey-analytics" element={<Navigate to="/search-registry" replace />} />
@@ -57,6 +66,7 @@ const App = () => (
             <Route path="/methodology" element={<Navigate to="/data-method" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </AdminAccessProvider>
         </BrowserRouter>
         </PlainModeProvider>
     </TooltipProvider>
