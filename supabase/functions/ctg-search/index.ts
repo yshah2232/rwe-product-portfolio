@@ -21,6 +21,7 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
 import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
+import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -73,7 +74,7 @@ function checkRateLimit(ip: string): { ok: boolean; reason?: string } {
   return { ok: true };
 }
 
-interface RankedTrial {
+interface _UnusedRankedTrial {
   nctId: string;
   briefTitle: string;
   officialTitle: string;
@@ -204,208 +205,255 @@ Deno.serve(async (req) => {
       return json({ error: rl.reason }, 429);
     }
 
-    // ── 1. Fetch candidates from CTG.gov ──
-    // CTG's keyword params AND every token by default, so a long natural-
-    // language query collapses to zero hits. We strip filler, then OR the
-    // remaining tokens, and use query.term (all-field) for broader recall.
-    // Semantic re-rank handles precision across the OR'd candidate pool.
-    const ctgQuery = simplifyForCTG(query);
-
-    const ctgParams = new URLSearchParams();
-    ctgParams.set("query.term", ctgQuery);
-    ctgParams.set("pageSize", "25");
-    ctgParams.set("format", "json");
-    ctgParams.set("countTotal", "true");
-
+    // ── 1. Interpret the query (deterministic, no LLM) ──
+    const intent = parseQuery(query);
+    const effStatus = status || intent.status || "";
+    const effPhase = phase || intent.phase || "";
     const filters: string[] = [];
-    if (status) filters.push(`AREA[OverallStatus]${status}`);
-    if (phase) filters.push(`AREA[Phase]${phase}`);
+    if (effStatus) filters.push(`AREA[OverallStatus]${effStatus}`);
+    if (effPhase) filters.push(`AREA[Phase]${effPhase}`);
     if (countryUS) filters.push(`AREA[LocationCountry]United States`);
-    if (filters.length) ctgParams.set("filter.advanced", filters.join(" AND "));
 
-    const ctgRes = await fetch(`${CTG_BASE}/studies?${ctgParams.toString()}`, {
-      headers: { Accept: "application/json" },
-    });
-    if (!ctgRes.ok) {
-      const text = await ctgRes.text();
-      return json({ error: `CTG.gov error [${ctgRes.status}]`, detail: text.slice(0, 300) }, 502);
+    const broadTerm = simplifyForCTG(query);
+    const ctgQuery = broadTerm;
+    const hasTargeted = intent.conditionTerms.length > 0 || intent.biomarkers.length > 0;
+    const isComplex = intent.complexity >= 2;
+
+    type Pass = { label: string; cond?: string; term?: string; pageToken?: string };
+    const buildParams = (p: Pass) => {
+      const ps = new URLSearchParams();
+      if (p.cond) ps.set("query.cond", p.cond);
+      if (p.term) ps.set("query.term", p.term);
+      if (intent.location) ps.set("query.locn", intent.location);
+      ps.set("pageSize", String(RETRIEVAL_LIMITS.PAGE_SIZE));
+      ps.set("format", "json");
+      ps.set("countTotal", "true");
+      if (filters.length) ps.set("filter.advanced", filters.join(" AND "));
+      if (p.pageToken) ps.set("pageToken", p.pageToken);
+      return ps;
+    };
+    const targeted: Pass = {
+      label: "targeted",
+      cond: intent.conditionTerms.join(" ") || undefined,
+      term: intent.biomarkers.length ? intent.biomarkers.map((b) => `"${b}"`).join(" AND ") : undefined,
+    };
+    const broad: Pass = { label: "broad", term: broadTerm };
+
+    const studyMap = new Map<string, any>();
+    const passes: { label: string; returned: number; totalCount: number }[] = [];
+    const adaptiveReasons: string[] = [];
+    let totalCount = 0;
+    let nextToken = null as { pass: Pass; token: string } | null;
+
+    const runPass = async (p: Pass) => {
+      if (passes.length >= RETRIEVAL_LIMITS.MAX_CTG_CALLS || studyMap.size >= RETRIEVAL_LIMITS.MAX_CANDIDATES) return;
+      const r = await fetch(`${CTG_BASE}/studies?${buildParams(p).toString()}`, { headers: { Accept: "application/json" } });
+      if (!r.ok) {
+        const text = await r.text();
+        passes.push({ label: p.label, returned: 0, totalCount: 0 });
+        if (passes.length === 1) throw new CtgError(r.status, text);
+        console.error("ctg pass failed", p.label, r.status);
+        return;
+      }
+      const d = await r.json();
+      const list = (d.studies ?? []) as any[];
+      let added = 0;
+      for (const s of list) {
+        const id = s.protocolSection?.identificationModule?.nctId;
+        if (id && !studyMap.has(id) && studyMap.size < RETRIEVAL_LIMITS.MAX_CANDIDATES) { studyMap.set(id, s); added++; }
+      }
+      totalCount = Math.max(totalCount, d.totalCount ?? list.length);
+      passes.push({ label: p.label, returned: added, totalCount: d.totalCount ?? list.length });
+      nextToken = d.nextPageToken ? { pass: p, token: d.nextPageToken } : null;
+    };
+
+    const shapeAll = () => Array.from(studyMap.values()).map(shapeStudy);
+    const coverageOf = (cands: ReturnType<typeof shapeStudy>[]) => {
+      if (!hasTargeted || cands.length === 0) return 1;
+      const hit = cands.filter((c) => groundConcepts(intent, c.ground).evidence
+        .some((e) => e.type === "condition" || e.type === "biomarker")).length;
+      return hit / cands.length;
+    };
+
+    try {
+      // Pass 1: targeted for complex queries, broad (original behaviour) for simple ones.
+      await runPass(isComplex && hasTargeted ? targeted : broad);
+      let cands = shapeAll();
+      const weakNow = () => isWeak(cands.length, coverageOf(cands));
+      if (weakNow()) adaptiveReasons.push(`first pass weak (${cands.length} candidates)`);
+      if (isComplex) adaptiveReasons.push(`complex query (${intent.complexity} concept types)`);
+      // Pass 2: only when the query is complex or the first pool is weak.
+      if (weakNow() || isComplex) {
+        if (passes[0].label === "targeted" && passes[0].returned < 10 && intent.biomarkers.length && intent.conditionTerms.length > 1) {
+          // Relax condition wording but keep the biomarker requirement.
+          await runPass({ label: "targeted-relaxed", cond: intent.conditionTerms.map((t) => `"${t}"`).join(" OR "), term: targeted.term });
+        } else if (passes[0].label === "targeted") await runPass(broad);
+        else if (hasTargeted && isComplex) await runPass(targeted);
+        else if (nextToken) await runPass({ ...nextToken.pass, label: `${nextToken.pass.label}-page2`, pageToken: nextToken.token });
+        cands = shapeAll();
+      }
+      // Pass 3: only if still weak, or a complex query has not tried broad recall yet.
+      if ((weakNow() || (isComplex && !passes.some((p) => p.label === "broad"))) && passes.length < RETRIEVAL_LIMITS.MAX_CTG_CALLS) {
+        if (weakNow()) adaptiveReasons.push("still weak after second pass");
+        if (!passes.some((p) => p.label === "broad")) await runPass(broad);
+        else if (nextToken) await runPass({ ...nextToken.pass, label: `${nextToken.pass.label}-next`, pageToken: nextToken.token });
+      }
+    } catch (e) {
+      if (e instanceof CtgError) return json({ error: `CTG.gov error [${e.status}]`, detail: e.detail.slice(0, 300) }, 502);
+      throw e;
     }
-    const ctgData = await ctgRes.json();
-    const studies = (ctgData.studies ?? []) as any[];
-    const totalCount = ctgData.totalCount ?? studies.length;
 
-    if (studies.length === 0) {
+    const candidates = shapeAll();
+    const interpretation = {
+      conditionTerms: intent.conditionTerms, biomarkers: intent.biomarkers, location: intent.location,
+      priorTreatments: intent.priorTreatments, status: effStatus || null, phase: effPhase || null,
+      statusFromQuery: !status && !!intent.status, phaseFromQuery: !phase && !!intent.phase,
+      complexity: intent.complexity,
+    };
+    const retrieval = {
+      passes, candidatesFetched: candidates.length, adaptive: passes.length > 1, reasons: adaptiveReasons,
+      maxCandidates: RETRIEVAL_LIMITS.MAX_CANDIDATES,
+    };
+
+    if (candidates.length === 0) {
       return json({
-        query,
-        totalCount: 0,
-        candidatesFetched: 0,
-        results: [],
+        query, totalCount: 0, candidatesFetched: 0, results: [], interpretation, retrieval,
+        warnings: buildWarnings({ intent, interpretation, totalCount: 0, candidates: [], results: [], fallback: false, countryUS }),
         usage: { rateLimitRemaining: DAILY_CAP - (ipDailyCount.get(ip)?.count ?? 0) },
       });
     }
-
-    // ── 2. Shape candidates ──
-    const candidates = studies.map((s) => {
-      const id = s.protocolSection?.identificationModule ?? {};
-      const status = s.protocolSection?.statusModule ?? {};
-      const design = s.protocolSection?.designModule ?? {};
-      const cond = s.protocolSection?.conditionsModule ?? {};
-      const arms = s.protocolSection?.armsInterventionsModule ?? {};
-      const sponsor = s.protocolSection?.sponsorCollaboratorsModule?.leadSponsor ?? {};
-      const contacts = s.protocolSection?.contactsLocationsModule ?? {};
-      const locs = (contacts.locations ?? []) as any[];
-
-      const conditions = (cond.conditions ?? []) as string[];
-      const interventions = (arms.interventions ?? []).map((i: any) => i.name).filter(Boolean) as string[];
-      const sponsorRaw = sponsor.name ?? "";
-
-      return {
-        nctId: id.nctId ?? "",
-        briefTitle: id.briefTitle ?? "",
-        officialTitle: id.officialTitle ?? "",
-        status: status.overallStatus ?? "",
-        phase: (design.phases ?? []) as string[],
-        conditions,
-        conditionsClean: conditions.map((c) => cleanIndication(c).clean),
-        interventions,
-        interventionsClean: interventions.map((i) => cleanAsset(i).clean),
-        leadSponsor: sponsorRaw,
-        leadSponsorClean: cleanSponsor(sponsorRaw).clean,
-        enrollment: design.enrollmentInfo?.count ?? null,
-        startDate: status.startDateStruct?.date ?? "",
-        countries: Array.from(new Set(locs.map((l: any) => l.country).filter(Boolean))) as string[],
-      };
-    });
 
     // ── 3. Single LLM call to score all candidates ──
     const compactList = candidates.map((c, idx) => ({
       idx,
       nct: c.nctId,
-      title: c.briefTitle.slice(0, 200),
-      conds: c.conditions.slice(0, 4).join("; ").slice(0, 160),
-      intv: c.interventions.slice(0, 4).join("; ").slice(0, 160),
+      title: c.briefTitle.slice(0, 180),
+      conds: c.conditions.slice(0, 4).join("; ").slice(0, 140),
+      intv: c.interventions.slice(0, 4).join("; ").slice(0, 140),
+      phase: c.phase.join(",") || "not stated",
+      status: c.status || "not stated",
+      elig: c.ground.eligibility.replace(/\s+/g, " ").slice(0, candidates.length > 40 ? 220 : 400),
     }));
 
-    const systemPrompt = `You are a clinical trial relevance scorer. Given a user's search intent and a list of trial candidates, score each candidate 0-100 for how well it matches the *meaning* of the query (not just keyword overlap). Consider synonyms, abbreviations, drug class relationships, disease equivalents, and clinical context. Be strict: 90+ only for excellent matches, 60-89 for solid matches, 30-59 for tangential, <30 for poor matches.`;
+    const systemPrompt = `You are a clinical trial relevance scorer. Score each candidate 0-100 for how well it matches the *meaning* of the query. Consider synonyms, abbreviations, drug classes, and disease equivalents. Be strict: 90+ excellent, 60-89 solid, 30-59 tangential, <30 poor.
+GROUNDING RULES (mandatory): Your reason may only mention attributes that appear in the candidate's title, conditions, interventions or eligibility text shown to you. Never infer, guess or call "implied" any locations, biomarkers, eligibility requirements, phases or prior treatments that are not written there. For each candidate also return 1-3 short verbatim quotes (copied exactly) with the field they came from (title, conditions, interventions, eligibility, phase, status). Site locations are NOT shown to you, so never comment on location. If a query concept is absent from the record, say it is not stated.`;
 
     const userPrompt = `User query: "${query}"
 
 Candidates:
 ${compactList
-  .map((c) => `[${c.idx}] ${c.nct} | ${c.title} | conditions: ${c.conds} | interventions: ${c.intv}`)
+  .map((c) => `[${c.idx}] ${c.nct} | title: ${c.title} | conditions: ${c.conds} | interventions: ${c.intv} | phase: ${c.phase} | status: ${c.status} | eligibility: ${c.elig}`)
   .join("\n")}
 
-Return a relevance score and a one-sentence reason for each candidate.`;
+Return a relevance score, a one-sentence grounded reason, and verbatim quotes for each candidate.`;
 
     const llmRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "rank_candidates",
-              description: "Return a relevance score and reason for each candidate trial.",
-              parameters: {
-                type: "object",
-                properties: {
-                  rankings: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        idx: { type: "integer" },
-                        score: { type: "integer", minimum: 0, maximum: 100 },
-                        reason: { type: "string" },
+        tools: [{
+          type: "function",
+          function: {
+            name: "rank_candidates",
+            description: "Return a relevance score, grounded reason and verbatim quotes for each candidate trial.",
+            parameters: {
+              type: "object",
+              properties: {
+                rankings: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      idx: { type: "integer" },
+                      score: { type: "integer", minimum: 0, maximum: 100 },
+                      reason: { type: "string" },
+                      quotes: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            field: { type: "string", enum: ["title", "conditions", "interventions", "eligibility", "phase", "status"] },
+                            quote: { type: "string" },
+                          },
+                          required: ["field", "quote"],
+                          additionalProperties: false,
+                        },
                       },
-                      required: ["idx", "score", "reason"],
-                      additionalProperties: false,
                     },
+                    required: ["idx", "score", "reason", "quotes"],
+                    additionalProperties: false,
                   },
                 },
-                required: ["rankings"],
-                additionalProperties: false,
               },
+              required: ["rankings"],
+              additionalProperties: false,
             },
           },
-        ],
+        }],
         tool_choice: { type: "function", function: { name: "rank_candidates" } },
       }),
     });
 
-    if (llmRes.status === 429) {
-      return json({ error: "AI gateway rate limit. Try again in a moment." }, 429);
-    }
-    if (llmRes.status === 402) {
-      return json({ error: "AI credits exhausted on the demo workspace." }, 402);
-    }
+    if (llmRes.status === 429) return json({ error: "AI gateway rate limit. Try again in a moment." }, 429);
+    if (llmRes.status === 402) return json({ error: "AI credits exhausted on the demo workspace." }, 402);
+
+    let rankings: { idx: number; score: number; reason: string; quotes?: { field: string; quote: string }[] }[] = [];
+    let usedFallback = false;
     if (!llmRes.ok) {
-      const text = await llmRes.text();
-      console.error("LLM error", llmRes.status, text);
-      // Fall back to unranked: return CTG order with neutral score
-      const fallback: RankedTrial[] = candidates.slice(0, 10).map((c) => ({
-        ...c,
-        semanticScore: 50,
-        semanticReason: "Semantic ranking unavailable — showing CTG.gov default order.",
-      }));
-      const ipHashFb = await hashIp(ip);
-      const searchEventIdFb = await logSearchEvent({
-        sessionId, ipHash: ipHashFb, query, ctgQuery, phase, status, countryUS,
-        candidatesFetched: candidates.length, resultsReturned: fallback.length,
-        totalCount, usedFallback: true, userAgent,
-      });
-      return json(
-        {
-          query,
-          totalCount,
-          candidatesFetched: candidates.length,
-          results: fallback,
-          fallback: true,
-          sessionId,
-          searchEventId: searchEventIdFb,
-          usage: { rateLimitRemaining: DAILY_CAP - (ipDailyCount.get(ip)?.count ?? 0) },
-        },
-        200,
-      );
+      console.error("LLM error", llmRes.status, await llmRes.text());
+      usedFallback = true;
+    } else {
+      const llmData = await llmRes.json();
+      const toolCall = llmData.choices?.[0]?.message?.tool_calls?.[0];
+      try {
+        rankings = JSON.parse(toolCall?.function?.arguments ?? "{}").rankings ?? [];
+      } catch (e) {
+        console.error("Failed to parse rankings", e);
+      }
+      if (rankings.length === 0) usedFallback = true;
     }
 
-    const llmData = await llmRes.json();
-    const toolCall = llmData.choices?.[0]?.message?.tool_calls?.[0];
-    let rankings: { idx: number; score: number; reason: string }[] = [];
-    try {
-      const args = JSON.parse(toolCall?.function?.arguments ?? "{}");
-      rankings = args.rankings ?? [];
-    } catch (e) {
-      console.error("Failed to parse rankings", e);
-    }
-
-    // Map scores back to candidates
-    const scored: RankedTrial[] = candidates.map((c, idx) => {
+    // ── 4. Ground every explanation in CTG fields ──
+    const HARD_TYPES = new Set(["biomarker", "location", "status", "phase"]);
+    const scored = candidates.map((c, idx) => {
       const r = rankings.find((x) => x.idx === idx);
+      const { evidence, notFound } = groundConcepts(intent, c.ground);
+      const llmVerified = !!r && verifyQuotes(r.quotes, c.ground);
+      let score = r?.score ?? 50;
+      // A trial cannot score as a strong match when a hard concept is absent from its record.
+      const missingHard = notFound.filter((n) => HARD_TYPES.has(n.type));
+      if (missingHard.length && score > 59) score = 59;
+      const deterministic = groundedReason(evidence, notFound);
+      const reason = llmVerified
+        ? `${r!.reason.trim()}${notFound.length ? ` Not found in record: ${notFound.map((n) => n.concept).join(", ")}.` : ""}`
+        : usedFallback ? `Semantic ranking unavailable. ${deterministic}` : deterministic;
+      const { ground, ...pub } = c;
       return {
-        ...c,
-        semanticScore: r?.score ?? 50,
-        semanticReason: r?.reason ?? "Not scored.",
+        ...pub,
+        semanticScore: score,
+        semanticReason: reason,
+        reasonSource: llmVerified ? "llm_verified" : "registry_fields",
+        evidence: [
+          ...evidence,
+          ...(llmVerified ? r!.quotes!.slice(0, 3).map((q) => ({ concept: "reranker quote", type: "quote", field: q.field, snippet: q.quote })) : []),
+        ],
+        notFound,
       };
     });
 
-    scored.sort((a, b) => b.semanticScore - a.semanticScore);
+    if (!usedFallback) scored.sort((a, b) => b.semanticScore - a.semanticScore);
     const top = scored.slice(0, 10);
 
     const ipHash = await hashIp(ip);
     const searchEventId = await logSearchEvent({
-      sessionId, ipHash, query, ctgQuery, phase, status, countryUS,
+      sessionId, ipHash, query, ctgQuery, phase: effPhase, status: effStatus, countryUS,
       candidatesFetched: candidates.length, resultsReturned: top.length,
-      totalCount, usedFallback: false, userAgent,
+      totalCount, usedFallback, userAgent,
     });
 
     return new Response(
@@ -414,18 +462,15 @@ Return a relevance score and a one-sentence reason for each candidate.`;
         totalCount,
         candidatesFetched: candidates.length,
         results: top,
+        fallback: usedFallback || undefined,
+        interpretation,
+        retrieval,
+        warnings: buildWarnings({ intent, interpretation, totalCount, candidates, results: top, fallback: usedFallback, countryUS }),
         sessionId,
         searchEventId,
         usage: { rateLimitRemaining: DAILY_CAP - (ipDailyCount.get(ip)?.count ?? 0) },
       }),
-      {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-          "Cache-Control": "no-store",
-        },
-      },
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } },
     );
   } catch (err) {
     console.error("ctg-search error", err);
@@ -498,4 +543,96 @@ function simplifyForCTG(q: string): string {
   const top = Array.from(new Set(tokens)).slice(0, 8);
   // 1 token → pass through. Multiple → OR-join so any-match wins.
   return top.length === 1 ? top[0] : top.map((t) => `"${t}"`).join(" OR ");
+}
+
+class CtgError extends Error {
+  constructor(public status: number, public detail: string) { super(`CTG ${status}`); }
+}
+
+function shapeStudy(s: any) {
+  const ps = s.protocolSection ?? {};
+  const id = ps.identificationModule ?? {};
+  const st = ps.statusModule ?? {};
+  const design = ps.designModule ?? {};
+  const cond = ps.conditionsModule ?? {};
+  const arms = ps.armsInterventionsModule ?? {};
+  const sponsor = ps.sponsorCollaboratorsModule?.leadSponsor ?? {};
+  const locs = (ps.contactsLocationsModule?.locations ?? []) as any[];
+  const conditions = (cond.conditions ?? []) as string[];
+  const interventions = (arms.interventions ?? []).map((i: any) => i.name).filter(Boolean) as string[];
+  const sponsorRaw = sponsor.name ?? "";
+  const phases = (design.phases ?? []) as string[];
+  return {
+    nctId: id.nctId ?? "",
+    briefTitle: id.briefTitle ?? "",
+    officialTitle: id.officialTitle ?? "",
+    status: st.overallStatus ?? "",
+    phase: phases,
+    conditions,
+    conditionsClean: conditions.map((c) => cleanIndication(c).clean),
+    interventions,
+    interventionsClean: interventions.map((i) => cleanAsset(i).clean),
+    leadSponsor: sponsorRaw,
+    leadSponsorClean: cleanSponsor(sponsorRaw).clean,
+    enrollment: design.enrollmentInfo?.count ?? null,
+    startDate: st.startDateStruct?.date ?? "",
+    countries: Array.from(new Set(locs.map((l: any) => l.country).filter(Boolean))) as string[],
+    hasEligibilityText: !!ps.eligibilityModule?.eligibilityCriteria,
+    locationCount: locs.length,
+    ground: {
+      briefTitle: id.briefTitle ?? "",
+      officialTitle: id.officialTitle ?? "",
+      conditions,
+      interventions,
+      keywords: (cond.keywords ?? []) as string[],
+      eligibility: (ps.eligibilityModule?.eligibilityCriteria ?? "") as string,
+      locations: locs.map((l: any) => [l.facility, l.city, l.state, l.country].filter(Boolean).join(", ")),
+      status: st.overallStatus ?? "",
+      phase: phases,
+    } as GroundFields,
+  };
+}
+
+type Warning = { code: string; message: string };
+
+function buildWarnings(p: {
+  intent: QueryIntent; interpretation: any; totalCount: number;
+  candidates: any[]; results: any[]; fallback: boolean; countryUS: boolean;
+}): Warning[] {
+  const w: Warning[] = [];
+  const { intent, interpretation, results, candidates } = p;
+  const filterBits = [
+    interpretation.status && `status ${interpretation.status}`,
+    interpretation.phase && `phase ${interpretation.phase}`,
+    intent.location && `location "${intent.location}"`,
+    p.countryUS && "United States only",
+  ].filter(Boolean);
+
+  if (results.length === 0) {
+    w.push({ code: "no_results", message: filterBits.length
+      ? `No registry records matched with ${filterBits.join(", ")} applied. Try removing a filter or broadening terms.`
+      : "No registry records matched these terms." });
+    return w;
+  }
+  if (filterBits.length) w.push({ code: "filtered", message: `Results are limited by ${filterBits.join(", ")}. Trials outside these filters are not shown.` });
+  if (interpretation.statusFromQuery || interpretation.phaseFromQuery)
+    w.push({ code: "inferred_filter", message: "A status or phase filter was inferred from your wording. Check the interpretation below." });
+  if (p.totalCount > candidates.length)
+    w.push({ code: "partial_pool", message: `Ranked ${candidates.length} of ${p.totalCount.toLocaleString()} matching registry records. Lower ranked records were not reviewed.` });
+  if (intent.conditionTerms.length === 0)
+    w.push({ code: "no_condition", message: "No clear condition was recognised in the query, so interpretation is uncertain." });
+  if (intent.priorTreatments.length) {
+    const hits = results.filter((r) => r.evidence.some((e: any) => e.type === "prior treatment")).length;
+    w.push({ code: "prior_treatment", message: `Prior treatment is only recorded in free text eligibility criteria. ${hits} of ${results.length} results mention "${intent.priorTreatments.join(", ")}" there.` });
+  }
+  for (const b of intent.biomarkers) {
+    const hits = results.filter((r) => r.evidence.some((e: any) => e.concept === b)).length;
+    if (hits < results.length) w.push({ code: "biomarker_gap", message: `"${b}" appears in ${hits} of ${results.length} result records. Others may not list biomarker requirements.` });
+  }
+  const noLoc = results.filter((r) => r.locationCount === 0).length;
+  if (intent.location && noLoc) w.push({ code: "missing_locations", message: `${noLoc} results list no site locations in the registry.` });
+  if (results.length < 5) w.push({ code: "few_results", message: "Fewer than five results found. The registry may have limited records for this combination." });
+  if (p.fallback) w.push({ code: "fallback", message: "Semantic ranking was unavailable, so results are in ClinicalTrials.gov order." });
+  if (intent.droppedTokens.length > 3) w.push({ code: "dropped_words", message: `Some words were ignored as filler: ${intent.droppedTokens.slice(0, 6).join(", ")}.` });
+  return w;
 }

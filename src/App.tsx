@@ -18,6 +18,7 @@ import Privacy from "./pages/Privacy";
 import MedicalDisclaimer from "./pages/MedicalDisclaimer";
 import NotFound from "./pages/NotFound";
 import HeatmapAnalytics from "./pages/HeatmapAnalytics";
+import SearchEvaluation from "./pages/SearchEvaluation";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/medical-disclaimer" element={<MedicalDisclaimer />} />
               <Route path="/analytics/heatmap" element={<HeatmapAnalytics />} />
+              <Route path="/analytics/search-eval" element={<SearchEvaluation />} />
               {/* Deactivated legacy synthetic dashboards */}
               <Route path="/dashboard" element={<Navigate to="/search-registry" replace />} />
               <Route path="/journey-analytics" element={<Navigate to="/search-registry" replace />} />

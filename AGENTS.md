@@ -1,0 +1,2 @@
+- Search interpretation, grounding and adaptive retrieval limits live in supabase/functions/_shared/queryIntent.ts (pure TS, unit tested in src/test); match explanations must be verified against ClinicalTrials.gov fields so nothing is invented.
+- Internal admin pages (/analytics/*) gate through edge functions checking ANALYTICS_ADMIN_PASSWORD; their tables have RLS with no policies (service role only).

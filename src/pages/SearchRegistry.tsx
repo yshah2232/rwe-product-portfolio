@@ -26,6 +26,7 @@ import SaveCohortDialog from '@/components/SaveCohortDialog';
 import TrialMap from '@/components/TrialMap';
 import { cleanSponsor, cleanIndication } from '@/lib/canonicalize';
 import { usePlainMode } from '@/contexts/PlainModeContext';
+import { SearchDiagnostics, EvidenceList, type SearchInterpretation, type SearchRetrieval, type SearchWarning, type Evidence } from '@/components/SearchDiagnostics';
 
 interface RankedTrial {
   nctId: string;
@@ -44,6 +45,9 @@ interface RankedTrial {
   countries: string[];
   semanticScore: number;
   semanticReason: string;
+  reasonSource?: 'llm_verified' | 'registry_fields';
+  evidence?: Evidence[];
+  notFound?: { concept: string; type: string }[];
 }
 
 interface SearchResponse {
@@ -55,6 +59,9 @@ interface SearchResponse {
   sessionId?: string;
   searchEventId?: string | null;
   usage: { rateLimitRemaining: number };
+  interpretation?: SearchInterpretation;
+  retrieval?: SearchRetrieval;
+  warnings?: SearchWarning[];
 }
 
 const SEARCH_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-search`;
@@ -470,6 +477,8 @@ const SearchRegistry = () => {
                 </div>
               )}
 
+              <SearchDiagnostics interpretation={data.interpretation} retrieval={data.retrieval} warnings={data.warnings} />
+
               {/* Source + freshness attribution */}
               <p className="text-[11.5px] text-muted-foreground mb-6 flex items-center gap-1.5">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/60" />
@@ -616,6 +625,7 @@ const SearchRegistry = () => {
                       <p className="text-[13px] text-foreground/85 leading-relaxed">
                         {trial.semanticReason}
                       </p>
+                      <EvidenceList evidence={trial.evidence} notFound={trial.notFound} />
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[12.5px] mb-4">

@@ -629,6 +629,74 @@ export type Database = {
         }
         Relationships: []
       }
+      search_eval_cases: {
+        Row: {
+          created_at: string
+          expected_concepts: string[]
+          id: string
+          notes: string | null
+          query: string
+        }
+        Insert: {
+          created_at?: string
+          expected_concepts?: string[]
+          id?: string
+          notes?: string | null
+          query: string
+        }
+        Update: {
+          created_at?: string
+          expected_concepts?: string[]
+          id?: string
+          notes?: string | null
+          query?: string
+        }
+        Relationships: []
+      }
+      search_eval_runs: {
+        Row: {
+          candidates_fetched: number | null
+          case_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          relevant_in_top5: boolean
+          relevant_rank: number | null
+          retrieval_passes: number | null
+          top5_ncts: string[]
+        }
+        Insert: {
+          candidates_fetched?: number | null
+          case_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          relevant_in_top5: boolean
+          relevant_rank?: number | null
+          retrieval_passes?: number | null
+          top5_ncts?: string[]
+        }
+        Update: {
+          candidates_fetched?: number | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          relevant_in_top5?: boolean
+          relevant_rank?: number | null
+          retrieval_passes?: number | null
+          top5_ncts?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_eval_runs_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "search_eval_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       search_events: {
         Row: {
           candidates_fetched: number | null
