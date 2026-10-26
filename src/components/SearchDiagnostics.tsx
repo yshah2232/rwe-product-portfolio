@@ -57,7 +57,7 @@ export const SearchDiagnostics = ({
         </div>
       )}
       {warnings && warnings.length > 0 && (
-        <div className="rounded-sm border border-warning/40 bg-warning/10 p-3" role="status">
+        <div className="ctg-warning rounded-sm p-3" role="status">
           <p className="flex items-center gap-1.5 text-[12px] font-semibold text-foreground mb-1.5">
             <AlertTriangle className="h-3.5 w-3.5" /> Results may be incomplete
           </p>
