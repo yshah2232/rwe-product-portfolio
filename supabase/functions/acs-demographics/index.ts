@@ -141,6 +141,7 @@ function aggregateRows(rows: ReturnType<typeof parseRow>[]) {
 }
 
 async function fetchOneGeo(geo: GeoRequest) {
+  if (!CENSUS_API_KEY) return { error: "census_key_required" };
   const url = buildCensusUrl(geo);
   if (!url) return { error: `Invalid geo ${geo.type}:${geo.id}` };
   const res = await fetch(url, { headers: { Accept: "application/json" } });
