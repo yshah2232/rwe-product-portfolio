@@ -248,6 +248,11 @@ const CohortDetail = () => {
                     <Users className="h-4 w-4" /> Diversity & Access
                   </Link>
                 </Button>
+                <Button asChild variant="default" className="gap-2">
+                  <Link to={`/cohorts/${cohort.id}/barriers`}>
+                    <Users className="h-4 w-4" /> Barriers & Access
+                  </Link>
+                </Button>
                 <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="gap-2">
                   {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                   Refresh from CTG.gov

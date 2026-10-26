@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      acs_barriers_cache: {
+        Row: {
+          acs_year: number
+          expires_at: string
+          fetched_at: string
+          geo_id: string
+          geo_type: string
+          id: string
+          lep_pct: number | null
+          lep_population: number | null
+          lep_total_population: number | null
+          poverty_below_level: number | null
+          poverty_pct: number | null
+          poverty_population: number | null
+          source_url: string
+        }
+        Insert: {
+          acs_year: number
+          expires_at?: string
+          fetched_at?: string
+          geo_id: string
+          geo_type: string
+          id?: string
+          lep_pct?: number | null
+          lep_population?: number | null
+          lep_total_population?: number | null
+          poverty_below_level?: number | null
+          poverty_pct?: number | null
+          poverty_population?: number | null
+          source_url: string
+        }
+        Update: {
+          acs_year?: number
+          expires_at?: string
+          fetched_at?: string
+          geo_id?: string
+          geo_type?: string
+          id?: string
+          lep_pct?: number | null
+          lep_population?: number | null
+          lep_total_population?: number | null
+          poverty_below_level?: number | null
+          poverty_pct?: number | null
+          poverty_population?: number | null
+          source_url?: string
+        }
+        Relationships: []
+      }
       acs_cache: {
         Row: {
           acs_year: number
@@ -868,6 +916,45 @@ export type Database = {
           session_id?: string
           testimonial?: string | null
           use_case?: string | null
+        }
+        Relationships: []
+      }
+      site_barriers: {
+        Row: {
+          barrier_score: number | null
+          cohort_id: string
+          computed_at: string
+          county_fips: string
+          expires_at: string
+          id: string
+          lep_pct: number | null
+          nct_id: string
+          normalized_location_id: string
+          poverty_pct: number | null
+        }
+        Insert: {
+          barrier_score?: number | null
+          cohort_id: string
+          computed_at?: string
+          county_fips: string
+          expires_at?: string
+          id?: string
+          lep_pct?: number | null
+          nct_id: string
+          normalized_location_id: string
+          poverty_pct?: number | null
+        }
+        Update: {
+          barrier_score?: number | null
+          cohort_id?: string
+          computed_at?: string
+          county_fips?: string
+          expires_at?: string
+          id?: string
+          lep_pct?: number | null
+          nct_id?: string
+          normalized_location_id?: string
+          poverty_pct?: number | null
         }
         Relationships: []
       }
