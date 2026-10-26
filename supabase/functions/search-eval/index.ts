@@ -1,16 +1,11 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { verifiedAdmin } from '../_shared/adminServer.ts';
 import { z } from 'npm:zod@3';
 
-const headers = { ...corsHeaders, 'Access-Control-Allow-Headers': `${corsHeaders['Access-Control-Allow-Headers']}, x-admin-password`, 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+const headers = { ...corsHeaders, 'Access-Control-Allow-Headers': `${corsHeaders['Access-Control-Allow-Headers']}, x-admin-session`, 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
 const res = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers });
 
-function safeEqual(a: string, b: string) {
-  if (a.length !== b.length) return false;
-  let r = 0;
-  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return r === 0;
-}
+
 
 const CaseSchema = z.object({
   action: z.literal('create_case'),
@@ -31,9 +26,9 @@ const RunSchema = z.object({
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers });
-  const expected = Deno.env.get('ANALYTICS_ADMIN_PASSWORD');
-  if (!expected || !safeEqual(req.headers.get('x-admin-password') ?? '', expected)) return res({ error: 'Unauthorized' }, 401);
-  const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  const session = await verifiedAdmin(req);
+  if (!session) return res({ error: 'Unauthorized' }, 401);
+  const sb = session.client;
 
   if (req.method === 'GET') {
     const [cases, runs] = await Promise.all([

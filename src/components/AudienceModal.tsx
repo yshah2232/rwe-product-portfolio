@@ -3,7 +3,7 @@
 // Shown once per browser (localStorage persisted via PlainModeContext).
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Stethoscope, HeartHandshake, Sparkles } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -13,6 +13,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { usePlainMode } from '@/contexts/PlainModeContext';
 
 const AudienceModal = () => {
+  const { pathname } = useLocation();
+  const internal = pathname.startsWith('/admin') || pathname.startsWith('/analytics/');
   const { audiencePromptSeen, setAudience, markAudiencePromptSeen } = usePlainMode();
   const [open, setOpen] = useState(false);
   const [agreed, setAgreed] = useState(true); // pre-checked by default
@@ -21,13 +23,13 @@ const AudienceModal = () => {
   // Also auto-close if the prompt becomes "seen" elsewhere (e.g. user picked
   // an intent chip on the hero), so we don't ask the same question twice.
   useEffect(() => {
-    if (audiencePromptSeen) {
+    if (audiencePromptSeen || internal) {
       setOpen(false);
       return;
     }
     const t = setTimeout(() => setOpen(true), 700);
     return () => clearTimeout(t);
-  }, [audiencePromptSeen]);
+  }, [audiencePromptSeen, internal]);
 
   const choose = (kind: 'clinical' | 'patient') => {
     if (!agreed) return;

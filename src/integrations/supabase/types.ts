@@ -83,6 +83,45 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_access_sessions: {
+        Row: {
+          created_at: string
+          credential_version: string
+          expires_at: string
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          credential_version: string
+          expires_at: string
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          credential_version?: string
+          expires_at?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
+      admin_login_limits: {
+        Row: {
+          attempts: number
+          bucket_key: string
+          window_start: string
+        }
+        Insert: {
+          attempts?: number
+          bucket_key: string
+          window_start?: string
+        }
+        Update: {
+          attempts?: number
+          bucket_key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       asset_mappings: {
         Row: {
           clean_value: string
@@ -936,6 +975,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_admin_login_attempt: {
+        Args: { p_key: string; p_limit: number }
+        Returns: boolean
+      }
       search_registry_impact: {
         Args: never
         Returns: {
