@@ -69,7 +69,7 @@ describe('computeBarrierScore', () => {
       { pct: 10, nationalPct: 12.5 },
     );
     expect(r.languageAccess.level).toBe('unknown');
-    expect(r.socioeconomicStrain.level).toBe('moderate');
+    expect(r.socioeconomicStrain.level).toBe('low'); // 80% of national
     expect(r.barrierScore).toBe(80);
   });
 
