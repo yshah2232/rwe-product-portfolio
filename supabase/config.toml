@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.analytics-heatmap]
 verify_jwt = false
+
+[functions.search-eval]
+verify_jwt = false
