@@ -22,6 +22,13 @@
       "when": 1793050231529,
       "tag": "0002_admin_access_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793056045485,
+      "tag": "0003_module3_site_barriers",
+      "breakpoints": true
     }
   ]
 }
