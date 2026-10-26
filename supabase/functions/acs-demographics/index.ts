@@ -12,6 +12,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
 
 const CENSUS_BASE = "https://api.census.gov/data/2022/acs/acs5";
 const ACS_YEAR = 2022;
+// Census API began requiring an API key in 2026 (requests without one get a
+// 302 to missing_key.html). The key is a free, encrypted runtime secret.
+const CENSUS_API_KEY = (Deno.env.get("CENSUS_API_KEY") ?? "").trim();
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
