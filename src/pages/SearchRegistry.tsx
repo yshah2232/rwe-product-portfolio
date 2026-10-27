@@ -166,12 +166,7 @@ const SearchRegistry = () => {
         }
         lastSearchRef.current = { id: body.searchEventId ?? null, query: q.trim(), at: now };
 
-        // Trigger the outcome modal sooner — after the FIRST search, ~2.5s in.
-        // Previously waited for the 2nd search; ~88% of sessions never got there.
-        if (false && sessionSearchCount.current >= 1 && !outcomeShown) {
-          setOutcomeShown(true);
-          setTimeout(() => setOutcomeOpen(true), 2500);
-        }
+        // Visitor outcome collection is disabled under the no retention policy.
       }
     } catch (e) {
       if ((e as Error).name !== 'AbortError') {
