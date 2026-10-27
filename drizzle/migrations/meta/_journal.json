@@ -29,6 +29,13 @@
       "when": 1793056045485,
       "tag": "0003_module3_site_barriers",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793120264796,
+      "tag": "0004_retire_public_visitor_history_writes",
+      "breakpoints": true
     }
   ]
 }
