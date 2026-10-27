@@ -1,3 +1,4 @@
+import { readAcceptance } from '@/lib/agreementGate';
 // Hook that fetches & caches the plain-language version of a single trial.
 // Only fires when `enabled` is true (so it skips work when plain mode is off).
 
@@ -66,6 +67,7 @@ export function usePlainTrial(nctId: string | null, enabled: boolean) {
       return;
     }
 
+    if (!readAcceptance(window.localStorage)) return; // agreement gate
     let cancelled = false;
     setLoading(true);
     setError(null);

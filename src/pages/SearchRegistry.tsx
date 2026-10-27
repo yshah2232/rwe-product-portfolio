@@ -27,6 +27,7 @@ import { MAX_COMPARE, MIN_COMPARE } from '@/lib/trialCompare';
 import TrialMap from '@/components/TrialMap';
 import { cleanSponsor, cleanIndication } from '@/lib/canonicalize';
 import { usePlainMode } from '@/contexts/PlainModeContext';
+import { createPendingSearchGate } from '@/lib/agreementGate';
 import { SearchDiagnostics, EvidenceList, type SearchInterpretation, type SearchRetrieval, type SearchWarning, type Evidence } from '@/components/SearchDiagnostics';
 
 interface RankedTrial {
@@ -85,7 +86,7 @@ const SearchRegistry = () => {
     description: 'Plain-language search across live ClinicalTrials.gov. Filter by condition, phase, status, sponsor, and geography with AI-rewritten summaries.',
     canonical: '/search-registry',
   });
-  const { plainMode } = usePlainMode();
+  const { plainMode, termsAccepted } = usePlainMode();
   const [query, setQuery] = useState('');
   const [phase, setPhase] = useState<string>('any');
   const [status, setStatus] = useState<string>('any');
@@ -124,8 +125,11 @@ const SearchRegistry = () => {
   const sessionSearchCount = useRef(0);
   const lastSearchRef = useRef<{ id: string | null; query: string; at: number } | null>(null);
   const sessionId = getSessionId();
+  const termsAcceptedRef = useRef(termsAccepted);
+  termsAcceptedRef.current = termsAccepted;
 
   const runSearch = async (q: string) => {
+    if (!termsAcceptedRef.current) return; // agreement gate: no processing before acceptance
     if (q.trim().length < 3) {
       setError('Query must be at least 3 characters.');
       return;
@@ -259,21 +263,24 @@ const SearchRegistry = () => {
 
   // Deep-link from homepage hero search: ?q=...
   const [searchParams, setSearchParams] = useSearchParams();
-  const didConsumeQuery = useRef(false);
+  const runSearchRef = useRef(runSearch);
+  runSearchRef.current = runSearch;
+  const gateRef = useRef<ReturnType<typeof createPendingSearchGate> | null>(null);
+  if (!gateRef.current) gateRef.current = createPendingSearchGate((q) => runSearchRef.current(q));
   useEffect(() => {
-    if (didConsumeQuery.current) return;
     const q = searchParams.get('q');
     if (q && q.trim().length >= 3) {
-      didConsumeQuery.current = true;
       setQuery(q);
-      runSearch(q);
-      // Clean the URL so a refresh doesn't re-fire
+      gateRef.current!.offer(q, termsAcceptedRef.current);
+      // Clean the URL so a refresh doesn't re-fire; the query stays preserved in memory.
       const next = new URLSearchParams(searchParams);
       next.delete('q');
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+  // Run the preserved deep-link query exactly once after acceptance.
+  useEffect(() => { gateRef.current!.release(termsAccepted); }, [termsAccepted]);
 
   // "Did you mean?" — only when results are sparse or zero.
   const correction =
