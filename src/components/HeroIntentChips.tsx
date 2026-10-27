@@ -23,7 +23,7 @@ const OPTIONS: { id: Intent; label: string; icon: typeof Stethoscope }[] = [
 ];
 
 const HeroIntentChips = () => {
-  const { setAudience, markAudiencePromptSeen } = usePlainMode();
+  const { setAudience } = usePlainMode();
   const [intent, setIntent] = useState<Intent | null>(null);
   const [editing, setEditing] = useState(false);
 
@@ -42,9 +42,6 @@ const HeroIntentChips = () => {
     // Patient: Easy read on (search then defaults to recruiting studies). Others: registry language.
     setAudience(id === 'patient' ? 'patient' : 'clinical');
 
-    // Dismiss the first-visit Audience modal so visitors aren't asked the
-    // same question twice. Safe to call even if already seen.
-    markAudiencePromptSeen();
   };
 
   if (intent && !editing) {
