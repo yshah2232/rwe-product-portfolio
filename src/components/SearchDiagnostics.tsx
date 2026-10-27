@@ -4,6 +4,7 @@ export interface SearchInterpretation {
   conditionTerms: string[];
   biomarkers: string[];
   location: string | null;
+  locationConfidence?: 'high' | 'low' | null;
   priorTreatments: string[];
   status: string | null;
   phase: string | null;
@@ -30,8 +31,11 @@ const Chip = ({ label, value }: { label: string; value: string }) => (
 );
 
 export const SearchDiagnostics = ({
-  interpretation, retrieval, warnings,
-}: { interpretation?: SearchInterpretation; retrieval?: SearchRetrieval; warnings?: SearchWarning[] }) => {
+  interpretation, retrieval, warnings, onConfirmLocation, onRemoveLocation,
+}: {
+  interpretation?: SearchInterpretation; retrieval?: SearchRetrieval; warnings?: SearchWarning[];
+  onConfirmLocation?: (loc: string) => void; onRemoveLocation?: (loc: string) => void;
+}) => {
   if (!interpretation && !warnings?.length) return null;
   const i = interpretation;
   return (
@@ -42,7 +46,31 @@ export const SearchDiagnostics = ({
           <div className="flex flex-wrap gap-1.5">
             {i.conditionTerms.length > 0 && <Chip label="Condition" value={i.conditionTerms.join(' ')} />}
             {i.biomarkers.map((b) => <Chip key={b} label="Biomarker" value={b.toUpperCase()} />)}
-            {i.location && <Chip label="Location" value={i.location} />}
+            {i.location && i.locationConfidence !== 'low' && <Chip label="Location" value={i.location} />}
+            {i.location && i.locationConfidence === 'low' && (
+              <span className="inline-flex items-center gap-1.5 rounded-sm border border-primary/40 bg-primary/5 px-2 py-0.5 text-[12px]">
+                <span className="text-muted-foreground">Possible location:</span>
+                <span className="font-semibold text-foreground">{i.location}</span>
+                {onConfirmLocation && (
+                  <button
+                    type="button"
+                    onClick={() => onConfirmLocation(i.location!)}
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    Confirm
+                  </button>
+                )}
+                {onRemoveLocation && (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveLocation(i.location!)}
+                    className="font-semibold text-muted-foreground hover:text-destructive hover:underline"
+                  >
+                    Remove
+                  </button>
+                )}
+              </span>
+            )}
             {i.status && <Chip label="Status" value={human(i.status) + (i.statusFromQuery ? ' (from wording)' : '')} />}
             {i.phase && <Chip label="Phase" value={human(i.phase) + (i.phaseFromQuery ? ' (from wording)' : '')} />}
             {i.priorTreatments.map((p) => <Chip key={p} label="Prior treatment" value={p} />)}
