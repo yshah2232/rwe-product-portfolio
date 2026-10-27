@@ -148,14 +148,22 @@ async function fetchOneGeo(geo: GeoRequest) {
   if (!res.ok) {
     return { error: `Census ${res.status}` };
   }
-  const data = await res.json();
+  const text = await res.text();
+  let data: unknown;
+  try { data = JSON.parse(text); } catch {
+    // Census answers an unknown or not yet activated key with an HTML page.
+    const title = /<title>([^<]*)<\/title>/i.exec(text)?.[1]?.trim() ?? "html";
+    console.warn("Census non-JSON response:", title.slice(0, 80));
+    return { error: /invalid key|missing/i.test(text) ? "census_key_invalid" : "census_bad_response" };
+  }
   if (!Array.isArray(data) || data.length < 2) {
     return { error: "Empty Census response" };
   }
   const headers = data[0] as string[];
   const rows = (data.slice(1) as string[][]).map((r) => parseRow(headers, r));
   const agg = rows.length === 1 ? rows[0] : aggregateRows(rows);
-  return { url, ...agg };
+  // Never return the request URL: it carries the Census key.
+  return { ...agg };
 }
 
 Deno.serve(async (req) => {

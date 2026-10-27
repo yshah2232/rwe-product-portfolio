@@ -63,11 +63,16 @@ async function fetchCensusMeasures(geoType: "county" | "national", geoId: string
   let url = `${CENSUS_BASE}?get=NAME,${VARS.join(",")}&`;
   if (geoType === "national") url += "for=us:1";
   else url += `for=county:${geoId.slice(2)}&in=state:${geoId.slice(0, 2)}`;
-  url += `&key=${encodeURIComponent(CENSUS_KEY)}`;
+  const publicUrl = url; // citable source link, never includes the key
+  const keyedUrl = `${url}&key=${encodeURIComponent(CENSUS_KEY)}`;
   try {
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    const res = await fetch(keyedUrl, { headers: { Accept: "application/json" } });
     if (!res.ok) return { error: `Census ${res.status}` };
-    const data = await res.json();
+    const text = await res.text();
+    let data: unknown;
+    try { data = JSON.parse(text); } catch {
+      return { error: /invalid key|missing/i.test(text) ? "census_key_invalid" : "census_bad_response" };
+    }
     if (!Array.isArray(data) || data.length < 2) return { error: "Empty Census response" };
     const headers = data[0] as string[];
     const row = data[1] as string[];
@@ -82,7 +87,7 @@ async function fetchCensusMeasures(geoType: "county" | "national", geoId: string
       lep_pct: pct(lepSum, get("C16002_001E")),
       poverty_pct: pct(get("B17001_002E"), get("B17001_001E")),
     };
-    return { url, measures };
+    return { url: publicUrl, measures };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Census fetch failed" };
   }
