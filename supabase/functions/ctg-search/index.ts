@@ -21,7 +21,7 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
-import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, rankKey, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
+import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, rankKey, matchLocation, locationSentence, stripLocationClaims, matchLabels, scoresAreDifferentiated, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -314,7 +314,7 @@ Deno.serve(async (req) => {
     }));
 
     const systemPrompt = `You are a clinical trial relevance scorer. Score each candidate 0-100 for how well it matches the *meaning* of the query. Consider synonyms, abbreviations, drug classes, and disease equivalents. Be strict: 90+ excellent, 60-89 solid, 30-59 tangential, <30 poor.
-GROUNDING RULES (mandatory): Your reason may only mention attributes that appear in the candidate's title, conditions, interventions or eligibility text shown to you. Never infer, guess or call "implied" any locations, biomarkers, eligibility requirements, phases or prior treatments that are not written there. For each candidate also return 1-3 short verbatim quotes (copied exactly) with the field they came from (title, conditions, interventions, eligibility, phase, status). Site locations are NOT shown to you, so never comment on location. If a query concept is absent from the record, say it is not stated.`;
+GROUNDING RULES (mandatory): Your reason may only mention attributes that appear in the candidate's title, conditions, interventions or eligibility text shown to you. Never infer, guess or call "implied" any locations, biomarkers, eligibility requirements, phases or prior treatments that are not written there. For each candidate also return 1-3 short verbatim quotes (copied exactly) with the field they came from (title, conditions, interventions, eligibility, phase, status). Site locations are NOT shown to you and are checked separately against facility data, so ignore any place names in the query when scoring and never mention location, sites, states or countries. Use the full 0-100 range so scores separate candidates; do not give every candidate the same score. If a query concept is absent from the record, say it is not stated.`;
 
     const userPrompt = `User query: "${query}"
 
