@@ -4,7 +4,7 @@
  * and inserted into the existing audience_selections table for segmentation.
  *
  * Uses the existing `audience` text column (no schema change). For "patient"
- * we also flip plain-language mode on by default — matches AudienceModal.
+ * we also flip plain-language mode on by default (Easy read + recruiting-focused search). Others keep registry-standard language.
  */
 import { useEffect, useState } from 'react';
 import { Check, Stethoscope, HeartHandshake, FlaskConical, Building2, Pencil } from 'lucide-react';
@@ -23,7 +23,7 @@ const OPTIONS: { id: Intent; label: string; icon: typeof Stethoscope }[] = [
 ];
 
 const HeroIntentChips = () => {
-  const { setPlainMode, markAudiencePromptSeen } = usePlainMode();
+  const { setAudience, markAudiencePromptSeen } = usePlainMode();
   const [intent, setIntent] = useState<Intent | null>(null);
   const [editing, setEditing] = useState(false);
 
@@ -39,7 +39,8 @@ const HeroIntentChips = () => {
 
     track('hero_intent_select', { intent: id });
 
-    setPlainMode(id === 'patient');
+    // Patient: Easy read on (search then defaults to recruiting studies). Others: registry language.
+    setAudience(id === 'patient' ? 'patient' : 'clinical');
 
     // Dismiss the first-visit Audience modal so visitors aren't asked the
     // same question twice. Safe to call even if already seen.
@@ -60,6 +61,9 @@ const HeroIntentChips = () => {
         >
           <Pencil className="h-3 w-3" /> change
         </button>
+        {intent === 'patient' && (
+          <a href="/medical-disclaimer" className="gov-link ml-2">Medical Disclaimer</a>
+        )}
       </div>
     );
   }
