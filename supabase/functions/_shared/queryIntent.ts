@@ -100,9 +100,11 @@ export function parseQuery(raw: string): QueryIntent {
       const stateName = st.replace(/\b\w/g, (c) => c.toUpperCase());
       // A capitalized city directly before the state is part of the location: "diabetes Dallas Texas".
       const cityM = rawNoQual.match(new RegExp(`([A-Z][A-Za-z.'-]+(?:\\s+[A-Z][A-Za-z.'-]+){0,1})\\s+${stateName.replace(/\s+/g, "\\s+")}\\b`));
-      location = cityM && !LOC_STOP.test(cityM[1].split(/\s+/)[0]) && !GENERIC_MEDICAL.has(cityM[1].split(/\s+/)[0].toLowerCase())
-        ? `${cityM[1]} ${stateName}`
-        : stateName;
+      const cityWords = cityM ? cityM[1].split(/\s+/) : [];
+      const cityOk = cityWords.length > 0 && cityWords.every((w) =>
+        !LOC_STOP.test(w) && !GENERIC_MEDICAL.has(w.toLowerCase().replace(/['’]s$/, "")) &&
+        !BIOMARKER_WORDS.includes(w.toLowerCase()) && !FILLER.has(w.toLowerCase()));
+      location = cityOk ? `${cityM![1]} ${stateName}` : stateName;
       locationConfidence = 'high';
     }
   }
