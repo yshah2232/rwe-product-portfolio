@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Linkedin, Github, Info, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
+import { Info, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const SiteFooter = () => {
