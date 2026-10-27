@@ -405,9 +405,9 @@ const SearchRegistry = () => {
             <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
             <div className="text-[13px] text-muted-foreground leading-relaxed">
               <span className="font-semibold text-foreground">Demo limits in effect:</span> 30 searches per IP per
-              day, 6 per minute, 25 candidates fetched, top 10 returned. Identical queries within the hour are
-              served from edge cache. Anonymous interaction signals (clicks, dwell, thumbs up/down) are stored to
-              improve future ranking — no IP or PII retained.
+              day, 6 per minute. Up to 75 registry records are reviewed and 10 results returned.
+              Search activity is not saved in our application database. Requests are processed by ClinicalTrials.gov
+              and our AI service; their logging practices are separate. Downloads stay on your device.
             </div>
           </div>
         </div>

@@ -190,18 +190,7 @@ Deno.serve(async (req) => {
       : "unclear";
     const summary = String(parsed.summary ?? "").slice(0, 400);
 
-    // Log structured outcome only — never the file content.
-    if (body.sessionId) {
-      await supabase.from("eligibility_checks").insert({
-        session_id: body.sessionId,
-        nct_id: nctId,
-        files_count: files.length,
-        total_bytes: totalBytes,
-        checklist: items,
-        overall_signal: overall,
-        notes: (body.notes ?? "").slice(0, 1000) || null,
-      });
-    }
+    // Return the requested assessment without retaining notes or outcomes.
 
     return json({
       items,

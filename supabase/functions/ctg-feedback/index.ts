@@ -39,7 +39,10 @@ function rateLimit(ip: string): boolean {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
+  // Older published clients must not continue collecting visitor activity.
+  return json({ ok: true, retained: false });
 
+  /* Retired persistence path retained for reference, not executed.
   try {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
@@ -120,6 +123,7 @@ Deno.serve(async (req) => {
     console.error("ctg-feedback error", err);
     return json({ error: err instanceof Error ? err.message : "Unknown" }, 500);
   }
+  */
 });
 
 function json(body: unknown, status = 200) {
