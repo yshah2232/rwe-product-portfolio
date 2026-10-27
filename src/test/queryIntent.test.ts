@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseQuery, groundConcepts, verifyQuotes, isWeak, RETRIEVAL_LIMITS, type GroundFields } from '../../supabase/functions/_shared/queryIntent';
+import { parseQuery, groundConcepts, verifyQuotes, isWeak, RETRIEVAL_LIMITS, dedupeEvidence, matchLocation, type GroundFields, type Evidence } from '../../supabase/functions/_shared/queryIntent';
 
 const rec: GroundFields = {
   briefTitle: 'Sotorasib in KRAS G12C Mutated NSCLC',
@@ -65,5 +65,97 @@ describe("location parsing (any urban or rural place)", () => {
   });
   it("does not treat 'in patients' as a place", () => {
     expect(parseQuery("KRAS G12C in patients after chemo").location).toBeNull();
+  });
+});
+
+describe("location parsing without a cue word", () => {
+  it("reads a trailing capitalized city as a possible location", () => {
+    const i = parseQuery("non small cell lung cancer Boston");
+    expect(i.location).toBe("Boston");
+    expect(i.locationConfidence).toBe("low");
+    expect(i.conditionTerms).toEqual(expect.arrayContaining(["lung", "cancer"]));
+    expect(i.conditionTerms).not.toContain("boston");
+  });
+  it("keeps cue-word locations high confidence", () => {
+    const i = parseQuery("non small cell lung cancer in Boston");
+    expect(i.location).toBe("Boston");
+    expect(i.locationConfidence).toBe("high");
+  });
+  it("reads a multi-word state anywhere in the query", () => {
+    const i = parseQuery("breast cancer New Jersey");
+    expect(i.location).toBe("New Jersey");
+    expect(i.locationConfidence).toBe("high");
+    expect(i.conditionTerms).not.toContain("jersey");
+  });
+  it("joins a capitalized city before a state", () => {
+    const i = parseQuery("diabetes Dallas Texas");
+    expect(i.location).toBe("Dallas Texas");
+    expect(i.locationConfidence).toBe("high");
+  });
+  it("reads a state after a condition with an apostrophe", () => {
+    const i = parseQuery("Alzheimer's California");
+    expect(i.location).toBe("California");
+    expect(i.locationConfidence).toBe("high");
+  });
+  it("does not guess a location from a title-cased condition", () => {
+    expect(parseQuery("Small Cell Lung Cancer").location).toBeNull();
+  });
+  it("does not guess a location from a trailing biomarker", () => {
+    expect(parseQuery("lung cancer KRAS").location).toBeNull();
+  });
+});
+
+describe("dedupeEvidence", () => {
+  const ev = (concept: string, type: string, field: Evidence["field"], snippet: string): Evidence =>
+    ({ concept, type, field, snippet });
+  it("removes repeated snippets and repeated concepts", () => {
+    const out = dedupeEvidence([
+      ev("lung cancer", "condition", "conditions", "Non Small Cell Lung Cancer"),
+      ev("lung cancer", "condition", "conditions", "Non Small Cell Lung Cancer"),
+      ev("lung cancer", "condition", "title", "…lung cancer…"),
+    ]);
+    expect(out).toHaveLength(1);
+  });
+  it("caps at three items in priority order", () => {
+    const out = dedupeEvidence([
+      ev("PHASE3", "phase", "phase", "PHASE3"),
+      ev("chemo", "prior treatment", "eligibility", "…prior chemo…"),
+      ev("Boston", "location", "locations", "3 listed sites in Boston"),
+      ev("RECRUITING", "status", "status", "RECRUITING"),
+      ev("lung cancer", "condition", "conditions", "Lung Cancer"),
+    ]);
+    expect(out.map((e) => e.type)).toEqual(["condition", "status", "location"]);
+  });
+  it("collapses multi-word condition evidence to one row per field", () => {
+    const out = dedupeEvidence([
+      ev("non", "condition", "conditions", "…Non Small Cell Lung Cancer…"),
+      ev("small", "condition", "conditions", "…Non Small Cell Lung Cancer…"),
+      ev("cell", "condition", "conditions", "…Non Small Cell Lung Cancer…"),
+      ev("lung", "condition", "title", "…lung cancer trial…"),
+    ]);
+    expect(out).toHaveLength(2);
+    expect(out.map((e) => e.field)).toEqual(["conditions", "title"]);
+  });
+});
+
+describe("matchLocation with city + state", () => {
+  const sites = [
+    { city: "Dallas", state: "Texas", country: "United States", status: "RECRUITING" },
+    { city: "Houston", state: "Texas", country: "United States", status: "RECRUITING" },
+    { city: "Boston", state: "Massachusetts", country: "United States", status: "RECRUITING" },
+  ];
+  it("confirms a city + state pair against the city", () => {
+    const m = matchLocation("Dallas Texas", sites);
+    expect(m.confirmed).toBe(true);
+    expect(m.matchedSites).toBe(1);
+  });
+  it("falls back to the state when the city is not listed", () => {
+    const m = matchLocation("Plano Texas", sites);
+    expect(m.confirmed).toBe(true);
+    expect(m.matchedSites).toBe(2);
+  });
+  it("still matches a bare state or city", () => {
+    expect(matchLocation("Texas", sites).matchedSites).toBe(2);
+    expect(matchLocation("Boston", sites).matchedSites).toBe(1);
   });
 });

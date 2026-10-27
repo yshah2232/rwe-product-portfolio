@@ -21,7 +21,7 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
-import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, rankKey, matchLocation, locationSentence, stripLocationClaims, matchLabels, scoresAreDifferentiated, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
+import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, rankKey, matchLocation, locationSentence, stripLocationClaims, matchLabels, scoresAreDifferentiated, dedupeEvidence, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -284,6 +284,7 @@ Deno.serve(async (req) => {
     const candidates = shapeAll();
     const interpretation = {
       conditionTerms: intent.conditionTerms, biomarkers: intent.biomarkers, location: intent.location,
+      locationConfidence: intent.locationConfidence,
       priorTreatments: intent.priorTreatments, status: effStatus || null, phase: effPhase || null,
       statusFromQuery: !status && !!intent.status, phaseFromQuery: !phase && !!intent.phase,
       complexity: intent.complexity,
@@ -426,10 +427,10 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
         locationEvidence: intent.location && loc ? { location: intent.location, confirmed: loc.confirmed, matchedSites: loc.matchedSites, recruitingSites: loc.recruitingMatched } : null,
         matchLabels: matchLabels(evidence, !!loc?.confirmed),
         evidenceRatio: queryConceptCount ? evidence.filter((e) => e.type !== "quote").length / queryConceptCount : 0,
-        evidence: [
+        evidence: dedupeEvidence([
           ...evidence,
           ...(llmVerified ? r!.quotes!.slice(0, 3).map((q) => ({ concept: "reranker quote", type: "quote", field: q.field, snippet: q.quote })) : []),
-        ],
+        ]),
         notFound,
       };
     });

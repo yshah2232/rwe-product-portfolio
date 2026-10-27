@@ -279,6 +279,19 @@ const SearchRegistry = () => {
   const correction =
     data && data.results.length <= 2 ? suggestCorrection(data.query) : null;
 
+  // Confirm or remove a low-confidence ("Possible") location: rewrite the query and re-run.
+  const adjustLocation = (loc: string, mode: 'confirm' | 'remove') => {
+    const esc = loc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const next = (mode === 'confirm'
+      ? query.replace(new RegExp(`\\s*${esc}\\s*$`, 'i'), ` in ${loc}`)
+      : query.replace(new RegExp(`\\s*${esc}\\s*$`, 'i'), '')
+    ).trim();
+    if (next.length >= 3) {
+      setQuery(next);
+      runSearch(next);
+    }
+  };
+
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -448,11 +461,15 @@ const SearchRegistry = () => {
               <div className="flex flex-wrap items-baseline justify-between gap-4 mb-3">
                 <div>
                   <h2 className="font-display text-[26px] md:text-[28px] font-semibold text-foreground tracking-tight">
-                    {data.results.length} re-ranked results
+                    {data.candidatesFetched} registry records reviewed · {data.results.length} results shown
                   </h2>
                   <p className="text-[13px] text-muted-foreground mt-1.5">
-                    From {data.candidatesFetched} candidates · {data.totalCount.toLocaleString()} total matching the
-                    keyword on CTG.gov
+                    <span
+                      className="underline decoration-dotted underline-offset-2 cursor-help"
+                      title="ClinicalTrials.gov reports this broad keyword count before detailed interpretation, filtering and semantic reranking."
+                    >
+                      {data.totalCount.toLocaleString()} broad keyword matches on ClinicalTrials.gov
+                    </span>
                     {data.fallback && ' · semantic re-rank unavailable, showing CTG default order'}
                   </p>
                 </div>
@@ -490,7 +507,13 @@ const SearchRegistry = () => {
                 </div>
               )}
 
-              <SearchDiagnostics interpretation={data.interpretation} retrieval={data.retrieval} warnings={data.warnings} />
+              <SearchDiagnostics
+                interpretation={data.interpretation}
+                retrieval={data.retrieval}
+                warnings={data.warnings}
+                onConfirmLocation={(loc) => adjustLocation(loc, 'confirm')}
+                onRemoveLocation={(loc) => adjustLocation(loc, 'remove')}
+              />
 
               {/* Source + freshness attribution */}
               <p className="text-[11.5px] text-muted-foreground mb-6 flex items-center gap-1.5">

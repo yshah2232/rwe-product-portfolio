@@ -7,6 +7,7 @@ export interface QueryIntent {
   conditionTerms: string[];
   biomarkers: string[];
   location: string | null;
+  locationConfidence: 'high' | 'low' | null; // low = guessed from position, user should confirm
   status: string | null; // CTG overallStatus enum
   phase: string | null; // CTG phase enum
   priorTreatments: string[];
@@ -74,26 +75,56 @@ export function parseQuery(raw: string): QueryIntent {
   // Location: "near X" / "in X" where X is a US state, "us", or a place name (urban or rural).
   // "rural"/"urban" qualifiers are skipped; the place itself is sent to CTG.gov as query.locn.
   let location: string | null = null;
+  let locationConfidence: 'high' | 'low' | null = null;
   const LOC_STOP = /^(phase|patients?|adults?|children|kids|people|women|men|the|a|an|my|elderly|trials?|studies|recruiting|early|late|stage|after|with|for|who|that|and|or)$/i;
+  // Words that are medical terms, not places — guards the no-cue fallback below.
+  const GENERIC_MEDICAL = new Set(["cancer", "carcinoma", "tumor", "tumour", "lymphoma", "leukemia", "leukaemia", "disease", "syndrome", "diabetes", "alzheimer", "alzheimers", "parkinson", "parkinsons", "asthma", "melanoma", "myeloma", "sarcoma", "infection", "obesity", "stroke", "copd", "hiv", "covid"]);
   const rawNoQual = raw.replace(/\b(rural|urban|suburban|small[- ]town)\s+/gi, "");
   const locM = rawNoQual.match(/\b(?:near|in|around|within)\s+([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,2})/);
-  if (locM && !LOC_STOP.test(locM[1].split(/\s+/)[0])) location = locM[1].trim();
+  if (locM && !LOC_STOP.test(locM[1].split(/\s+/)[0])) { location = locM[1].trim(); locationConfidence = 'high'; }
   if (!location) {
     // lowercase "near boston" / "around tulsa": "near"/"around" are unambiguous location cues
     const lowM = rawNoQual.match(/\b(?:near|around)\s+([a-z][a-z.'-]+(?:\s+[a-z][a-z.'-]+){0,2})/i);
     if (lowM) {
       const words: string[] = [];
       for (const w of lowM[1].split(/\s+/)) { if (LOC_STOP.test(w)) break; words.push(w); }
-      if (words.length) location = words.join(" ").replace(/\b\w/g, (c) => c.toUpperCase());
+      if (words.length) { location = words.join(" ").replace(/\b\w/g, (c) => c.toUpperCase()); locationConfidence = 'high'; }
     }
   }
   if (!location) {
+    // A US state named anywhere in the query, no cue word needed: "breast cancer New Jersey".
+    // Longest names first so "west virginia" wins over "virginia".
     const qNoQual = q.replace(/\b(rural|urban|suburban)\s+/g, "");
-    const st = US_STATES.find((s) => new RegExp(`\\b(?:near|in|around) ${s}\\b`).test(qNoQual));
-    if (st) location = st.replace(/\b\w/g, (c) => c.toUpperCase());
+    const st = [...US_STATES].sort((a, b) => b.length - a.length).find((s) => new RegExp(`\\b${s}\\b`).test(qNoQual));
+    if (st) {
+      const stateName = st.replace(/\b\w/g, (c) => c.toUpperCase());
+      // A capitalized city directly before the state is part of the location: "diabetes Dallas Texas".
+      const cityM = rawNoQual.match(new RegExp(`([A-Z][A-Za-z.'-]+(?:\\s+[A-Z][A-Za-z.'-]+){0,1})\\s+${stateName.replace(/\s+/g, "\\s+")}\\b`));
+      const cityWords = cityM ? cityM[1].split(/\s+/) : [];
+      const cityOk = cityWords.length > 0 && cityWords.every((w) =>
+        !LOC_STOP.test(w) && !GENERIC_MEDICAL.has(w.toLowerCase().replace(/['’]s$/, "")) &&
+        !BIOMARKER_WORDS.includes(w.toLowerCase()) && !FILLER.has(w.toLowerCase()));
+      location = cityOk ? `${cityM![1]} ${stateName}` : stateName;
+      locationConfidence = 'high';
+    }
+  }
+  if (!location) {
+    // Trailing capitalized place with no cue word: "lung cancer Boston". Uncertain —
+    // surfaced as "Possible location" so the user can confirm or remove it.
+    const tailM = rawNoQual.match(/([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,1})\s*[,.;]?\s*$/);
+    if (tailM && tailM.index !== undefined) {
+      const words = tailM[1].split(/\s+/);
+      const ok = words.every((w) =>
+        !LOC_STOP.test(w) && !GENERIC_MEDICAL.has(w.toLowerCase()) &&
+        !BIOMARKER_WORDS.includes(w.toLowerCase()) && !MUTATION_RE.test(w) && !FILLER.has(w.toLowerCase()));
+      const remaining = rawNoQual.slice(0, tailM.index).trim().split(/\s+/).filter(Boolean);
+      if (ok && remaining.length >= 2) { location = tailM[1]; locationConfidence = 'low'; }
+    }
   }
   if (location) {
-    q = q.replace(new RegExp(`\\b(near|in|around|within)\\s+(?:(?:rural|urban|suburban)\\s+)?${location.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`), " ");
+    const escLoc = location.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    q = q.replace(new RegExp(`\\b(near|in|around|within)\\s+(?:(?:rural|urban|suburban)\\s+)?${escLoc}\\b`), " ");
+    q = q.replace(new RegExp(`\\b${escLoc}\\b`), " "); // no-cue match
     q = q.replace(/\b(rural|urban|suburban)\b/g, " ");
   }
 
@@ -120,7 +151,7 @@ export function parseQuery(raw: string): QueryIntent {
   const complexity = [conditionTerms.length > 0, biomarkers.length > 0, !!location, !!status, !!phase, priorTreatments.length > 0]
     .filter(Boolean).length;
 
-  return { conditionTerms, biomarkers: Array.from(new Set(biomarkers)), location, status, phase, priorTreatments, complexity, droppedTokens: dropped };
+  return { conditionTerms, biomarkers: Array.from(new Set(biomarkers)), location, locationConfidence, status, phase, priorTreatments, complexity, droppedTokens: dropped };
 }
 
 // ── Grounding ──
@@ -282,11 +313,24 @@ export interface SiteLocation { city?: string; state?: string; country?: string;
 const lc = (s?: string) => (s ?? "").trim().toLowerCase();
 const COUNTRY_ALIASES: Record<string, string> = { us: "united states", usa: "united states", "u.s.": "united states", "u.s.a.": "united states", america: "united states" };
 
-/** Sites whose city, state or country exactly equals the interpreted location. */
+/** Sites whose city, state or country matches the interpreted location. "Dallas Texas" splits into city + state. */
 export function matchLocation(location: string | null, sites: SiteLocation[]): { confirmed: boolean; matchedSites: number; recruitingMatched: number } {
   if (!location) return { confirmed: false, matchedSites: 0, recruitingMatched: 0 };
   const target = COUNTRY_ALIASES[lc(location)] ?? lc(location);
-  const hits = sites.filter((s) => lc(s.city) === target || lc(s.state) === target || lc(s.country) === target);
+  const words = target.split(" ");
+  let city: string | null = null;
+  let state: string | null = null;
+  for (let n = Math.min(2, words.length - 1); n >= 1; n--) {
+    const maybeState = words.slice(-n).join(" ");
+    if (US_STATES.includes(maybeState)) { state = maybeState; city = words.slice(0, -n).join(" ") || null; break; }
+  }
+  let hits: SiteLocation[];
+  if (state && city) {
+    hits = sites.filter((s) => lc(s.city) === city && lc(s.state) === state);
+    if (hits.length === 0) hits = sites.filter((s) => lc(s.state) === state); // city not listed; state still confirms
+  } else {
+    hits = sites.filter((s) => lc(s.city) === target || lc(s.state) === target || lc(s.country) === target);
+  }
   return { confirmed: hits.length > 0, matchedSites: hits.length, recruitingMatched: hits.filter((s) => s.status === "RECRUITING").length };
 }
 
@@ -318,6 +362,39 @@ export function matchLabels(evidence: Evidence[], locationConfirmed: boolean): M
   if (types.has("phase")) out.push("Phase match");
   if (types.has("biomarker")) out.push("Biomarker match");
   if (types.has("prior treatment")) out.push("Prior-treatment match");
+  return out;
+}
+
+// ── Evidence deduplication ──
+// Display priority: condition/biomarker → status → location → phase → prior treatment → quotes.
+const EVIDENCE_PRIORITY: Record<string, number> = {
+  condition: 1, biomarker: 1, status: 2, location: 3, phase: 4, "prior treatment": 5, quote: 6,
+};
+
+/**
+ * Normalize and deduplicate match evidence before display.
+ * Drops repeated source-field/snippet pairs and repeated concept+type pairs,
+ * then keeps at most `max` items in priority order.
+ */
+export function dedupeEvidence(evidence: Evidence[], max = 3): Evidence[] {
+  const seenSnippet = new Set<string>();
+  const seenConcept = new Set<string>();
+  const seenTypeField = new Set<string>();
+  const out: Evidence[] = [];
+  const sorted = [...evidence].sort((a, b) => (EVIDENCE_PRIORITY[a.type] ?? 9) - (EVIDENCE_PRIORITY[b.type] ?? 9));
+  for (const e of sorted) {
+    const snippetKey = `${e.field}|${norm(e.snippet)}`;
+    const conceptKey = `${e.type}|${norm(e.concept)}`;
+    // Condition terms are words of one phrase ("non", "small", "cell"…): one row per field is enough.
+    const typeFieldKey = `${e.type}|${e.field}`;
+    if (seenSnippet.has(snippetKey) || seenConcept.has(conceptKey)) continue;
+    if (e.type === "condition" && seenTypeField.has(typeFieldKey)) continue;
+    seenSnippet.add(snippetKey);
+    seenConcept.add(conceptKey);
+    seenTypeField.add(typeFieldKey);
+    out.push(e);
+    if (out.length >= max) break;
+  }
   return out;
 }
 
