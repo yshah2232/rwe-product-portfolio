@@ -416,9 +416,9 @@ const Index = () => {
             </div>
             <div className="ctg-panel p-5">
               <ScatterChart className="h-5 w-5 mb-3" style={{ color: 'hsl(var(--primary))' }} strokeWidth={2} />
-              <p className="text-[32px] font-bold leading-none" style={{ color: 'hsl(var(--primary))' }}>3 TAs</p>
+              <p className="text-[32px] font-bold leading-none" style={{ color: 'hsl(var(--primary))' }}>Any condition</p>
               <p className="mt-2 text-[13px] text-foreground/75 leading-relaxed">
-                Live cohorts seeded for GLP-1, NSCLC, and Alzheimer's — extensible to any condition the registry covers.
+                Every search queries the full live registry. No pre-seeded datasets, no condition list to maintain.
               </p>
             </div>
           </div>
