@@ -36,6 +36,13 @@
       "when": 1793120264796,
       "tag": "0004_retire_public_visitor_history_writes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793121681222,
+      "tag": "0005_create_issue_reports",
+      "breakpoints": true
     }
   ]
 }
