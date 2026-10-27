@@ -20,6 +20,7 @@ export default function ReportProblem() {
     title: 'Report a problem | Clinical Trial Diversity Studio',
     description: 'Tell us about a bug, wrong information, or an improvement idea for Clinical Trial Diversity Studio.',
     canonical: '/report',
+    noindex: true,
   });
   const [category, setCategory] = useState<string>('bug');
   const [message, setMessage] = useState('');
