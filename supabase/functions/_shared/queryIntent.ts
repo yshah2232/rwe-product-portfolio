@@ -149,7 +149,7 @@ export function parseQuery(raw: string): QueryIntent {
   const complexity = [conditionTerms.length > 0, biomarkers.length > 0, !!location, !!status, !!phase, priorTreatments.length > 0]
     .filter(Boolean).length;
 
-  return { conditionTerms, biomarkers: Array.from(new Set(biomarkers)), location, status, phase, priorTreatments, complexity, droppedTokens: dropped };
+  return { conditionTerms, biomarkers: Array.from(new Set(biomarkers)), location, locationConfidence, status, phase, priorTreatments, complexity, droppedTokens: dropped };
 }
 
 // ── Grounding ──
