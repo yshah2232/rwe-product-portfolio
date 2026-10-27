@@ -135,6 +135,7 @@ export interface GroundFields {
   locations: string[]; // "City, State, Country"
   status: string;
   phase: string[];
+  sites?: SiteLocation[]; // structured city/state/country from contactsLocationsModule
 }
 
 export type FieldName = "title" | "conditions" | "interventions" | "keywords" | "eligibility" | "locations" | "status" | "phase";
@@ -184,7 +185,13 @@ export function groundConcepts(intent: QueryIntent, f: GroundFields): { evidence
   intent.conditionTerms.forEach((c) => check(c, "condition", ["conditions", "title", "keywords", "eligibility"]));
   intent.biomarkers.forEach((b) => check(b, "biomarker", ["title", "conditions", "keywords", "eligibility", "interventions"]));
   intent.priorTreatments.forEach((p) => check(p, "prior treatment", ["eligibility", "title"]));
-  if (intent.location) check(intent.location, "location", ["locations"]);
+  if (intent.location) {
+    if (f.sites) {
+      const m = matchLocation(intent.location, f.sites);
+      if (m.confirmed) evidence.push({ concept: intent.location, type: "location", field: "locations", snippet: `${m.matchedSites} listed site${m.matchedSites === 1 ? "" : "s"} in ${intent.location}` });
+      else notFound.push({ concept: intent.location, type: "location" });
+    } else check(intent.location, "location", ["locations"]);
+  }
   if (intent.status) {
     if (f.status === intent.status) evidence.push({ concept: intent.status, type: "status", field: "status", snippet: f.status });
     else notFound.push({ concept: intent.status, type: "status" });
