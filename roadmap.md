@@ -1,4 +1,6 @@
 # Current task
+- [x] Correct preview origin blocking: live browser requests with actual hosted preview Origin returned 10 trials for Cancer trials in US (45 candidates, 749 registry matches) and Prostate cancer. Invalid origins return 403 with visible error, not zero results; 12 tests passed.
+- [ ] Search relevance review: Prostate cancer retrieves an overly broad registry pool and includes weak matches. Origin blocking is corrected; ranking accuracy must not be described as fully verified.
 - [x] Replace public saved cohorts with direct trial comparison (2 to 4 trials). Verified live search, deselection, four trial cap, separate tabs and reload reset.
 - [x] Add browser generated PDF report with visible watermark and embedded attribution. Downloaded and inspected six page report; eight unit tests pass and mobile page does not overflow.
 - [x] Stop new visitor activity retention in application storage and explain individual temporary activity. Historical records remain; provider and hosting retention is not verified.
