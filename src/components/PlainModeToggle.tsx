@@ -25,7 +25,7 @@ const PlainModeToggle = () => {
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{plainMode ? 'Easy read: ON' : 'Easy read'}</span>
-            <span className="sm:hidden">{plainMode ? 'Easy' : 'Easy?'}</span>
+            <span className="sm:hidden">{plainMode ? 'Easy read: ON' : 'Easy read'}</span>
             <span
               aria-hidden
               className={`inline-block w-7 h-3.5 rounded-full relative transition-colors ${

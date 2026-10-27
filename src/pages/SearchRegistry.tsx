@@ -135,6 +135,8 @@ const SearchRegistry = () => {
     const effectiveStatus = plainMode ? 'RECRUITING' : status;
     if (effectiveStatus !== 'any') params.set('status', effectiveStatus);
     if (countryUS) params.set('countryUS', 'true');
+    // Browser language region only (e.g. en-US), sent as a ranking hint and never stored.
+    if (/-US$/i.test(navigator.language || '')) params.set('region', 'US');
 
     try {
       const res = await fetch(`${SEARCH_URL}?${params.toString()}`, {
