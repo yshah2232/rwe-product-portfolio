@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Flag, Send, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSeo } from '@/hooks/useSeo';
+
+type ReportStats = { total: number; resolved: number; in_review: number; new: number; dismissed: number };
 
 const CATEGORIES = [
   { value: 'bug', label: 'Something is broken' },
@@ -24,6 +26,19 @@ export default function ReportProblem() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<ReportStats | null>(null);
+
+  const loadStats = async () => {
+    try {
+      const response = await fetch(`${base}/issue-stats`, { cache: 'no-store', headers: { apikey: publicKey, Authorization: `Bearer ${publicKey}` } });
+      const data = await response.json();
+      if (response.ok && typeof data.total === 'number') setStats(data as ReportStats);
+    } catch {
+      // Stats are optional context; the form still works without them.
+    }
+  };
+
+  useEffect(() => { void loadStats(); }, []);
 
   const submit = async () => {
     setError(null);
