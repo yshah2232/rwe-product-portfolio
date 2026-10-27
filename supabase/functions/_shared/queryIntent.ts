@@ -184,7 +184,17 @@ export function groundConcepts(intent: QueryIntent, f: GroundFields): { evidence
   };
   intent.conditionTerms.forEach((c) => check(c, "condition", ["conditions", "title", "keywords", "eligibility"]));
   intent.biomarkers.forEach((b) => check(b, "biomarker", ["title", "conditions", "keywords", "eligibility", "interventions"]));
-  intent.priorTreatments.forEach((p) => check(p, "prior treatment", ["eligibility", "title"]));
+  intent.priorTreatments.forEach((p) => {
+    // Only count prior treatment when the term sits next to a prior-therapy cue in eligibility or title.
+    const esc = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const cue = "(prior|previous(ly)?|after|following|progress\\w*|refractory|resistant|received|failed|failure|pretreated|treated with)";
+    const re = new RegExp(`${cue}[^.;]{0,60}\\b${esc}|\\b${esc}[^.;]{0,40}\\b(prior|previous(ly)?|progress\\w*|failure|refractory)`, "i");
+    for (const field of ["eligibility", "title"] as FieldName[]) {
+      const t = fieldText(f, field); const m = t.match(re);
+      if (m && m.index !== undefined) { evidence.push({ concept: p, type: "prior treatment", field, snippet: `…${t.slice(Math.max(0, m.index - 20), m.index + m[0].length + 20).replace(/\s+/g, " ").trim()}…` }); return; }
+    }
+    notFound.push({ concept: p, type: "prior treatment" });
+  });
   if (intent.location) {
     if (f.sites) {
       const m = matchLocation(intent.location, f.sites);
@@ -273,6 +283,7 @@ export function stripLocationClaims(reason: string, location: string | null): st
   const sentences = reason.split(/(?<=[.!?])\s+/);
   const kept = sentences
     .map((s) => s.replace(/,?\s*(but|and|although|though|while)\s+(the\s+)?(location|site)[^.]*\./i, "."))
+    .filter((s) => !/\b(impl(y|ies|ied)|not (necessarily|explicitly)|does not mention|not stated)\b/i.test(s))
     .filter((s) => !geo.test(s) && !(location && s.toLowerCase().includes(location.toLowerCase())));
   return kept.join(" ").trim();
 }

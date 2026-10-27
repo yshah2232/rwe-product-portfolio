@@ -30,3 +30,16 @@ describe('scores', () => {
     expect(matchLabels([{ concept: 'breast', type: 'condition', field: 'conditions', snippet: '' }], false)).toEqual(['Condition match']);
   });
 });
+
+describe('prior treatment grounding', () => {
+  const base = { briefTitle: 'NSCLC study', officialTitle: '', conditions: ['NSCLC'], interventions: [], keywords: [], locations: [], status: 'RECRUITING', phase: [] };
+  const intent = parseQuery('NSCLC after chemotherapy');
+  it('matches when chemotherapy follows a prior cue', () => {
+    const g = groundConcepts(intent, { ...base, eligibility: 'Progression after platinum based chemotherapy.' });
+    expect(g.evidence.some((e) => e.type === 'prior treatment')).toBe(true);
+  });
+  it('does not match a bare mention of chemotherapy', () => {
+    const g = groundConcepts(intent, { ...base, eligibility: 'Participants will receive neoadjuvant chemotherapy.' });
+    expect(g.evidence.some((e) => e.type === 'prior treatment')).toBe(false);
+  });
+});
