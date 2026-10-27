@@ -19,6 +19,7 @@
 //   • Single LLM call per search (not per trial)
 
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
 import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
 
@@ -133,14 +134,10 @@ Deno.serve(async (req) => {
 
     // 3) Origin allowlist — accept only our own front-ends. Missing origin
     // (server-to-server tools) is treated as suspect.
-    const ORIGIN_ALLOWLIST = [
-      "lovable.app", "lovable.dev", "ysclin.xyz", "localhost", "127.0.0.1",
-    ];
-
     const isBotUA = !userAgent || KNOWN_BOTS.some((b) => uaLower.includes(b));
     const missingHeaders = !acceptLang;
     const isReferrerSpam = !!referer && KNOWN_REFERRER_SPAM.some((r) => referer.includes(r));
-    const isOriginOk = !!origin && ORIGIN_ALLOWLIST.some((o) => origin.includes(o));
+    const isOriginOk = isAllowedSearchOrigin(origin);
     const isOriginSuspect = !isOriginOk;
 
     const suspicious = isBotUA || missingHeaders || isReferrerSpam || isOriginSuspect;
@@ -148,7 +145,7 @@ Deno.serve(async (req) => {
     if (suspicious) {
       // 4) Optional Turnstile escape hatch — if the client supplies a valid
       // Cloudflare Turnstile token AND TURNSTILE_SECRET is set, allow through.
-      // Otherwise silently return empty results (don't tip off scrapers).
+      // Return an explicit blocked request, never pretend the registry has no trials.
       const turnstileSecret = Deno.env.get("TURNSTILE_SECRET");
       const turnstileToken = req.headers.get("x-turnstile-token") ?? url.searchParams.get("ts") ?? "";
       let passedChallenge = false;
@@ -168,12 +165,10 @@ Deno.serve(async (req) => {
 
       if (!passedChallenge) {
         return json({
-          query, totalCount: 0, candidatesFetched: 0, results: [],
-          sessionId, searchEventId: null,
-          usage: { rateLimitRemaining: 0 },
-          // Frontend may render a Turnstile widget when challenge === "turnstile".
+          error: 'Search was blocked by abuse protection. No registry search was performed. Reload the page and try again.',
+          code: 'search_blocked',
           challenge: isOriginSuspect ? null : "turnstile",
-        });
+        }, 403);
       }
     }
 
@@ -459,7 +454,7 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }
 

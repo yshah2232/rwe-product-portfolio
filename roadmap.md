@@ -1,4 +1,5 @@
 # Current task
+- [ ] Correct preview origin blocking and verify the screenshot query on the real hosted preview origin; blocked requests must not masquerade as zero results.
 - [x] Replace public saved cohorts with direct trial comparison (2 to 4 trials). Verified live search, deselection, four trial cap, separate tabs and reload reset.
 - [x] Add browser generated PDF report with visible watermark and embedded attribution. Downloaded and inspected six page report; eight unit tests pass and mobile page does not overflow.
 - [x] Stop new visitor activity retention in application storage and explain individual temporary activity. Historical records remain; provider and hosting retention is not verified.

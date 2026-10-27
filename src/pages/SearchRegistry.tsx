@@ -63,6 +63,7 @@ interface SearchResponse {
   interpretation?: SearchInterpretation;
   retrieval?: SearchRetrieval;
   warnings?: SearchWarning[];
+  challenge?: 'turnstile' | null;
 }
 
 const SEARCH_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-search`;
@@ -141,8 +142,8 @@ const SearchRegistry = () => {
         headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
       });
       const body: SearchResponse = await res.json();
-      if (!res.ok) {
-        setError((body as any).error ?? `Request failed (${res.status})`);
+      if (!res.ok || body.challenge) {
+        setError((body as any).error ?? (body.challenge ? 'Search was blocked by abuse protection. No registry search was performed. Reload the page and try again.' : `Request failed (${res.status})`));
         setData(null);
       } else {
         setData(body);
