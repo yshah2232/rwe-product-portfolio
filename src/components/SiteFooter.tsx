@@ -7,8 +7,8 @@ const SiteFooter = () => {
   return (
     <footer className="border-t border-border/40 bg-muted/20">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 space-y-10">
-        {/* Brand + social row */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-2">
+        {/* Brand row */}
+        <div className="pt-2">
           <div className="space-y-1.5">
             <p className="text-[16px] font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
               Clinical Trial Diversity Studio
@@ -16,17 +16,6 @@ const SiteFooter = () => {
             <p className="text-xs text-muted-foreground leading-relaxed">
               Built on live ClinicalTrials.gov registry data · No PHI · Product capability demo
             </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <a href="https://www.linkedin.com/in/yashshah2232" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center justify-center w-9 h-9 rounded-lg hover:bg-accent transition-colors" aria-label="LinkedIn">
-              <Linkedin className="h-[18px] w-[18px] text-muted-foreground hover:text-primary transition-colors" />
-            </a>
-            <a href="https://github.com/yshah2232" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center justify-center w-9 h-9 rounded-lg hover:bg-muted transition-colors" aria-label="GitHub">
-              <Github className="h-[18px] w-[18px] text-muted-foreground hover:text-foreground transition-colors" />
-            </a>
           </div>
         </div>
 
