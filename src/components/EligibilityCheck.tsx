@@ -25,13 +25,16 @@ interface Verdict {
 
 export const VERDICT_LABEL: Record<Verdict['verdict'], string> = {
   likely_meets: 'Information supports this listed criterion',
-  likely_does_not_meet: 'Potential conflict with this listed criterion',
+  likely_does_not_meet: 'Potential conflict identified',
   unclear: 'Insufficient information',
-  no_docs: 'No supporting document provided',
+  no_docs: 'No supporting information found',
 };
 
 const URL_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-eligibility-check`;
 const MAX_FILES = 6;
+const ALLOWED_MIME = /^(application\/pdf|image\/(png|jpe?g|webp|gif)|text\/plain|text\/markdown|text\/csv)$/i;
+export const REVIEW_DISCLAIMER =
+  'This review cannot confirm eligibility. Verify the original trial record and speak with the study team or a qualified healthcare professional.';
 const MAX_BYTES = 8 * 1024 * 1024;
 
 export default function EligibilityCheck({ nctId, checklist }: Props) {
@@ -51,6 +54,10 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
     const next = [...files];
     for (const f of Array.from(incoming)) {
       if (next.length >= MAX_FILES) break;
+      if (!ALLOWED_MIME.test(f.type || '')) {
+        setError(`Unsupported file type: ${f.name}. Use PDF, PNG, JPEG, WebP or plain text.`);
+        return;
+      }
       if (next.find((x) => x.name === f.name && x.size === f.size)) continue;
       next.push(f);
     }
@@ -266,9 +273,7 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
               })}
             </ul>
 
-            {result.disclaimer && (
-              <p className="text-[10.5px] text-muted-foreground italic">{result.disclaimer}</p>
-            )}
+            <p className="text-[12px] font-semibold text-foreground">{REVIEW_DISCLAIMER}</p>
           </div>
         )}
       </div>

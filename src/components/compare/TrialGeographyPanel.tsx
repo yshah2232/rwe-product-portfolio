@@ -135,9 +135,9 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
       {/* ── Surrounding population context (ACS) — separate on purpose ── */}
       <section aria-labelledby="geo-acs" className="rounded-md border border-dashed border-border bg-muted/30">
         <header className="p-4 border-b border-dashed border-border">
-          <h2 id="geo-acs" className="font-display text-xl font-medium text-foreground flex items-center gap-2"><Users className="h-4 w-4 text-muted-foreground" /> Surrounding population context</h2>
+          <h2 id="geo-acs" className="font-display text-xl font-medium text-foreground flex items-center gap-2"><Users className="h-4 w-4 text-muted-foreground" /> Statewide population context (ACS)</h2>
           <p className="text-[12px] text-muted-foreground mt-1">
-            Statewide residents from the US Census American Community Survey (ACS) 5 year estimates, for states with listed sites. This is <strong>not</strong> who enrolled in these trials.
+            Statewide residents from the US Census American Community Survey (ACS) 5 year estimates, for states with listed sites. This is <strong>not</strong> trial enrollment, patient demographics or disease prevalence.
           </p>
         </header>
         <div className="p-4 overflow-x-auto">
@@ -158,7 +158,7 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
               <thead>
                 <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
                   <th className="py-2 pr-2">State residents</th>
-                  <th className="py-2 pr-2 text-right">Population</th>
+                  <th className="py-2 pr-2 text-right">Statewide population</th>
                   <th className="py-2 pr-2 text-right">Hispanic or Latino</th>
                   <th className="py-2 pr-2 text-right">Black, non Hispanic</th>
                   <th className="py-2 pr-2 text-right">Asian, non Hispanic</th>
