@@ -22,25 +22,26 @@ const SiteNav = () => {
         className="w-full"
         style={{ backgroundColor: 'hsl(var(--gov-band-bg))', color: 'hsl(var(--gov-band-fg))' }}
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3 group">
+        <div className="max-w-7xl mx-auto px-3 md:px-6 h-14 md:h-auto md:py-4 flex items-center justify-between gap-2 md:gap-4">
+          <Link to="/" className="flex items-center gap-2 md:gap-3 group min-w-0">
             <div
-              className="flex items-center justify-center h-10 w-10 rounded-sm font-bold text-[13px] tracking-wider shrink-0"
+              className="flex items-center justify-center h-9 w-9 md:h-10 md:w-10 rounded-sm font-bold text-[13px] tracking-wider shrink-0"
               style={{ backgroundColor: 'white', color: 'hsl(var(--gov-band-bg))' }}
               aria-hidden
             >
               CTD
             </div>
-            <div className="leading-tight">
-              <div className="text-[18px] md:text-[20px] font-bold">
-                Clinical Trial Diversity Studio
+            <div className="leading-tight min-w-0">
+              <div className="text-[15px] md:text-[20px] font-bold truncate">
+                <span className="md:hidden">CTD Studio</span>
+                <span className="hidden md:inline">Clinical Trial Diversity Studio</span>
               </div>
-              <div className="text-[12px] md:text-[13px] opacity-90">
+              <div className="hidden md:block text-[13px] opacity-90">
                 A planning workspace built on the public ClinicalTrials.gov registry
               </div>
             </div>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <PlainModeToggle />
             <button
               type="button"
@@ -56,7 +57,7 @@ const SiteNav = () => {
       </div>
 
       {/* Nav row */}
-      <div className="bg-background">
+      <div className="hidden md:block bg-background">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <nav className="hidden md:flex items-center gap-1 -mb-px">
             {navLinks.map((link) => {
@@ -99,7 +100,7 @@ const SiteNav = () => {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-border bg-background">
+        <div className="md:hidden border-t border-border bg-background max-h-[calc(100vh-56px)] overflow-y-auto shadow-md">
           <div className="max-w-7xl mx-auto px-6 py-2 flex flex-col">
             {navLinks.map((link) => {
               const isActive =

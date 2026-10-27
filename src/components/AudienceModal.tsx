@@ -1,6 +1,6 @@
-// First-visit pop-up that asks whether the visitor is a clinical/research user
-// or a patient/family member. Sets default plain mode accordingly.
-// Shown once per browser (localStorage persisted via PlainModeContext).
+// First-visit pop-up: visitor must pick an audience AND tick the agreement,
+// then press Continue. Acceptance is stored only on this device
+// (see PlainModeContext) and re-asked when the Terms version changes.
 
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -15,39 +15,56 @@ import { usePlainMode } from '@/contexts/PlainModeContext';
 const AudienceModal = () => {
   const { pathname } = useLocation();
   const internal = pathname.startsWith('/admin') || pathname.startsWith('/analytics/');
-  const { audiencePromptSeen, setAudience, markAudiencePromptSeen } = usePlainMode();
+  const { termsAccepted, acceptTerms } = usePlainMode();
   const [open, setOpen] = useState(false);
-  const [agreed, setAgreed] = useState(false); // visitor must tick it; never pre-checked
+  const [agreed, setAgreed] = useState(false); // never pre-checked
+  const [choice, setChoice] = useState<'clinical' | 'patient' | null>(null);
 
-  // Defer the open by 700ms so the page renders first — feels less aggressive.
-  // Also auto-close if the prompt becomes "seen" elsewhere (e.g. user picked
-  // an intent chip on the hero), so we don't ask the same question twice.
   useEffect(() => {
-    if (audiencePromptSeen || internal) {
+    if (termsAccepted || internal) {
       setOpen(false);
       return;
     }
     const t = setTimeout(() => setOpen(true), 700);
     return () => clearTimeout(t);
-  }, [audiencePromptSeen, internal]);
+  }, [termsAccepted, internal]);
 
-  const choose = (kind: 'clinical' | 'patient') => {
-    if (!agreed) return;
-    setAudience(kind);
-    markAudiencePromptSeen();
+  const canContinue = agreed && choice !== null;
+  const submit = () => {
+    if (!canContinue || !choice) return;
+    acceptTerms(choice);
     setOpen(false);
   };
 
-  const skip = () => {
-    if (!agreed) return;
-    setAudience('unspecified', { skipPlain: true });
-    markAudiencePromptSeen();
-    setOpen(false);
+  const option = (kind: 'clinical' | 'patient', Icon: typeof Stethoscope, title: string, body: string) => {
+    const selected = choice === kind;
+    return (
+      <button
+        type="button"
+        role="radio"
+        aria-checked={selected}
+        onClick={() => setChoice(kind)}
+        className={`text-left p-3 sm:p-4 rounded-sm border-2 transition-colors group ${
+          selected ? 'border-primary bg-accent/50' : 'border-border hover:border-primary/60 hover:bg-accent/30'
+        }`}
+      >
+        <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-sm bg-accent mb-2 sm:mb-3">
+          <Icon className="h-5 w-5" style={{ color: 'hsl(var(--primary))' }} />
+        </div>
+        <div className="text-[15px] font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>{title}</div>
+        <div className="text-[12.5px] text-foreground/70 leading-relaxed">{body}</div>
+      </button>
+    );
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v && agreed) skip(); }}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={open} onOpenChange={() => { /* cannot be dismissed without agreeing */ }}>
+      <DialogContent
+        className="sm:max-w-lg max-h-[92vh] overflow-y-auto [&>button.absolute]:hidden"
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader className="text-left">
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} />
@@ -64,69 +81,43 @@ const AudienceModal = () => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-          <button
-            onClick={() => choose('clinical')}
-            disabled={!agreed}
-            className="text-left p-4 rounded-sm border-2 border-border hover:border-primary hover:bg-accent/40 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border disabled:hover:bg-transparent"
-          >
-            <div className="flex items-center justify-center w-10 h-10 rounded-sm bg-accent mb-3 group-hover:bg-primary/10">
-              <Stethoscope className="h-5 w-5" style={{ color: 'hsl(var(--primary))' }} />
-            </div>
-            <div className="text-[15px] font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>
-              I'm a clinician or researcher
-            </div>
-            <div className="text-[12.5px] text-foreground/70 leading-relaxed">
-              Show registry-standard terminology — phases, masking, eligibility criteria, ICD/MeSH terms.
-            </div>
-          </button>
-
-          <button
-            onClick={() => choose('patient')}
-            disabled={!agreed}
-            className="text-left p-4 rounded-sm border-2 border-border hover:border-primary hover:bg-accent/40 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border disabled:hover:bg-transparent"
-          >
-            <div className="flex items-center justify-center w-10 h-10 rounded-sm bg-accent mb-3 group-hover:bg-primary/10">
-              <HeartHandshake className="h-5 w-5" style={{ color: 'hsl(var(--primary))' }} />
-            </div>
-            <div className="text-[15px] font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>
-              I'm a patient, caregiver, or just curious
-            </div>
-            <div className="text-[12.5px] text-foreground/70 leading-relaxed">
-              Rewrite trials in plain language. Default to studies that are currently recruiting.
-            </div>
-          </button>
+        <div role="radiogroup" aria-label="Audience" className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+          {option('clinical', Stethoscope, "I'm a clinician or researcher",
+            'Show registry-standard terminology — phases, masking, eligibility criteria, ICD/MeSH terms.')}
+          {option('patient', HeartHandshake, "I'm a patient, caregiver, or just curious",
+            'Rewrite trials in plain language. Default to studies that are currently recruiting.')}
         </div>
 
-        {/* Pre-checked agreement gate */}
-        <label className="flex items-start gap-2.5 mt-3 p-3 rounded-sm bg-accent/40 border border-border cursor-pointer">
+        <label htmlFor="audience-agree" className="flex items-start gap-2.5 mt-3 cursor-pointer">
           <Checkbox
             checked={agreed}
             onCheckedChange={(v) => setAgreed(!!v)}
             id="audience-agree"
             className="mt-0.5"
           />
-          <span className="text-[12px] leading-relaxed text-foreground/85">
-            I understand this site is <strong>not medical advice</strong> and I agree to the{' '}
-            <Link to="/terms" target="_blank" className="underline font-semibold" style={{ color: 'hsl(var(--primary))' }}>
-              Terms
-            </Link>
-            ,{' '}
-            <Link to="/privacy" target="_blank" className="underline font-semibold" style={{ color: 'hsl(var(--primary))' }}>
-              Privacy Policy
-            </Link>
-            , and{' '}
-            <Link to="/medical-disclaimer" target="_blank" className="underline font-semibold" style={{ color: 'hsl(var(--primary))' }}>
-              Medical Disclaimer
-            </Link>
-            .
+          <span className="text-[12.5px] leading-relaxed text-foreground/85">
+            I agree to the{' '}
+            <Link to="/terms" target="_blank" className="underline font-semibold" style={{ color: 'hsl(var(--primary))' }}>Terms of Service</Link>,{' '}
+            <Link to="/privacy" target="_blank" className="underline font-semibold" style={{ color: 'hsl(var(--primary))' }}>Privacy Policy</Link>{' '}
+            and{' '}
+            <Link to="/medical-disclaimer" target="_blank" className="underline font-semibold" style={{ color: 'hsl(var(--primary))' }}>Medical Disclaimer</Link>.
           </span>
         </label>
 
-        <div className="pt-3 border-t border-border/50 mt-2">
+        <Button onClick={submit} disabled={!canContinue} className="w-full mt-2">
+          Continue
+        </Button>
+        {!canContinue && (
+          <p className="text-[11px] text-muted-foreground -mt-1">
+            Choose how you'd like to read the site and tick the agreement to continue.
+          </p>
+        )}
+
+        <div className="pt-3 border-t border-border/50">
           <p className="text-[11px] text-muted-foreground">
             Verify all trial details on{' '}
             <a className="underline" href="https://clinicaltrials.gov/" target="_blank" rel="noreferrer">ClinicalTrials.gov</a>.
+            Your choice is saved only in this browser.
           </p>
         </div>
       </DialogContent>
