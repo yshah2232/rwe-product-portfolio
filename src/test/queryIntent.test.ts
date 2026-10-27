@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseQuery, groundConcepts, verifyQuotes, isWeak, RETRIEVAL_LIMITS, dedupeEvidence, type GroundFields, type Evidence } from '../../supabase/functions/_shared/queryIntent';
+import { parseQuery, groundConcepts, verifyQuotes, isWeak, RETRIEVAL_LIMITS, dedupeEvidence, matchLocation, type GroundFields, type Evidence } from '../../supabase/functions/_shared/queryIntent';
 
 const rec: GroundFields = {
   briefTitle: 'Sotorasib in KRAS G12C Mutated NSCLC',
@@ -125,5 +125,37 @@ describe("dedupeEvidence", () => {
       ev("lung cancer", "condition", "conditions", "Lung Cancer"),
     ]);
     expect(out.map((e) => e.type)).toEqual(["condition", "status", "location"]);
+  });
+  it("collapses multi-word condition evidence to one row per field", () => {
+    const out = dedupeEvidence([
+      ev("non", "condition", "conditions", "…Non Small Cell Lung Cancer…"),
+      ev("small", "condition", "conditions", "…Non Small Cell Lung Cancer…"),
+      ev("cell", "condition", "conditions", "…Non Small Cell Lung Cancer…"),
+      ev("lung", "condition", "title", "…lung cancer trial…"),
+    ]);
+    expect(out).toHaveLength(2);
+    expect(out.map((e) => e.field)).toEqual(["conditions", "title"]);
+  });
+});
+
+describe("matchLocation with city + state", () => {
+  const sites = [
+    { city: "Dallas", state: "Texas", country: "United States", status: "RECRUITING" },
+    { city: "Houston", state: "Texas", country: "United States", status: "RECRUITING" },
+    { city: "Boston", state: "Massachusetts", country: "United States", status: "RECRUITING" },
+  ];
+  it("confirms a city + state pair against the city", () => {
+    const m = matchLocation("Dallas Texas", sites);
+    expect(m.confirmed).toBe(true);
+    expect(m.matchedSites).toBe(1);
+  });
+  it("falls back to the state when the city is not listed", () => {
+    const m = matchLocation("Plano Texas", sites);
+    expect(m.confirmed).toBe(true);
+    expect(m.matchedSites).toBe(2);
+  });
+  it("still matches a bare state or city", () => {
+    expect(matchLocation("Texas", sites).matchedSites).toBe(2);
+    expect(matchLocation("Boston", sites).matchedSites).toBe(1);
   });
 });
