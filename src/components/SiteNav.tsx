@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronRight, Info, ChevronUp, ChevronDown } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import PlainModeToggle from '@/components/PlainModeToggle';
 
 const navLinks = [
@@ -13,17 +13,11 @@ const navLinks = [
   { label: 'About', to: '/about', disabled: false },
 ];
 
-const BANNER_AUTO_HIDE_MS = 45000;
-
 const SiteNav = () => {
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [bannerExpanded, setBannerExpanded] = useState(true);
 
-  // Auto-collapse the intro banner after 45s of session time
-  useEffect(() => {
-    const t = setTimeout(() => setBannerExpanded(false), BANNER_AUTO_HIDE_MS);
-    return () => clearTimeout(t);
+  return () => clearTimeout(t);
   }, []);
 
   return (
@@ -63,52 +57,6 @@ const SiteNav = () => {
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* Dismissible / collapsible intro banner (replaces old top strip) */}
-      <div
-        className="w-full border-b border-border"
-        style={{ backgroundColor: 'hsl(var(--accent))' }}
-        role="region"
-        aria-label="About this product"
-      >
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-2 flex items-start gap-3">
-          <Info className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'hsl(var(--primary))' }} />
-          <div className="flex-1 min-w-0">
-            {bannerExpanded ? (
-              <p className="text-[13px] leading-snug text-foreground/85">
-                <span className="font-semibold" style={{ color: 'hsl(var(--primary))' }}>
-                  Independent product capability demo.
-                </span>{' '}
-                All study data is fetched live from the public ClinicalTrials.gov API. This workspace
-                is not affiliated with NIH or NLM.{' '}
-                <a
-                  href="https://clinicaltrials.gov/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center underline underline-offset-2"
-                  style={{ color: 'hsl(var(--link))' }}
-                >
-                  View source registry <ChevronRight className="h-3 w-3 ml-0.5" />
-                </a>
-              </p>
-            ) : (
-              <p className="text-[12px] leading-snug text-foreground/70 truncate">
-                Independent demo · Live ClinicalTrials.gov data
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setBannerExpanded((v) => !v)}
-            aria-label={bannerExpanded ? 'Collapse banner' : 'Expand banner'}
-            aria-expanded={bannerExpanded}
-            className="shrink-0 p-1 rounded-sm hover:bg-background/60 transition-colors"
-            style={{ color: 'hsl(var(--primary))' }}
-          >
-            {bannerExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
         </div>
       </div>
 
