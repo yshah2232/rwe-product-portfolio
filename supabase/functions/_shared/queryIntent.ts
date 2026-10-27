@@ -313,11 +313,24 @@ export interface SiteLocation { city?: string; state?: string; country?: string;
 const lc = (s?: string) => (s ?? "").trim().toLowerCase();
 const COUNTRY_ALIASES: Record<string, string> = { us: "united states", usa: "united states", "u.s.": "united states", "u.s.a.": "united states", america: "united states" };
 
-/** Sites whose city, state or country exactly equals the interpreted location. */
+/** Sites whose city, state or country matches the interpreted location. "Dallas Texas" splits into city + state. */
 export function matchLocation(location: string | null, sites: SiteLocation[]): { confirmed: boolean; matchedSites: number; recruitingMatched: number } {
   if (!location) return { confirmed: false, matchedSites: 0, recruitingMatched: 0 };
   const target = COUNTRY_ALIASES[lc(location)] ?? lc(location);
-  const hits = sites.filter((s) => lc(s.city) === target || lc(s.state) === target || lc(s.country) === target);
+  const words = target.split(" ");
+  let city: string | null = null;
+  let state: string | null = null;
+  for (let n = Math.min(2, words.length - 1); n >= 1; n--) {
+    const maybeState = words.slice(-n).join(" ");
+    if (US_STATES.includes(maybeState)) { state = maybeState; city = words.slice(0, -n).join(" ") || null; break; }
+  }
+  let hits: SiteLocation[];
+  if (state && city) {
+    hits = sites.filter((s) => lc(s.city) === city && lc(s.state) === state);
+    if (hits.length === 0) hits = sites.filter((s) => lc(s.state) === state); // city not listed; state still confirms
+  } else {
+    hits = sites.filter((s) => lc(s.city) === target || lc(s.state) === target || lc(s.country) === target);
+  }
   return { confirmed: hits.length > 0, matchedSites: hits.length, recruitingMatched: hits.filter((s) => s.status === "RECRUITING").length };
 }
 
@@ -366,14 +379,19 @@ const EVIDENCE_PRIORITY: Record<string, number> = {
 export function dedupeEvidence(evidence: Evidence[], max = 3): Evidence[] {
   const seenSnippet = new Set<string>();
   const seenConcept = new Set<string>();
+  const seenTypeField = new Set<string>();
   const out: Evidence[] = [];
   const sorted = [...evidence].sort((a, b) => (EVIDENCE_PRIORITY[a.type] ?? 9) - (EVIDENCE_PRIORITY[b.type] ?? 9));
   for (const e of sorted) {
     const snippetKey = `${e.field}|${norm(e.snippet)}`;
     const conceptKey = `${e.type}|${norm(e.concept)}`;
+    // Condition terms are words of one phrase ("non", "small", "cell"…): one row per field is enough.
+    const typeFieldKey = `${e.type}|${e.field}`;
     if (seenSnippet.has(snippetKey) || seenConcept.has(conceptKey)) continue;
+    if (e.type === "condition" && seenTypeField.has(typeFieldKey)) continue;
     seenSnippet.add(snippetKey);
     seenConcept.add(conceptKey);
+    seenTypeField.add(typeFieldKey);
     out.push(e);
     if (out.length >= max) break;
   }
