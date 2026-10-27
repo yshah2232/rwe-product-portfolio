@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react';
+import { dedupeEvidence } from '../../supabase/functions/_shared/queryIntent';
 
 export interface SearchInterpretation {
   conditionTerms: string[];
@@ -105,9 +106,11 @@ const FIELD: Record<string, string> = {
 
 export const EvidenceList = ({ evidence, notFound }: { evidence?: Evidence[]; notFound?: { concept: string }[] }) => {
   if (!evidence?.length && !notFound?.length) return null;
+  // Normalize + deduplicate: max three unique items, condition/biomarker first.
+  const shown = dedupeEvidence((evidence ?? []) as Parameters<typeof dedupeEvidence>[0], 3);
   return (
     <div className="mt-2 space-y-1">
-      {evidence?.slice(0, 5).map((e, k) => (
+      {shown.map((e, k) => (
         <p key={k} className="text-[12px] text-foreground/75">
           <span className="font-semibold text-primary/80">{FIELD[e.field] ?? e.field}:</span> {e.snippet}
         </p>
