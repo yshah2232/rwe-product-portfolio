@@ -179,6 +179,7 @@ Deno.serve(async (req) => {
     if (!aiRes.ok) return json({ error: `AI error ${aiRes.status}` }, 502);
 
     const aiBody = await aiRes.json();
+    console.log("ai items", JSON.stringify(aiBody.choices?.[0]?.message?.content ?? "").slice(0, 600));
     const text = aiBody.choices?.[0]?.message?.content ?? "{}";
     let parsed: any;
     try { parsed = JSON.parse(text); }
@@ -192,8 +193,12 @@ Deno.serve(async (req) => {
         }))
       : [];
     // Keep only checklist labels we sent; never let document text rename criteria.
-    const safeItems = checklist.map((c) => items.find((it: any) => it.label.toLowerCase() === c.label.toLowerCase())
-      ?? { label: c.label, verdict: "unclear", evidence: "" });
+    const norm = (t: string) => t.toLowerCase().replace(/^\s*\d+[.)]\s*/, "").split(/\s+[—-]\s+why:/)[0].replace(/[^a-z0-9]+/g, " ").trim();
+    const safeItems = checklist.map((c, i) => {
+      const hit = items.find((it: any) => norm(it.label) === norm(c.label))
+        ?? (items.length === checklist.length ? items[i] : undefined);
+      return { label: c.label, verdict: hit?.verdict ?? "unclear", evidence: hit?.evidence ?? "" };
+    });
     const summary = sanitizeReviewText(String(parsed.summary ?? "")).slice(0, 400);
 
     // Return the requested assessment without retaining notes or outcomes.
