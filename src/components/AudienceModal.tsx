@@ -123,14 +123,11 @@ const AudienceModal = () => {
           </span>
         </label>
 
-        <div className="flex items-center justify-between pt-3 border-t border-border/50 mt-2">
+        <div className="pt-3 border-t border-border/50 mt-2">
           <p className="text-[11px] text-muted-foreground">
             Verify all trial details on{' '}
             <a className="underline" href="https://clinicaltrials.gov/" target="_blank" rel="noreferrer">ClinicalTrials.gov</a>.
           </p>
-          <Button variant="ghost" size="sm" onClick={skip} disabled={!agreed} className="text-[12px]">
-            Continue without choosing
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
