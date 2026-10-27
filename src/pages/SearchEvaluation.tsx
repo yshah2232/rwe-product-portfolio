@@ -5,7 +5,7 @@ import { useAdminAccess } from '@/contexts/AdminAccessContext';
 
 type EvalCase = { id: string; query: string; expected_concepts: string[]; notes: string | null; created_at: string };
 type EvalRun = { id: string; case_id: string; top5_ncts: string[]; relevant_in_top5: boolean; relevant_rank: number | null; candidates_fetched: number | null; retrieval_passes: number | null; notes: string | null; created_at: string };
-type Result = { nctId: string; briefTitle: string; conditions: string[]; interventions: string[]; status: string; phase: string[]; semanticScore: number; semanticReason: string };
+type Result = { nctId: string; briefTitle: string; conditions: string[]; interventions: string[]; status: string; phase: string[]; semanticScore: number | null; semanticReason: string };
 type RunState = { loading: boolean; error?: string; results?: Result[]; candidates?: number; passes?: number; warnings?: { code: string; message: string }[] };
 
 const SEARCH_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-search`;
@@ -176,7 +176,7 @@ const SearchEvaluation = () => {
                         <p>
                           <span className="font-semibold">{idx + 1}.</span>{' '}
                           <a className="text-primary hover:underline" href={`https://clinicaltrials.gov/study/${r.nctId}`} target="_blank" rel="noopener noreferrer">{r.nctId}</a>{' '}
-                          {r.briefTitle} <span className="text-muted-foreground">· score {r.semanticScore}</span>
+                          {r.briefTitle} <span className="text-muted-foreground">{r.semanticScore !== null ? `· score ${r.semanticScore}` : "· evidence labels only"}</span>
                         </p>
                         {c.expected_concepts.length > 0 && (
                           <p className="text-[12px] mt-1">
