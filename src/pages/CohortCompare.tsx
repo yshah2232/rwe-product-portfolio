@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Loader2, Info } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Loader2, Info, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useSeo } from '@/hooks/useSeo';
 import {
@@ -14,6 +14,26 @@ import {
 const DETAIL_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-trial-detail`;
 
 type Slot = { nct: string; data?: CompareTrial; error?: string };
+
+// Built entirely in the browser; nothing is sent or stored.
+function downloadCsv(trials: CompareTrial[]) {
+  const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const rows: string[][] = [
+    ['Field', ...trials.map((t) => t.nctId)],
+    ...COMPARE_FIELDS.map((f) => [f.label, ...trials.map((t) => fieldValue(t, f.key) ?? 'Not reported on record')]),
+    ['Source', ...trials.map((t) => t.ctgUrl ?? `https://clinicaltrials.gov/study/${t.nctId}`)],
+    ['Note', 'Values as reported on ClinicalTrials.gov. Not a ranking and not medical advice.'],
+  ];
+  const blob = new Blob(['\uFEFF' + rows.map((r) => r.map(esc).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `trial-comparison-${trials.map((t) => t.nctId).join('-')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+}
 
 const CohortCompare = () => {
   const { id } = useParams<{ id: string }>();
@@ -69,10 +89,20 @@ const CohortCompare = () => {
             <Info className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
             Values are shown exactly as reported on each ClinicalTrials.gov record. Highlighted rows show where the records differ. This comparison does not rank trials or say one is better, and it is not medical advice.
           </p>
-          <label className="mt-4 inline-flex items-center gap-2 text-[13px] text-foreground cursor-pointer">
-            <input type="checkbox" checked={onlyDiff} onChange={(e) => setOnlyDiff(e.target.checked)} className="accent-primary h-4 w-4" />
-            Show only rows that differ
-          </label>
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            <label className="inline-flex items-center gap-2 text-[13px] text-foreground cursor-pointer">
+              <input type="checkbox" checked={onlyDiff} onChange={(e) => setOnlyDiff(e.target.checked)} className="accent-primary h-4 w-4" />
+              Show only rows that differ
+            </label>
+            <button
+              type="button"
+              disabled={loading || loaded.length < MIN_COMPARE}
+              onClick={() => downloadCsv(loaded)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-[13px] text-foreground hover:bg-muted disabled:opacity-50"
+            >
+              <Download className="h-3.5 w-3.5" /> Download comparison (CSV)
+            </button>
+          </div>
         </div>
       </section>
 
