@@ -135,6 +135,7 @@ export interface GroundFields {
   locations: string[]; // "City, State, Country"
   status: string;
   phase: string[];
+  sites?: SiteLocation[]; // structured city/state/country from contactsLocationsModule
 }
 
 export type FieldName = "title" | "conditions" | "interventions" | "keywords" | "eligibility" | "locations" | "status" | "phase";
@@ -171,6 +172,13 @@ function snippetAround(text: string, needle: string): string | null {
   return (start > 0 ? "…" : "") + text.slice(start, idx + needle.length + 40).replace(/\s+/g, " ").trim() + "…";
 }
 
+/** Standard registry spellings for common abbreviations (lookup only, never shown as data). */
+const CONDITION_ALIASES: Record<string, string> = {
+  nsclc: "non small cell lung", sclc: "small cell lung", t2d: "type 2 diabetes", t1d: "type 1 diabetes",
+  copd: "chronic obstructive pulmonary", mbc: "metastatic breast", crc: "colorectal", hcc: "hepatocellular",
+  aml: "acute myeloid", cll: "chronic lymphocytic", ad: "alzheimer",
+};
+
 export function groundConcepts(intent: QueryIntent, f: GroundFields): { evidence: Evidence[]; notFound: { concept: string; type: string }[] } {
   const evidence: Evidence[] = [];
   const notFound: { concept: string; type: string }[] = [];
@@ -181,10 +189,38 @@ export function groundConcepts(intent: QueryIntent, f: GroundFields): { evidence
     }
     notFound.push({ concept, type });
   };
-  intent.conditionTerms.forEach((c) => check(c, "condition", ["conditions", "title", "keywords", "eligibility"]));
+  intent.conditionTerms.forEach((c) => {
+    const before = evidence.length;
+    check(c, "condition", ["conditions", "title", "keywords", "eligibility"]);
+    const alias = CONDITION_ALIASES[c.toLowerCase()];
+    if (evidence.length === before && alias) {
+      notFound.pop();
+      for (const field of ["conditions", "title", "keywords"] as FieldName[]) {
+        const sn = snippetAround(fieldText(f, field), alias);
+        if (sn) { evidence.push({ concept: c, type: "condition", field, snippet: sn }); return; }
+      }
+      notFound.push({ concept: c, type: "condition" });
+    }
+  });
   intent.biomarkers.forEach((b) => check(b, "biomarker", ["title", "conditions", "keywords", "eligibility", "interventions"]));
-  intent.priorTreatments.forEach((p) => check(p, "prior treatment", ["eligibility", "title"]));
-  if (intent.location) check(intent.location, "location", ["locations"]);
+  intent.priorTreatments.forEach((p) => {
+    // Only count prior treatment when the term sits next to a prior-therapy cue in eligibility or title.
+    const esc = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const cue = "(prior|previous(ly)?|after|following|progress\\w*|refractory|resistant|received|failed|failure|pretreated|treated with)";
+    const re = new RegExp(`${cue}[^.;]{0,60}\\b${esc}|\\b${esc}[^.;]{0,40}\\b(prior|previous(ly)?|progress\\w*|failure|refractory)`, "i");
+    for (const field of ["eligibility", "title"] as FieldName[]) {
+      const t = fieldText(f, field); const m = t.match(re);
+      if (m && m.index !== undefined) { evidence.push({ concept: p, type: "prior treatment", field, snippet: `…${t.slice(Math.max(0, m.index - 20), m.index + m[0].length + 20).replace(/\s+/g, " ").trim()}…` }); return; }
+    }
+    notFound.push({ concept: p, type: "prior treatment" });
+  });
+  if (intent.location) {
+    if (f.sites) {
+      const m = matchLocation(intent.location, f.sites);
+      if (m.confirmed) evidence.push({ concept: intent.location, type: "location", field: "locations", snippet: `${m.matchedSites} listed site${m.matchedSites === 1 ? "" : "s"} in ${intent.location}` });
+      else notFound.push({ concept: intent.location, type: "location" });
+    } else check(intent.location, "location", ["locations"]);
+  }
   if (intent.status) {
     if (f.status === intent.status) evidence.push({ concept: intent.status, type: "status", field: "status", snippet: f.status });
     else notFound.push({ concept: intent.status, type: "status" });
@@ -237,4 +273,58 @@ export function prefersUS(raw: string, intent: QueryIntent, browserRegionUS: boo
 export const US_PRIORITY_BOOST = 15;
 export function rankKey(score: number, countries: string[], preferUS: boolean): number {
   return score + (preferUS && countries.includes("United States") ? US_PRIORITY_BOOST : 0);
+}
+
+// ── Location evidence (structured facility fields) ──
+
+export interface SiteLocation { city?: string; state?: string; country?: string; status?: string }
+
+const lc = (s?: string) => (s ?? "").trim().toLowerCase();
+const COUNTRY_ALIASES: Record<string, string> = { us: "united states", usa: "united states", "u.s.": "united states", "u.s.a.": "united states", america: "united states" };
+
+/** Sites whose city, state or country exactly equals the interpreted location. */
+export function matchLocation(location: string | null, sites: SiteLocation[]): { confirmed: boolean; matchedSites: number; recruitingMatched: number } {
+  if (!location) return { confirmed: false, matchedSites: 0, recruitingMatched: 0 };
+  const target = COUNTRY_ALIASES[lc(location)] ?? lc(location);
+  const hits = sites.filter((s) => lc(s.city) === target || lc(s.state) === target || lc(s.country) === target);
+  return { confirmed: hits.length > 0, matchedSites: hits.length, recruitingMatched: hits.filter((s) => s.status === "RECRUITING").length };
+}
+
+export function locationSentence(location: string, confirmed: boolean, trialRecruiting: boolean): string {
+  return confirmed
+    ? `${trialRecruiting ? "Recruiting trial" : "Trial"} with one or more listed sites in ${location}.`
+    : `The available registry record does not confirm a site in ${location}.`;
+}
+
+/** Remove LLM sentences that talk about geography: the reranker never sees site data. */
+export function stripLocationClaims(reason: string, location: string | null): string {
+  const geo = /\b(locat\w*|sites?|state|country|region|city|u\.s\.?|usa|united states|geograph\w*)\b/i;
+  const sentences = reason.split(/(?<=[.!?])\s+/);
+  const kept = sentences
+    .map((s) => s.replace(/,?\s*(but|and|although|though|while)\s+(the\s+)?(location|site)[^.]*\./i, "."))
+    .filter((s) => !/\b(impl(y|ies|ied)|not (necessarily|explicitly)|does not mention|not stated)\b/i.test(s))
+    .filter((s) => !geo.test(s) && !(location && s.toLowerCase().includes(location.toLowerCase())));
+  return kept.join(" ").trim();
+}
+
+export type MatchLabel = "Condition match" | "Recruiting status match" | "Location confirmed" | "Phase match" | "Biomarker match" | "Prior-treatment match";
+
+export function matchLabels(evidence: Evidence[], locationConfirmed: boolean): MatchLabel[] {
+  const types = new Set(evidence.map((e) => e.type));
+  const out: MatchLabel[] = [];
+  if (types.has("condition")) out.push("Condition match");
+  if (evidence.some((e) => e.type === "status" && e.concept === "RECRUITING")) out.push("Recruiting status match");
+  if (locationConfirmed) out.push("Location confirmed");
+  if (types.has("phase")) out.push("Phase match");
+  if (types.has("biomarker")) out.push("Biomarker match");
+  if (types.has("prior treatment")) out.push("Prior-treatment match");
+  return out;
+}
+
+/** A numeric score is shown only when it actually separates results. */
+export function scoresAreDifferentiated(scores: number[]): boolean {
+  if (scores.length < 2) return scores.length === 1;
+  const distinct = new Set(scores).size;
+  const spread = Math.max(...scores) - Math.min(...scores);
+  return distinct >= Math.min(3, scores.length) && spread >= 10;
 }

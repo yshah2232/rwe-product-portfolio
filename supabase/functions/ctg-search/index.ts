@@ -21,7 +21,7 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
-import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, rankKey, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
+import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, rankKey, matchLocation, locationSentence, stripLocationClaims, matchLabels, scoresAreDifferentiated, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -314,7 +314,7 @@ Deno.serve(async (req) => {
     }));
 
     const systemPrompt = `You are a clinical trial relevance scorer. Score each candidate 0-100 for how well it matches the *meaning* of the query. Consider synonyms, abbreviations, drug classes, and disease equivalents. Be strict: 90+ excellent, 60-89 solid, 30-59 tangential, <30 poor.
-GROUNDING RULES (mandatory): Your reason may only mention attributes that appear in the candidate's title, conditions, interventions or eligibility text shown to you. Never infer, guess or call "implied" any locations, biomarkers, eligibility requirements, phases or prior treatments that are not written there. For each candidate also return 1-3 short verbatim quotes (copied exactly) with the field they came from (title, conditions, interventions, eligibility, phase, status). Site locations are NOT shown to you, so never comment on location. If a query concept is absent from the record, say it is not stated.`;
+GROUNDING RULES (mandatory): Your reason may only mention attributes that appear in the candidate's title, conditions, interventions or eligibility text shown to you. Never infer, guess or call "implied" any locations, biomarkers, eligibility requirements, phases or prior treatments that are not written there. For each candidate also return 1-3 short verbatim quotes (copied exactly) with the field they came from (title, conditions, interventions, eligibility, phase, status). Site locations are NOT shown to you and are checked separately against facility data, so ignore any place names in the query when scoring and never mention location, sites, states or countries. Use the full 0-100 range so scores separate candidates; do not give every candidate the same score. If a query concept is absent from the record, say it is not stated.`;
 
     const userPrompt = `User query: "${query}"
 
@@ -398,24 +398,34 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
 
     // ── 4. Ground every explanation in CTG fields ──
     const HARD_TYPES = new Set(["biomarker", "location", "status", "phase"]);
+    const queryConceptCount = intent.conditionTerms.length + intent.biomarkers.length + intent.priorTreatments.length
+      + (intent.location ? 1 : 0) + (intent.status ? 1 : 0) + (intent.phase ? 1 : 0);
     const scored = candidates.map((c, idx) => {
       const r = rankings.find((x) => x.idx === idx);
       const { evidence, notFound } = groundConcepts(intent, c.ground);
       const llmVerified = !!r && verifyQuotes(r.quotes, c.ground);
-      let score = r?.score ?? 50;
-      // A trial cannot score as a strong match when a hard concept is absent from its record.
+      // Score comes only from the reranker; no default value is invented when it is missing.
+      let score: number | null = typeof r?.score === "number" ? r.score : null;
       const missingHard = notFound.filter((n) => HARD_TYPES.has(n.type));
-      if (missingHard.length && score > 59) score = 59;
-      const deterministic = groundedReason(evidence, notFound);
-      const reason = llmVerified
-        ? `${r!.reason.trim()}${notFound.length ? ` Not found in record: ${notFound.map((n) => n.concept).join(", ")}.` : ""}`
+      if (score !== null && missingHard.length && score > 59) score = 59;
+      const loc = intent.location ? matchLocation(intent.location, c.ground.sites ?? []) : null;
+      // Location is never left to the reranker (it does not see sites); state it from facility data.
+      const nonLocNotFound = notFound.filter((n) => n.type !== "location");
+      const deterministic = groundedReason(evidence.filter((e) => e.type !== "location"), nonLocNotFound);
+      const llmText = llmVerified ? stripLocationClaims(r!.reason.trim(), intent.location) : "";
+      let reason = llmText
+        ? `${llmText}${nonLocNotFound.length ? ` Not found in record: ${nonLocNotFound.map((n) => n.concept).join(", ")}.` : ""}`
         : usedFallback ? `Semantic ranking unavailable. ${deterministic}` : deterministic;
+      if (intent.location && loc) reason = `${locationSentence(intent.location, loc.confirmed, c.status === "RECRUITING")} ${reason}`;
       const { ground, ...pub } = c;
       return {
         ...pub,
         semanticScore: score,
         semanticReason: reason,
-        reasonSource: llmVerified ? "llm_verified" : "registry_fields",
+        reasonSource: llmText ? "llm_verified" : "registry_fields",
+        locationEvidence: intent.location && loc ? { location: intent.location, confirmed: loc.confirmed, matchedSites: loc.matchedSites, recruitingSites: loc.recruitingMatched } : null,
+        matchLabels: matchLabels(evidence, !!loc?.confirmed),
+        evidenceRatio: queryConceptCount ? evidence.filter((e) => e.type !== "quote").length / queryConceptCount : 0,
         evidence: [
           ...evidence,
           ...(llmVerified ? r!.quotes!.slice(0, 3).map((q) => ({ concept: "reranker quote", type: "quote", field: q.field, snippet: q.quote })) : []),
@@ -425,9 +435,13 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
     });
 
     const preferUS = prefersUS(query, intent, browserRegionUS);
-    if (!usedFallback) scored.sort((a, b) => rankKey(b.semanticScore, b.countries ?? [], preferUS) - rankKey(a.semanticScore, a.countries ?? [], preferUS));
-    else if (preferUS) scored.sort((a, b) => rankKey(0, b.countries ?? [], true) - rankKey(0, a.countries ?? [], true));
+    // Order: reranker score plus registry evidence (share of query concepts found) plus US preference.
+    const key = (t: typeof scored[number]) => t.evidenceRatio * 40 + rankKey(t.semanticScore ?? 0, t.countries ?? [], preferUS);
+    scored.sort((a, b) => key(b) - key(a));
     const top = scored.slice(0, 10);
+    const topScores = top.map((t) => t.semanticScore);
+    const scoreShown = !usedFallback && topScores.every((x) => typeof x === "number") && scoresAreDifferentiated(topScores as number[]);
+    if (!scoreShown) for (const t of top) (t as any).semanticScore = null;
 
     // No visitor search history is written to application storage.
     const searchEventId = null;
@@ -438,6 +452,7 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
         totalCount,
         candidatesFetched: candidates.length,
         results: top,
+        scoreShown,
         fallback: usedFallback || undefined,
         interpretation,
         retrieval,
@@ -535,6 +550,7 @@ function shapeStudy(s: any) {
       locations: locs.map((l: any) => [l.facility, l.city, l.state, l.country].filter(Boolean).join(", ")),
       status: st.overallStatus ?? "",
       phase: phases,
+      sites: locs.map((l: any) => ({ city: l.city, state: l.state, country: l.country, status: l.status })),
     } as GroundFields,
   };
 }

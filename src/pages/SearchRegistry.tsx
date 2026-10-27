@@ -44,8 +44,10 @@ interface RankedTrial {
   enrollment: number | null;
   startDate: string;
   countries: string[];
-  semanticScore: number;
+  semanticScore: number | null;
   semanticReason: string;
+  matchLabels?: string[];
+  locationEvidence?: { location: string; confirmed: boolean; matchedSites: number; recruitingSites: number } | null;
   reasonSource?: 'llm_verified' | 'registry_fields';
   evidence?: Evidence[];
   notFound?: { concept: string; type: string }[];
@@ -89,6 +91,13 @@ const SearchRegistry = () => {
   const [status, setStatus] = useState<string>('any');
   const [countryUS, setCountryUS] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [stage, setStage] = useState(0);
+  useEffect(() => {
+    if (!loading) { setStage(0); return; }
+    const t1 = setTimeout(() => setStage(1), 2500);
+    const t2 = setTimeout(() => setStage(2), 6000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [loading]);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SearchResponse | null>(null);
   const [feedbackGiven, setFeedbackGiven] = useState<Record<string, 'up' | 'down'>>({});
@@ -424,7 +433,13 @@ const SearchRegistry = () => {
           {loading && (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin mb-4 text-primary" />
-              <p className="text-sm">Pulling from CTG.gov, then semantically re-ranking…</p>
+              <ol className="space-y-1.5 text-sm" aria-live="polite">
+                {['Searching ClinicalTrials.gov', 'Reviewing candidate trials', 'Ranking relevant matches'].map((label, i) => (
+                  <li key={label} className={i === stage ? 'text-foreground font-semibold' : i < stage ? 'text-muted-foreground line-through decoration-muted-foreground/40' : 'text-muted-foreground/60'}>
+                    {i < stage ? '✓ ' : i === stage ? '• ' : '○ '}{label}
+                  </li>
+                ))}
+              </ol>
             </div>
           )}
 
@@ -590,6 +605,7 @@ const SearchRegistry = () => {
                           </button>
                         )}
                       </div>
+                      {trial.semanticScore !== null && (
                       <div className="shrink-0 text-right">
                         <div
                           className={`inline-flex items-center justify-center w-14 h-14 rounded-lg font-display text-xl font-bold ${
@@ -599,7 +615,7 @@ const SearchRegistry = () => {
                               ? 'bg-accent text-foreground'
                               : 'bg-muted text-muted-foreground'
                           }`}
-                          title="Semantic relevance score (0–100). See Data & Method for how this is computed."
+                          title="Semantic relevance score (0–100). Shown only when scores separate results."
                         >
                           {trial.semanticScore}
                         </div>
@@ -607,13 +623,21 @@ const SearchRegistry = () => {
                           Relevance
                         </p>
                       </div>
+                      )}
                     </div>
 
                     {/* Why this scored: rationale from LLM reranker */}
                     <div className="mb-4 pl-3 border-l-2 border-primary/40 bg-primary/[0.03] rounded-r py-2 pr-3">
                       <p className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold mb-1">
-                        Why this score
+                        {trial.semanticScore !== null ? 'Why this score' : 'Why this matched'}
                       </p>
+                      {trial.matchLabels && trial.matchLabels.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-1.5">
+                          {trial.matchLabels.map((l) => (
+                            <span key={l} className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">{l}</span>
+                          ))}
+                        </div>
+                      )}
                       <p className="text-[13px] text-foreground/85 leading-relaxed">
                         {trial.semanticReason}
                       </p>

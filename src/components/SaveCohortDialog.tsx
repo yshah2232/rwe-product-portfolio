@@ -26,7 +26,7 @@ export interface SaveTrial {
   interventions: string[];
   enrollment: number | null;
   countries: string[];
-  semanticScore: number;
+  semanticScore: number | null;
   semanticReason: string;
 }
 
