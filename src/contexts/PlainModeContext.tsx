@@ -23,21 +23,9 @@ const Ctx = createContext<PlainModeCtx | null>(null);
 const KEY_AUDIENCE = 'ctd.audience';
 const KEY_PLAIN = 'ctd.plain_mode';
 const KEY_PROMPT_SEEN = 'ctd.audience_prompt_seen';
-const KEY_ACCEPTANCE = 'ctd.terms_acceptance';
-/** Terms version = current Terms "Last updated" date. Bump to re-prompt everyone. */
-export const TERMS_VERSION = '2026-10-27';
-
-interface StoredAcceptance { audience: Audience; accepted: true; termsVersion: string; acceptedAt: string }
-
-const readAcceptance = (): StoredAcceptance | null => {
-  try {
-    const raw = localStorage.getItem(KEY_ACCEPTANCE);
-    if (!raw) return null;
-    const v = JSON.parse(raw);
-    if (v?.accepted === true && v.termsVersion === TERMS_VERSION && ['clinical', 'patient'].includes(v.audience)) return v;
-  } catch { /* ignore */ }
-  return null;
-};
+import { TERMS_VERSION, KEY_ACCEPTANCE, readAcceptance as readStored, type StoredAcceptance } from '@/lib/agreementGate';
+export { TERMS_VERSION };
+const readAcceptance = () => readStored(typeof window !== 'undefined' ? window.localStorage : undefined);
 
 export const PlainModeProvider = ({ children }: { children: ReactNode }) => {
   const initial = typeof window !== 'undefined' ? readAcceptance() : null;
