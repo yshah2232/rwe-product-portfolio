@@ -2,7 +2,8 @@
 // summary, refresh button, and inspect-trial via StudyDetailSheet.
 
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { toggleSelection, MAX_COMPARE, MIN_COMPARE } from '@/lib/trialCompare';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Loader2, RefreshCw, ExternalLink, Trash2, Calendar, MapPin, Building2,
@@ -61,6 +62,8 @@ const CohortDetail = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [openNct, setOpenNct] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const navigate = useNavigate();
   useSeo({
     title: cohort ? `${cohort.name} — Cohort` : 'Cohort — Clinical Trial Diversity Studio',
     description: cohort
@@ -314,6 +317,9 @@ const CohortDetail = () => {
           <h2 className="font-display text-2xl font-medium text-foreground mb-4">
             Included trials ({trials.length})
           </h2>
+          {trials.length >= MIN_COMPARE && (
+            <p className="text-[12px] text-muted-foreground mb-4">Tick {MIN_COMPARE} to {MAX_COMPARE} trials to compare them side by side.</p>
+          )}
           {trials.length === 0 ? (
             <p className="text-sm text-muted-foreground">No trials in this cohort.</p>
           ) : (
@@ -330,6 +336,16 @@ const CohortDetail = () => {
                   >
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div className="flex items-center gap-2 flex-wrap">
+                        {trials.length >= MIN_COMPARE && (
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${t.nct_id} for comparison`}
+                            className="h-4 w-4 accent-primary cursor-pointer disabled:cursor-not-allowed"
+                            checked={selected.includes(t.nct_id)}
+                            disabled={!selected.includes(t.nct_id) && selected.length >= MAX_COMPARE}
+                            onChange={() => setSelected((s) => toggleSelection(s, t.nct_id))}
+                          />
+                        )}
                         <button
                           onClick={() => {
                             setOpenNct(t.nct_id);
@@ -408,6 +424,24 @@ const CohortDetail = () => {
           )}
         </div>
       </section>
+
+      {selected.length > 0 && (
+        <div className="sticky bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur px-4 py-3">
+          <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[13px] text-foreground">
+              {selected.length} of {MAX_COMPARE} selected
+              {selected.length < MIN_COMPARE && <span className="text-muted-foreground"> · select at least {MIN_COMPARE}</span>}
+            </p>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setSelected([])}>Clear</Button>
+              <Button size="sm" disabled={selected.length < MIN_COMPARE}
+                onClick={() => navigate(`/cohorts/${cohort.id}/compare?ncts=${selected.join(',')}`)}>
+                Compare trials
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <StudyDetailSheet nctId={openNct} open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>

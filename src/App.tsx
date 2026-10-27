@@ -14,6 +14,7 @@ import Cohorts from "./pages/Cohorts";
 import CohortDetail from "./pages/CohortDetail";
 import CohortDiversity from "./pages/CohortDiversity";
 import CohortBarriers from "./pages/CohortBarriers";
+import CohortCompare from "./pages/CohortCompare";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import MedicalDisclaimer from "./pages/MedicalDisclaimer";
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="/cohorts/:id" element={<CohortDetail />} />
               <Route path="/cohorts/:id/diversity" element={<CohortDiversity />} />
               <Route path="/cohorts/:id/barriers" element={<CohortBarriers />} />
+              <Route path="/cohorts/:id/compare" element={<CohortCompare />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/medical-disclaimer" element={<MedicalDisclaimer />} />
