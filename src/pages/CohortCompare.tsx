@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Loader2, Info, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTrialComparison } from '@/contexts/TrialComparisonContext';
 import { buildComparisonReport, downloadReport } from '@/lib/comparisonReport';
 import { TrialGeographyPanel } from '@/components/compare/TrialGeographyPanel';
@@ -134,7 +135,17 @@ const CohortCompare = () => {
                           <th scope="row" className={`sticky left-0 z-10 text-left p-3 align-top font-semibold text-foreground ${diff ? 'bg-accent border-l-4 border-l-primary' : 'bg-card'}`}>
                             {f.label}
                             {diff && <Badge variant="outline" className="ml-1 mt-1 text-[10px] h-5 py-0 border-primary text-primary">Differs</Badge>}
-                            <span className="block mt-1 text-[10px] font-mono font-normal text-muted-foreground break-all">{f.source}</span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button type="button" aria-label={`Source field for ${f.label}`} className="ml-1 inline-flex align-middle text-muted-foreground hover:text-primary">
+                                  <Info className="h-3 w-3" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="max-w-[260px]">
+                                <p className="text-[11px]">ClinicalTrials.gov source field:</p>
+                                <p className="text-[11px] font-mono break-all">{f.source}</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </th>
                           {loaded.map((t) => {
                             const v = fieldValue(t, f.key);

@@ -199,7 +199,7 @@ const AgentChatbot = () => {
     <>
       {/* Floating trigger */}
       <AnimatePresence>
-        {!isOpen && (
+        {!isOpen && !location.pathname.startsWith('/compare-trials') && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
