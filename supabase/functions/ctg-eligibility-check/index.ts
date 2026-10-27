@@ -54,7 +54,7 @@ STRICT RULES:
 - For each item, return a "evidence" field (≤140 chars): one short, neutral sentence that quotes or paraphrases what the document said. Empty string if no evidence.
 - Never recommend joining or avoiding the trial.
 - Never invent eligibility criteria not in the input.
-- Always end with: "Final eligibility must be confirmed by the trial site's medical team."
+- The summary must describe only what the documents contain relative to the listed criteria. It must NEVER state or imply that the person qualifies, is eligible, is a good fit, or should enroll.
 - Return JSON only:
 {
   "items": [{"label": "string (echo back)", "verdict": "likely_meets|unclear|likely_does_not_meet", "evidence": "string"}],
