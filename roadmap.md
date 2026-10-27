@@ -17,3 +17,8 @@
 - Cohort persistence retired at user request: direct trial comparison and local PDF download replace saving. Existing diversity and barriers pages are no longer publicly routed because they depended on saved cohorts.
 - [ ] Bot challenge UI (Turnstile widget for suspicious sessions)
 - [ ] Module 3 Phase 2 (drive-time, broadband, transit, rural designation) — deferred
+
+## QA log 2026-10-27 (5 conditions × desktop, 2 × phone)
+- [ ] BUG (low): On phones the header toggle label is cut to "Easy?" instead of "Easy read". Fix: shorten to an icon + "Easy read" on small screens.
+- [ ] ISSUE (medium): "type 2 diabetes" top results were old non‑US trials (South Korea, China), so map and Census box were empty. Display was correct; ranking should favor US / recruiting trials when no location is given.
+- [ ] Dev warning: "Function components cannot be given refs" at App level (no visible impact).
