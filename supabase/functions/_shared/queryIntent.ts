@@ -238,3 +238,56 @@ export const US_PRIORITY_BOOST = 15;
 export function rankKey(score: number, countries: string[], preferUS: boolean): number {
   return score + (preferUS && countries.includes("United States") ? US_PRIORITY_BOOST : 0);
 }
+
+// ── Location evidence (structured facility fields) ──
+
+export interface SiteLocation { city?: string; state?: string; country?: string; status?: string }
+
+const lc = (s?: string) => (s ?? "").trim().toLowerCase();
+const COUNTRY_ALIASES: Record<string, string> = { us: "united states", usa: "united states", "u.s.": "united states", "u.s.a.": "united states", america: "united states" };
+
+/** Sites whose city, state or country exactly equals the interpreted location. */
+export function matchLocation(location: string | null, sites: SiteLocation[]): { confirmed: boolean; matchedSites: number; recruitingMatched: number } {
+  if (!location) return { confirmed: false, matchedSites: 0, recruitingMatched: 0 };
+  const target = COUNTRY_ALIASES[lc(location)] ?? lc(location);
+  const hits = sites.filter((s) => lc(s.city) === target || lc(s.state) === target || lc(s.country) === target);
+  return { confirmed: hits.length > 0, matchedSites: hits.length, recruitingMatched: hits.filter((s) => s.status === "RECRUITING").length };
+}
+
+export function locationSentence(location: string, confirmed: boolean, trialRecruiting: boolean): string {
+  return confirmed
+    ? `${trialRecruiting ? "Recruiting trial" : "Trial"} with one or more listed sites in ${location}.`
+    : `The available registry record does not confirm a site in ${location}.`;
+}
+
+/** Remove LLM sentences that talk about geography: the reranker never sees site data. */
+export function stripLocationClaims(reason: string, location: string | null): string {
+  const geo = /\b(locat\w*|sites?|state|country|region|city|u\.s\.?|usa|united states|geograph\w*)\b/i;
+  const sentences = reason.split(/(?<=[.!?])\s+/);
+  const kept = sentences
+    .map((s) => s.replace(/,?\s*(but|and|although|though|while)\s+(the\s+)?(location|site)[^.]*\./i, "."))
+    .filter((s) => !geo.test(s) && !(location && s.toLowerCase().includes(location.toLowerCase())));
+  return kept.join(" ").trim();
+}
+
+export type MatchLabel = "Condition match" | "Recruiting status match" | "Location confirmed" | "Phase match" | "Biomarker match" | "Prior-treatment match";
+
+export function matchLabels(evidence: Evidence[], locationConfirmed: boolean): MatchLabel[] {
+  const types = new Set(evidence.map((e) => e.type));
+  const out: MatchLabel[] = [];
+  if (types.has("condition")) out.push("Condition match");
+  if (evidence.some((e) => e.type === "status" && e.concept === "RECRUITING")) out.push("Recruiting status match");
+  if (locationConfirmed) out.push("Location confirmed");
+  if (types.has("phase")) out.push("Phase match");
+  if (types.has("biomarker")) out.push("Biomarker match");
+  if (types.has("prior treatment")) out.push("Prior-treatment match");
+  return out;
+}
+
+/** A numeric score is shown only when it actually separates results. */
+export function scoresAreDifferentiated(scores: number[]): boolean {
+  if (scores.length < 2) return scores.length === 1;
+  const distinct = new Set(scores).size;
+  const spread = Math.max(...scores) - Math.min(...scores);
+  return distinct >= Math.min(3, scores.length) && spread >= 10;
+}
