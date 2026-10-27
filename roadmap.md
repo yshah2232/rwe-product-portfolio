@@ -19,6 +19,8 @@
 - [ ] Module 3 Phase 2 (drive-time, broadband, transit, rural designation) — deferred
 
 ## QA log 2026-10-27 (5 conditions × desktop, 2 × phone)
-- [ ] BUG (low): On phones the header toggle label is cut to "Easy?" instead of "Easy read". Fix: shorten to an icon + "Easy read" on small screens.
-- [ ] ISSUE (medium): "type 2 diabetes" top results were old non‑US trials (South Korea, China), so map and Census box were empty. Display was correct; ranking should favor US / recruiting trials when no location is given.
+- [x] BUG (low): On phones the header toggle label is cut to "Easy?" instead of "Easy read". Fix: shorten to an icon + "Easy read" on small screens.
+- [x] ISSUE (medium, fixed: US sites first when query names US/state or browser region is US): "type 2 diabetes" top results were old non‑US trials (South Korea, China), so map and Census box were empty. Display was correct; ranking should favor US / recruiting trials when no location is given.
 - [ ] Dev warning: "Function components cannot be given refs" at App level (no visible impact).
+- [x] Comparison page: source record row with ClinicalTrials.gov links + visible Not medical advice disclaimer.
+- [x] Region view retested: works for all 5 conditions (shows only regions that have sites).
