@@ -1,3 +1,4 @@
+import { readAcceptance } from '@/lib/agreementGate';
 // Document checklist + AI-powered self-check.
 // Flow:
 //  1. Show the per-trial checklist (cached from plain-language layer).
@@ -84,6 +85,7 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
     });
 
   const run = async () => {
+    if (!readAcceptance(window.localStorage)) return; // agreement gate
     setRunning(true);
     setError(null);
     setResult(null);
