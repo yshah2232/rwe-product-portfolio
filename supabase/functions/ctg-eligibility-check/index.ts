@@ -179,7 +179,6 @@ Deno.serve(async (req) => {
     if (!aiRes.ok) return json({ error: `AI error ${aiRes.status}` }, 502);
 
     const aiBody = await aiRes.json();
-    console.log("ai items", JSON.stringify(aiBody.choices?.[0]?.message?.content ?? "").slice(0, 600));
     const text = aiBody.choices?.[0]?.message?.content ?? "{}";
     let parsed: any;
     try { parsed = JSON.parse(text); }
