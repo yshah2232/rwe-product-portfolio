@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTrialComparison } from '@/contexts/TrialComparisonContext';
 import { buildComparisonReport, downloadReport } from '@/lib/comparisonReport';
+import { TrialGeographyPanel } from '@/components/compare/TrialGeographyPanel';
 import { useSeo } from '@/hooks/useSeo';
 import {
   COMPARE_FIELDS, CompareTrial, MAX_COMPARE, MIN_COMPARE, fieldDiffers, fieldValue,
@@ -159,6 +160,7 @@ const CohortCompare = () => {
                 </table>
               </div>
               <p className="mt-3 text-[11px] text-muted-foreground">Source: ClinicalTrials.gov API v2, fetched live. Follow each NCT link to verify the full record.</p>
+              {loaded.length > 0 && <TrialGeographyPanel trials={loaded} />}
             </>
           )}
         </div>
