@@ -17,9 +17,6 @@ const SiteNav = () => {
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  return () => clearTimeout(t);
-  }, []);
-
   return (
     <header className="sticky top-0 z-30 bg-background border-b border-border">
       {/* Unified NLM-style deep blue band: wordmark + product line */}
