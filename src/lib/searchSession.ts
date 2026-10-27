@@ -5,36 +5,13 @@
  * analytics without being a persistent identifier.
  */
 
-const SID_KEY = 'ctg_sid_v1';
+const sessionId = crypto.randomUUID();
 
 export function getSessionId(): string {
-  try {
-    let id = sessionStorage.getItem(SID_KEY);
-    if (!id) {
-      id = crypto.randomUUID();
-      sessionStorage.setItem(SID_KEY, id);
-    }
-    return id;
-  } catch {
-    return 'no-storage';
-  }
+  return sessionId;
 }
 
-const FEEDBACK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-feedback`;
-
 export async function sendSignal(payload: Record<string, unknown>): Promise<void> {
-  // Fire-and-forget; never block the UI.
-  try {
-    await fetch(FEEDBACK_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-      },
-      body: JSON.stringify(payload),
-      keepalive: true,
-    });
-  } catch {
-    // swallow — analytics must not crash UX
-  }
+  // Do not transmit or retain visitor feedback, clicks, queries, or outcomes.
+  void payload;
 }

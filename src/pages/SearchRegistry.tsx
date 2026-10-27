@@ -4,7 +4,7 @@ import { suggestCorrection } from '@/lib/typoSuggest';
 import { motion } from 'framer-motion';
 import {
   Search, Loader2, ExternalLink, Sparkles, AlertCircle, Info, Filter,
-  ThumbsUp, ThumbsDown, Star, Save, Layers, LayoutGrid, Map as MapIcon,
+  ThumbsUp, ThumbsDown, Star, Columns2, LayoutGrid, Map as MapIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,8 @@ import { getSessionId, sendSignal } from '@/lib/searchSession';
 import { toast } from 'sonner';
 import StudyDetailSheet from '@/components/StudyDetailSheet';
 import TrustDrawer from '@/components/TrustDrawer';
-import SaveCohortDialog from '@/components/SaveCohortDialog';
+import { useTrialComparison } from '@/contexts/TrialComparisonContext';
+import { MAX_COMPARE, MIN_COMPARE } from '@/lib/trialCompare';
 import TrialMap from '@/components/TrialMap';
 import { cleanSponsor, cleanIndication } from '@/lib/canonicalize';
 import { usePlainMode } from '@/contexts/PlainModeContext';
@@ -96,8 +97,8 @@ const SearchRegistry = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // Cohort save flow
-  const [selectedNcts, setSelectedNcts] = useState<Set<string>>(new Set());
-  const [saveOpen, setSaveOpen] = useState(false);
+  const { selected, toggle: toggleTrial, clear: clearTrials } = useTrialComparison();
+  const selectedNcts = new Set(selected);
   const [view, setView] = useState<'cards' | 'map'>('cards');
 
   // Outcome modal state
@@ -126,7 +127,6 @@ const SearchRegistry = () => {
     setLoading(true);
     setError(null);
     setFeedbackGiven({});
-    setSelectedNcts(new Set()); // reset selection on new search
 
     const params = new URLSearchParams({ q: q.trim(), sid: sessionId });
     if (phase !== 'any') params.set('phase', phase);
@@ -168,7 +168,7 @@ const SearchRegistry = () => {
 
         // Trigger the outcome modal sooner — after the FIRST search, ~2.5s in.
         // Previously waited for the 2nd search; ~88% of sessions never got there.
-        if (sessionSearchCount.current >= 1 && !outcomeShown) {
+        if (false && sessionSearchCount.current >= 1 && !outcomeShown) {
           setOutcomeShown(true);
           setTimeout(() => setOutcomeOpen(true), 2500);
         }
@@ -541,15 +541,9 @@ const SearchRegistry = () => {
                     <div className="flex items-start gap-3 mb-3">
                       <Checkbox
                         checked={checked}
-                        onCheckedChange={(v) => {
-                          setSelectedNcts((prev) => {
-                            const next = new Set(prev);
-                            if (v) next.add(trial.nctId);
-                            else next.delete(trial.nctId);
-                            return next;
-                          });
-                        }}
-                        aria-label={`Select ${trial.nctId} for cohort`}
+                        onCheckedChange={() => toggleTrial(trial.nctId)}
+                        disabled={!checked && selected.length >= MAX_COMPARE}
+                        aria-label={`Select ${trial.nctId} for comparison`}
                         className="mt-1.5"
                       />
                       <div className="flex-1 min-w-0">
@@ -852,45 +846,28 @@ const SearchRegistry = () => {
       {/* Study detail sheet */}
       <StudyDetailSheet nctId={openNct} open={sheetOpen} onOpenChange={setSheetOpen} />
 
-      {/* Save cohort dialog */}
-      <SaveCohortDialog
-        open={saveOpen}
-        onOpenChange={setSaveOpen}
-        trials={(data?.results ?? []).filter((t) => selectedNcts.has(t.nctId))}
-        query={data?.query ?? query}
-        filters={{ phase, status, countryUS }}
-      />
-
-      {/* Sticky save bar */}
+      {/* Temporary trial comparison */}
       {selectedNcts.size > 0 && (
         <motion.div
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-foreground text-background rounded-full shadow-2xl px-5 py-3 flex items-center gap-4"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-card text-foreground border border-border rounded-md shadow-lg px-4 py-3 flex flex-wrap justify-center items-center gap-3 w-max max-w-[calc(100%-2rem)]"
         >
           <span className="text-sm font-medium">
-            {selectedNcts.size} selected
+            {selectedNcts.size} of 4 selected
           </span>
-          <button
-            onClick={() => setSelectedNcts(new Set())}
-            className="text-xs opacity-70 hover:opacity-100 transition-opacity"
-          >
+          <Button size="sm" variant="ghost" onClick={clearTrials}>
             Clear
-          </button>
+          </Button>
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => setSaveOpen(true)}
+            disabled={selected.length < MIN_COMPARE}
+            asChild={selected.length >= MIN_COMPARE}
             className="gap-1.5"
           >
-            <Save className="h-3.5 w-3.5" /> Save as cohort
+            {selected.length >= MIN_COMPARE ? <Link to="/compare-trials"><Columns2 className="h-3.5 w-3.5" /> Compare trials</Link> : <span>Choose at least 2 trials</span>}
           </Button>
-          <Link
-            to="/cohorts"
-            className="text-xs inline-flex items-center gap-1 opacity-80 hover:opacity-100"
-          >
-            <Layers className="h-3.5 w-3.5" /> My cohorts
-          </Link>
         </motion.div>
       )}
     </div>

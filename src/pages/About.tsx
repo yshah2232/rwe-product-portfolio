@@ -59,7 +59,7 @@ const About = () => {
         items={[
           'Patients and caregivers search in plain words and read trial summaries in Plain Language mode.',
           'Clinicians find recruiting studies by condition, biomarker, phase, prior treatment and location.',
-          'Researchers and feasibility teams group studies into cohorts to compare sponsors, phases and sites.',
+          'Researchers and feasibility teams compare trial records by sponsor, phase, eligibility and sites without saving a cohort.',
           'Diversity and access leads compare site area demographics with national and disease benchmarks from the US Census.',
         ]}
       />

@@ -10,11 +10,8 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import DataMethod from "./pages/DataMethod";
 import SearchRegistry from "./pages/SearchRegistry";
-import Cohorts from "./pages/Cohorts";
-import CohortDetail from "./pages/CohortDetail";
-import CohortDiversity from "./pages/CohortDiversity";
-import CohortBarriers from "./pages/CohortBarriers";
 import CohortCompare from "./pages/CohortCompare";
+import { TrialComparisonProvider } from '@/contexts/TrialComparisonContext';
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import MedicalDisclaimer from "./pages/MedicalDisclaimer";
@@ -36,6 +33,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AdminAccessProvider>
+          <TrialComparisonProvider>
           <AudienceModal />
           <Routes>
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -54,11 +52,8 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/clinical-trials" element={<Navigate to="/search-registry" replace />} />
               <Route path="/search-registry" element={<SearchRegistry />} />
-              <Route path="/cohorts" element={<Cohorts />} />
-              <Route path="/cohorts/:id" element={<CohortDetail />} />
-              <Route path="/cohorts/:id/diversity" element={<CohortDiversity />} />
-              <Route path="/cohorts/:id/barriers" element={<CohortBarriers />} />
-              <Route path="/cohorts/:id/compare" element={<CohortCompare />} />
+              <Route path="/compare-trials" element={<CohortCompare />} />
+              <Route path="/cohorts/*" element={<Navigate to="/compare-trials" replace />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/medical-disclaimer" element={<MedicalDisclaimer />} />
@@ -70,6 +65,7 @@ const App = () => (
             <Route path="/methodology" element={<Navigate to="/data-method" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </TrialComparisonProvider>
           </AdminAccessProvider>
         </BrowserRouter>
         </PlainModeProvider>

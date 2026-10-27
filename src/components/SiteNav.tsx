@@ -6,9 +6,7 @@ import PlainModeToggle from '@/components/PlainModeToggle';
 const navLinks = [
   { label: 'Home', to: '/', disabled: false },
   { label: 'Search Registry', to: '/search-registry', disabled: false },
-  // Cohorts hidden from primary nav — feature still works at /cohorts but is
-  // not the focus right now (kept as deep link for in-flow Save action).
-  { label: 'Cohorts', to: '/cohorts', disabled: true },
+  { label: 'Compare trials', to: '/compare-trials', disabled: false },
   { label: 'Data & Method', to: '/data-method', disabled: false },
   { label: 'About', to: '/about', disabled: false },
 ];
