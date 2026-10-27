@@ -23,13 +23,20 @@ interface Verdict {
   evidence: string;
 }
 
+export const VERDICT_LABEL: Record<Verdict['verdict'], string> = {
+  likely_meets: 'Information supports this listed criterion',
+  likely_does_not_meet: 'Potential conflict with this listed criterion',
+  unclear: 'Insufficient information',
+  no_docs: 'No supporting document provided',
+};
+
 const URL_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-eligibility-check`;
 const MAX_FILES = 6;
 const MAX_BYTES = 8 * 1024 * 1024;
 
 export default function EligibilityCheck({ nctId, checklist }: Props) {
   const [files, setFiles] = useState<File[]>([]);
-  const [notes, setNotes] = useState('');
+  const [ack, setAck] = useState(false);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ items: Verdict[]; overall: string; summary: string; disclaimer: string } | null>(null);
@@ -77,7 +84,6 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
       const payload = {
         nctId,
         sessionId: getSessionId(),
-        notes,
         files: await Promise.all(
           files.map(async (f) => ({
             name: f.name,
@@ -141,6 +147,23 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
           ))}
         </ul>
 
+        <p className="text-[12px] font-semibold text-destructive">
+          Do not upload unredacted medical records or information identifying another person.
+        </p>
+        <label className="flex items-start gap-2 text-[12px] text-foreground leading-snug cursor-pointer">
+          <input
+            type="checkbox"
+            checked={ack}
+            onChange={(e) => setAck(e.target.checked)}
+            className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-primary"
+            disabled={running}
+          />
+          <span>
+            I understand this AI check cannot determine eligibility. I have removed names, contact details, medical
+            record numbers and other identifying information from the files.
+          </span>
+        </label>
+
         {/* File picker */}
         <div className="border border-dashed border-border rounded-sm p-3 bg-muted/20">
           <input
@@ -149,6 +172,7 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
             multiple
             accept="image/*,application/pdf,text/plain"
             className="hidden"
+            disabled={!ack}
             onChange={(e) => onPick(e.target.files)}
           />
           <div className="flex items-center gap-3">
@@ -157,7 +181,7 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
               variant="outline"
               size="sm"
               onClick={() => inputRef.current?.click()}
-              disabled={files.length >= MAX_FILES || running}
+              disabled={!ack || files.length >= MAX_FILES || running}
               className="gap-1.5"
             >
               <Upload className="h-3.5 w-3.5" />
@@ -185,20 +209,11 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
             </ul>
           )}
 
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value.slice(0, 400))}
-            placeholder="Optional: anything the AI should know (e.g. 'Diagnosed Stage IV in March 2024, on cycle 3 of treatment')"
-            rows={2}
-            className="mt-2 w-full text-[12px] rounded-sm border border-border bg-background px-2 py-1.5 placeholder:text-muted-foreground/60"
-            disabled={running}
-          />
-
           <div className="mt-2 flex items-center justify-between">
             <p className="text-[10.5px] text-muted-foreground italic">
-              Not medical advice. Final eligibility is decided by the trial site.
+              Not medical advice. Cannot confirm eligibility.
             </p>
-            <Button onClick={run} disabled={running || files.length === 0} size="sm" className="gap-1.5">
+            <Button onClick={run} disabled={!ack || running || files.length === 0} size="sm" className="gap-1.5">
               {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
               {running ? 'Checking…' : 'Run check'}
             </Button>
@@ -213,22 +228,17 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
 
         {result && (
           <div className="space-y-2 pt-1">
-            <div
-              className="rounded-sm p-3 border"
-              style={{
-                background:
-                  result.overall === 'likely_eligible' ? 'hsl(140 60% 96%)' :
-                  result.overall === 'likely_not_eligible' ? 'hsl(0 70% 96%)' :
-                  'hsl(45 80% 96%)',
-                borderColor:
-                  result.overall === 'likely_eligible' ? 'hsl(140 50% 75%)' :
-                  result.overall === 'likely_not_eligible' ? 'hsl(0 60% 80%)' :
-                  'hsl(40 70% 75%)',
-              }}
-            >
-              <p className="text-[12px] font-semibold text-foreground capitalize">
-                Overall: {result.overall.replace(/_/g, ' ')}
+            <div className="rounded-sm p-3 border border-border bg-muted/40" role="note">
+              <p className="text-[12px] text-foreground leading-snug">
+                This AI review compares the submitted information with selected criteria from the public trial record.
+                It may miss exclusions or misinterpret medical information. It cannot confirm eligibility. Review the
+                original{' '}
+                <a className="underline text-primary" href={`https://clinicaltrials.gov/study/${nctId}`} target="_blank" rel="noreferrer">ClinicalTrials.gov record</a>{' '}
+                and speak with the study team or a qualified healthcare professional before taking action.
               </p>
+            </div>
+            <div className="rounded-sm p-3 border border-border bg-background">
+              <p className="text-[12px] font-semibold text-foreground">Document review summary</p>
               {result.summary && <p className="text-[12px] text-foreground/80 mt-1 leading-snug">{result.summary}</p>}
             </div>
 
@@ -237,6 +247,7 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
                 const Icon = it.verdict === 'likely_meets' ? CheckCircle2 :
                              it.verdict === 'likely_does_not_meet' ? AlertTriangle :
                              HelpCircle;
+                const verdictLabel = VERDICT_LABEL[it.verdict] ?? VERDICT_LABEL.unclear;
                 const color = it.verdict === 'likely_meets' ? '#0d8050' :
                               it.verdict === 'likely_does_not_meet' ? '#b1331a' :
                               '#9a7400';
@@ -245,6 +256,7 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
                     <Icon className="h-4 w-4 shrink-0 mt-0.5" style={{ color }} />
                     <div className="min-w-0">
                       <p className="text-foreground font-medium leading-snug">{it.label}</p>
+                      <p className="text-[11.5px] font-semibold leading-snug" style={{ color }}>{verdictLabel}</p>
                       {it.evidence && (
                         <p className="text-[11.5px] text-muted-foreground italic leading-snug mt-0.5">"{it.evidence}"</p>
                       )}
