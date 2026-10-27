@@ -90,6 +90,14 @@ Deno.serve(async (req) => {
       whyStopped: status.whyStopped ?? null,
       phase: (design.phases ?? []) as string[],
       studyType: design.studyType ?? "",
+      designInfo: {
+        allocation: design.designInfo?.allocation ?? "",
+        interventionModel: design.designInfo?.interventionModel ?? "",
+        observationalModel: design.designInfo?.observationalModel ?? "",
+        primaryPurpose: design.designInfo?.primaryPurpose ?? "",
+        masking: design.designInfo?.maskingInfo?.masking ?? "",
+        timePerspective: design.designInfo?.timePerspective ?? "",
+      },
       conditions: (cond.conditions ?? []) as string[],
       keywords: (cond.keywords ?? []) as string[],
       interventions: ((arms.interventions ?? []) as any[]).map((i) => ({
