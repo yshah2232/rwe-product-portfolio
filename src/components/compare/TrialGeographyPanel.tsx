@@ -67,12 +67,12 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
           </div>
         </header>
 
-        <div className="p-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-          <div className="overflow-x-auto">
+        <div className="p-4 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+          <div className="min-w-0 overflow-x-auto">
             {geo.states.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">No compared trial lists a US facility with a state, so there is nothing to map.</p>
             ) : (
-              <div className="grid gap-1 min-w-[336px]" style={{ gridTemplateColumns: 'repeat(12, minmax(0, 1fr))' }} aria-label="US site map">
+              <div className="grid gap-[3px] sm:gap-1 min-w-[264px]" style={{ gridTemplateColumns: 'repeat(12, minmax(0, 1fr))' }} aria-label="US site map">
                 {Object.entries(STATE_TILES).map(([name, [c, r, ab]]) => {
                   const row = byState.get(name);
                   const o = row ? 0.25 + 0.75 * (row.siteCount / max) : 0;
@@ -89,8 +89,8 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
             <p className="mt-2 text-[11px] text-muted-foreground">Darker means more listed sites. Grey means none of these records list a site there.</p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px] min-w-[420px]">
+          <div className="min-w-0 overflow-x-auto">
+            <table className="w-full text-[12px] sm:text-[13px]">
               <thead>
                 <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
                   <th className="py-2 pr-2">{view === 'state' ? 'State' : 'Census region'}</th>
@@ -110,7 +110,7 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
                       {r.statusUnreported > 0 && r.statusUnreported < r.siteCount && <span className="block text-[10px] text-muted-foreground">{r.statusUnreported} status not reported</span>}
                     </td>
                     <td className="py-2 pr-2 text-right tabular-nums">{r.trials.length} of {trials.length}</td>
-                    <td className="py-2 font-mono text-[11px] text-muted-foreground">{r.trials.map((n) => <span key={n} className="inline-block mr-1.5">{n}</span>)}</td>
+                    <td className="py-2 font-mono text-[10px] sm:text-[11px] text-muted-foreground break-all">{r.trials.map((n) => <span key={n} className="inline-block mr-1.5">{n}</span>)}</td>
                   </tr>
                 ))}
                 {geo.states.length === 0 && <tr><td colSpan={5} className="py-3 text-muted-foreground italic">No US sites with a state on these records.</td></tr>}
