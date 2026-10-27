@@ -350,6 +350,34 @@ export function matchLabels(evidence: Evidence[], locationConfirmed: boolean): M
   return out;
 }
 
+// ── Evidence deduplication ──
+// Display priority: condition/biomarker → status → location → phase → prior treatment → quotes.
+const EVIDENCE_PRIORITY: Record<string, number> = {
+  condition: 1, biomarker: 1, status: 2, location: 3, phase: 4, "prior treatment": 5, quote: 6,
+};
+
+/**
+ * Normalize and deduplicate match evidence before display.
+ * Drops repeated source-field/snippet pairs and repeated concept+type pairs,
+ * then keeps at most `max` items in priority order.
+ */
+export function dedupeEvidence(evidence: Evidence[], max = 3): Evidence[] {
+  const seenSnippet = new Set<string>();
+  const seenConcept = new Set<string>();
+  const out: Evidence[] = [];
+  const sorted = [...evidence].sort((a, b) => (EVIDENCE_PRIORITY[a.type] ?? 9) - (EVIDENCE_PRIORITY[b.type] ?? 9));
+  for (const e of sorted) {
+    const snippetKey = `${e.field}|${norm(e.snippet)}`;
+    const conceptKey = `${e.type}|${norm(e.concept)}`;
+    if (seenSnippet.has(snippetKey) || seenConcept.has(conceptKey)) continue;
+    seenSnippet.add(snippetKey);
+    seenConcept.add(conceptKey);
+    out.push(e);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
 /** A numeric score is shown only when it actually separates results. */
 export function scoresAreDifferentiated(scores: number[]): boolean {
   if (scores.length < 2) return scores.length === 1;
