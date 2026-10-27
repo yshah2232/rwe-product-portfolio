@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { PlainModeProvider } from "@/contexts/PlainModeContext";
 import SiteLayout from "@/components/SiteLayout";
-import AudienceModal from "@/components/AudienceModal";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import DataMethod from "./pages/DataMethod";
@@ -36,7 +35,6 @@ const App = () => (
         <BrowserRouter>
           <AdminAccessProvider>
           <TrialComparisonProvider>
-          <AudienceModal />
           <Routes>
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route element={<AdminLayout />}>

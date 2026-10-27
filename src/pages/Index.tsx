@@ -229,7 +229,7 @@ const Index = () => {
                 </Button>
                 <p className="text-[10.5px] text-muted-foreground text-center leading-snug">
                   Not medical advice. Always confirm with a clinician.{' '}
-                  <a href="/disclaimer" className="gov-link">Medical Disclaimer</a>
+                  <a href="/medical-disclaimer" className="gov-link">Medical Disclaimer</a>
                 </p>
               </div>
             </div>
