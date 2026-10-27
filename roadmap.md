@@ -1,4 +1,7 @@
 # Current task
+- [ ] Replace public saved cohorts with direct trial comparison (2 to 4 trials).
+- [ ] Add browser generated report with visible watermark and embedded attribution.
+- [ ] Stop new visitor activity retention and explain individual temporary activity; do not delete historical records.
 - [x] Separate admin login and protected testing and analytics workspace.
 - [x] Replace admin password securely.
 - [x] Verify rejected credentials and signed-out redirects; all three admin services reject invalid sessions.
