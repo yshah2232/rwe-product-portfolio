@@ -206,7 +206,7 @@ const AgentChatbot = () => {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl hover:scale-110 transition-transform"
+            className="hidden md:flex fixed bottom-6 right-6 z-50 items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl hover:scale-110 transition-transform"
             aria-label="Open assistant"
           >
             <MessageCircle className="h-6 w-6" />
@@ -228,7 +228,7 @@ const AgentChatbot = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] rounded-2xl border border-border/60 bg-background shadow-2xl overflow-hidden flex flex-col"
+            className="hidden md:flex fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] rounded-2xl border border-border/60 bg-background shadow-2xl overflow-hidden flex-col"
             style={{ maxHeight: 'min(520px, calc(100vh - 4rem))' }}
           >
             {/* Header */}

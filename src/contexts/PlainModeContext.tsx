@@ -14,6 +14,8 @@ interface PlainModeCtx {
   togglePlainMode: () => void;
   setPlainMode: (v: boolean) => void;
   markAudiencePromptSeen: () => void;
+  termsAccepted: boolean;
+  acceptTerms: (a: 'clinical' | 'patient') => void;
 }
 
 const Ctx = createContext<PlainModeCtx | null>(null);
@@ -21,11 +23,38 @@ const Ctx = createContext<PlainModeCtx | null>(null);
 const KEY_AUDIENCE = 'ctd.audience';
 const KEY_PLAIN = 'ctd.plain_mode';
 const KEY_PROMPT_SEEN = 'ctd.audience_prompt_seen';
+const KEY_ACCEPTANCE = 'ctd.terms_acceptance';
+/** Terms version = current Terms "Last updated" date. Bump to re-prompt everyone. */
+export const TERMS_VERSION = '2026-10-27';
+
+interface StoredAcceptance { audience: Audience; accepted: true; termsVersion: string; acceptedAt: string }
+
+const readAcceptance = (): StoredAcceptance | null => {
+  try {
+    const raw = localStorage.getItem(KEY_ACCEPTANCE);
+    if (!raw) return null;
+    const v = JSON.parse(raw);
+    if (v?.accepted === true && v.termsVersion === TERMS_VERSION && ['clinical', 'patient'].includes(v.audience)) return v;
+  } catch { /* ignore */ }
+  return null;
+};
 
 export const PlainModeProvider = ({ children }: { children: ReactNode }) => {
-  const [audience, setAudienceState] = useState<Audience>('unspecified');
-  const [plainMode, setPlainModeState] = useState(false);
+  const initial = typeof window !== 'undefined' ? readAcceptance() : null;
+  const [audience, setAudienceState] = useState<Audience>(initial?.audience ?? 'unspecified');
+  const [plainMode, setPlainModeState] = useState(initial?.audience === 'patient');
   const [audiencePromptSeen, setAudiencePromptSeen] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(!!initial);
+
+  // Stored locally only (no server record, no identifiers).
+  const acceptTerms = useCallback((a: 'clinical' | 'patient') => {
+    const record: StoredAcceptance = { audience: a, accepted: true, termsVersion: TERMS_VERSION, acceptedAt: new Date().toISOString().slice(0, 10) };
+    try { localStorage.setItem(KEY_ACCEPTANCE, JSON.stringify(record)); } catch { /* ignore */ }
+    setAudienceState(a);
+    setPlainModeState(a === 'patient');
+    setTermsAccepted(true);
+    setAudiencePromptSeen(true);
+  }, []);
 
   // Remove old preferences; all new preferences live only in memory.
   useEffect(() => {
@@ -73,6 +102,8 @@ export const PlainModeProvider = ({ children }: { children: ReactNode }) => {
         togglePlainMode,
         setPlainMode,
         markAudiencePromptSeen,
+        termsAccepted,
+        acceptTerms,
       }}
     >
       {children}
