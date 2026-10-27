@@ -57,6 +57,7 @@ export default function ReportProblem() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'Could not send the report.');
       setDone(true);
+      void loadStats();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not send the report.');
     } finally {
@@ -74,6 +75,24 @@ export default function ReportProblem() {
         Spotted a bug, information that looks wrong, or have an idea to improve the site?
         Tell us below. We only store what you type here — no account, no email, no tracking.
       </p>
+
+      {stats && stats.total > 0 && (
+        <div className="ctg-panel p-4 mb-6 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+          <span className="font-semibold">Issue reports at a glance</span>
+          <span className="text-muted-foreground">
+            Received: <span className="font-semibold text-foreground">{stats.total}</span>
+          </span>
+          <span className="text-muted-foreground">
+            Resolved: <span className="font-semibold text-foreground">{stats.resolved}</span>
+          </span>
+          <span className="text-muted-foreground">
+            In review: <span className="font-semibold text-foreground">{stats.in_review}</span>
+          </span>
+          <span className="text-xs text-muted-foreground basis-full sm:basis-auto">
+            Reports contain no personal information, so we can't reply to the sender — resolutions are shown here as site-wide counts.
+          </span>
+        </div>
+      )}
 
       {done ? (
         <div className="ctg-panel p-6 flex items-start gap-3">
