@@ -1,4 +1,4 @@
-// Terms of Service — template copy. Edit before legal review.
+// Terms of Service.
 // Routes: /terms
 
 import { useSeo } from '@/hooks/useSeo';
@@ -19,7 +19,7 @@ const Terms = () => {
           Terms of Service
         </h1>
         <p className="text-[13px] text-muted-foreground mt-3">
-          Last updated: April 26, 2026 · Effective immediately upon use.
+          Last updated: October 27, 2026 · Effective immediately upon use.
         </p>
       </header>
 
@@ -109,7 +109,7 @@ const Terms = () => {
         <div>
           <h2 className="font-display text-[20px] font-bold mb-2">9. Third-party services</h2>
           <p>
-            The Service relies on ClinicalTrials.gov, AI gateway providers, and analytics tools.
+            The Service relies on ClinicalTrials.gov, the US Census ACS, and AI gateway providers.
             Their availability and accuracy are outside our control. Outbound links to trial
             sponsor sites are provided for convenience and do not imply endorsement.
           </p>
@@ -123,27 +123,14 @@ const Terms = () => {
           </p>
         </div>
 
+
         <div>
-          <h2 className="font-display text-[20px] font-bold mb-2">11. Governing law</h2>
+          <h2 className="font-display text-[20px] font-bold mb-2">11. Contact</h2>
           <p>
-            These Terms are governed by the laws of the State of Delaware, USA, without regard
-            to its conflict-of-laws provisions. Any dispute will be resolved in the state or
-            federal courts located in Delaware.
+            Questions or corrections: use the Report a problem form linked in the site footer.
           </p>
         </div>
 
-        <div>
-          <h2 className="font-display text-[20px] font-bold mb-2">12. Contact</h2>
-          <p>
-            Questions: open an issue at the project's public repository, or reach the maintainer
-            via the link in the site footer.
-          </p>
-        </div>
-
-        <p className="text-[12px] text-muted-foreground italic pt-4 border-t border-border">
-          This is template language drafted for an MVP information tool. It is not a substitute
-          for legal counsel. Have an attorney review before scaling beyond a small audience.
-        </p>
       </section>
     </article>
   );

@@ -60,7 +60,7 @@ const About = () => {
           'Patients and caregivers search in plain words and read trial summaries in Plain Language mode.',
           'Clinicians find recruiting studies by condition, biomarker, phase, prior treatment and location.',
           'Researchers and feasibility teams compare trial records by sponsor, phase, eligibility and sites without saving a cohort.',
-          'Diversity and access leads compare site area demographics with national and disease benchmarks from the US Census.',
+          'Diversity and access users can compare trial site distribution with statewide ACS population context.',
         ]}
       />
 
@@ -71,7 +71,7 @@ const About = () => {
           'Live data: every study is pulled from ClinicalTrials.gov at the moment you search.',
           'Grounded explanations: each match reason points to a field in the official study record.',
           'Honest limits: the platform flags when results may be incomplete instead of filling gaps.',
-          'No personal health information is collected or stored.',
+          'The application is not designed to collect or store protected health information. Users are instructed to remove identifying information before using the optional document check.',
         ]}
       />
 

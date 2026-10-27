@@ -1,4 +1,4 @@
-// Medical Disclaimer — template copy.
+// Medical Disclaimer.
 // Routes: /medical-disclaimer
 
 import { AlertTriangle } from 'lucide-react';

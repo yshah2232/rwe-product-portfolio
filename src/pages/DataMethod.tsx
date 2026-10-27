@@ -62,10 +62,10 @@ const DataMethod = () => {
             Home &nbsp;›&nbsp; Data & Method
           </motion.p>
           <motion.h1 {...anim(0.1)} className="ctg-hero-title">
-            Every number in the studio comes from the public registry.
+            Every output is tied to a documented source.
           </motion.h1>
           <motion.p {...anim(0.18)} className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
-            The Clinical Trial Diversity Studio reads directly from the ClinicalTrials.gov v2 API. This page documents
+            Trial data comes directly from the ClinicalTrials.gov v2 API, and surrounding population context comes from the US Census American Community Survey (ACS). This page documents
             the exact source, the parameters we send, the fields we display, and how often the data refreshes — so any
             recommendation surfaced in the studio is fully traceable.
           </motion.p>
@@ -120,9 +120,8 @@ const DataMethod = () => {
                   </p>
                 </div>
                 <p className="text-[13px] text-muted-foreground leading-relaxed">
-                  Returns <span className="font-semibold text-foreground">0 trials</span> — no protocol uses the
-                  literal phrase "elderly" or "lung tumor". The user has to translate clinical intent into
-                  registry vocabulary first.
+                  Usability example: keyword search works best with registry vocabulary, so the user often has
+                  to translate everyday phrases such as "elderly" or "lung tumor" into terms the registry uses.
                 </p>
               </div>
               <div className="rounded-lg border border-primary/40 bg-primary/5 p-4">
@@ -162,7 +161,7 @@ const DataMethod = () => {
                   {[
                     {
                       cap: 'Query understanding',
-                      ctg: 'Keyword + boolean. Natural-language phrases often return zero hits.',
+                      ctg: 'Keyword + boolean. Works best when the user already knows registry vocabulary.',
                       ours: 'Plain-language scenarios. Stopwords stripped, intent preserved.',
                     },
                     {
@@ -188,7 +187,7 @@ const DataMethod = () => {
                     {
                       cap: 'Learning loop',
                       ctg: 'Static.',
-                      ours: 'Captures clicks, dwell, thumbs up/down, refinements, and outcome ratings — feeds future ranking.',
+                      ours: 'Visitor analytics are currently disabled. Ranking does not learn from visitor behavior.',
                     },
                     {
                       cap: 'Cost guardrails',
