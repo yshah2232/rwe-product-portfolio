@@ -26,7 +26,7 @@ const CohortCompare = () => {
   const [loading, setLoading] = useState(true);
   const [onlyDiff, setOnlyDiff] = useState(false);
 
-  useSeo({ title: 'Compare trials | Health Insights Hub', description: 'Side by side comparison of ClinicalTrials.gov records from a saved cohort.', path: `/cohorts/${id}/compare` } as any);
+  useSeo({ title: 'Compare trials | Health Insights Hub', description: 'Side by side comparison of ClinicalTrials.gov records from a saved cohort.', canonical: `/cohorts/${id}/compare`, noindex: true });
 
   useEffect(() => {
     let cancelled = false;
@@ -45,7 +45,7 @@ const CohortCompare = () => {
     return () => { cancelled = true; };
   }, [ncts]);
 
-  const loaded = slots.filter((s) => s.data).map((s) => s.data!) ;
+  const loaded = slots.filter((s) => s.data).map((s) => s.data!);
   const back = `/cohorts/${id}`;
 
   if (ncts.length < MIN_COMPARE) {
