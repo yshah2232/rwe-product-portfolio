@@ -224,3 +224,17 @@ export function isWeak(candidateCount: number, coverage: number): boolean {
 }
 
 export const RETRIEVAL_LIMITS = { PAGE_SIZE: 25, MAX_CANDIDATES: 75, MAX_CTG_CALLS: 3 } as const;
+
+/** US-first ordering: the query names the US / a US state, or the visitor's browser region is US (hint, never stored). */
+export function prefersUS(raw: string, intent: QueryIntent, browserRegionUS: boolean): boolean {
+  if (browserRegionUS) return true;
+  if (/\b(us|u\.s\.?|usa|u\.s\.a\.?|united states|america)\b/i.test(raw)) return true;
+  const loc = intent.location?.toLowerCase();
+  return !!loc && US_STATES.includes(loc);
+}
+
+/** Ranking key: US-site trials move ahead of non-US trials of similar relevance; displayed scores stay unchanged. */
+export const US_PRIORITY_BOOST = 15;
+export function rankKey(score: number, countries: string[], preferUS: boolean): number {
+  return score + (preferUS && countries.includes("United States") ? US_PRIORITY_BOOST : 0);
+}

@@ -157,9 +157,25 @@ const CohortCompare = () => {
                       );
                     })}
                   </tbody>
+                  <tfoot>
+                    <tr className="border-t border-border bg-muted/40">
+                      <th className="sticky left-0 z-10 bg-muted text-left p-3 text-[11px] uppercase tracking-wider text-muted-foreground">Source record</th>
+                      {loaded.map((t) => (
+                        <td key={t.nctId} className="p-3">
+                          <a href={t.ctgUrl ?? `https://clinicaltrials.gov/study/${t.nctId}`} target="_blank" rel="noopener noreferrer"
+                             className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1">
+                            View {t.nctId} on ClinicalTrials.gov <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </td>
+                      ))}
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
               <p className="mt-3 text-[11px] text-muted-foreground">Source: ClinicalTrials.gov API v2, fetched live. Follow each NCT link to verify the full record.</p>
+              <p className="mt-2 rounded-sm border border-border bg-muted/50 p-3 text-[12px] leading-relaxed text-muted-foreground" data-testid="compare-disclaimer">
+                <strong className="text-foreground">Not medical advice.</strong> This comparison shows registry fields side by side as entered by each sponsor. It does not rank trials, recommend a trial, or say whether anyone is eligible. Records can be incomplete or out of date; confirm details on ClinicalTrials.gov and talk with a qualified clinician or the study team before making any decision. See the <a href="/medical-disclaimer" className="text-primary underline">medical disclaimer</a>.
+              </p>
               {loaded.length > 0 && <TrialGeographyPanel trials={loaded} />}
             </>
           )}
