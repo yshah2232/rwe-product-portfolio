@@ -21,7 +21,7 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
-import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
+import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, rankKey, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -441,7 +441,7 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
         fallback: usedFallback || undefined,
         interpretation,
         retrieval,
-        warnings: buildWarnings({ intent, interpretation, totalCount, candidates, results: top, fallback: usedFallback, countryUS }),
+        warnings: [...buildWarnings({ intent, interpretation, totalCount, candidates, results: top, fallback: usedFallback, countryUS }), ...(preferUS ? [{ code: "us_first", message: "Trials with United States sites are listed first." }] : [])],
         sessionId,
         searchEventId,
         usage: { rateLimitRemaining: DAILY_CAP - (ipDailyCount.get(ip)?.count ?? 0) },
