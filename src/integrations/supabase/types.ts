@@ -424,6 +424,33 @@ export type Database = {
         }
         Relationships: []
       }
+      issue_reports: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          message: string
+          page_url: string | null
+          status: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          message: string
+          page_url?: string | null
+          status?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          page_url?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       mapping_overrides: {
         Row: {
           created_at: string
