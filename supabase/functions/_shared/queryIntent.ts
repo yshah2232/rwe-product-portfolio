@@ -7,6 +7,7 @@ export interface QueryIntent {
   conditionTerms: string[];
   biomarkers: string[];
   location: string | null;
+  locationConfidence: 'high' | 'low' | null; // low = guessed from position, user should confirm
   status: string | null; // CTG overallStatus enum
   phase: string | null; // CTG phase enum
   priorTreatments: string[];
