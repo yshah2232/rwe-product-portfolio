@@ -39,8 +39,9 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
       if (cancelled) return;
       if (b.error) return setAcs({ loading: false, rows: [], error: b.error });
       const rows: AcsRow[] = (b.results ?? []).map((r: any, i: number) => ({ state: top[i].state, data: r.data, error: r.error }));
-      const keyMissing = rows.length > 0 && rows.every((r) => r.error === 'census_key_required');
-      setAcs({ loading: false, rows: keyMissing ? [] : rows, error: keyMissing ? 'census_key_required' : undefined, year: b.acsYear });
+      const keyErr = rows.length > 0 && rows.every((r) => r.error === rows[0].error) &&
+        (rows[0].error === 'census_key_required' || rows[0].error === 'census_key_invalid') ? rows[0].error : undefined;
+      setAcs({ loading: false, rows: keyErr ? [] : rows, error: keyErr, year: b.acsYear });
     }).catch(() => { if (!cancelled) setAcs({ loading: false, rows: [], error: 'network' }); });
     return () => { cancelled = true; };
   }, [geo]);
@@ -148,6 +149,8 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
             <p className="text-sm text-muted-foreground">
               {acs.error === 'census_key_required'
                 ? 'Census population data is not connected yet, so no population context is shown. No values are estimated in its place.'
+                : acs.error === 'census_key_invalid'
+                ? 'The Census Bureau did not accept the access key, so no population context is shown. No values are estimated in its place.'
                 : 'Census population data could not be loaded right now. No values are estimated in its place.'}
             </p>
           ) : (
