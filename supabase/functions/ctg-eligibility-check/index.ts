@@ -192,10 +192,8 @@ Deno.serve(async (req) => {
         }))
       : [];
     // Keep only checklist labels we sent; never let document text rename criteria.
-    const known = new Map(checklist.map((c) => [c.label.toLowerCase(), c.label]));
     const safeItems = checklist.map((c) => items.find((it: any) => it.label.toLowerCase() === c.label.toLowerCase())
       ?? { label: c.label, verdict: "unclear", evidence: "" });
-    void known;
     const summary = sanitizeReviewText(String(parsed.summary ?? "")).slice(0, 400);
 
     // Return the requested assessment without retaining notes or outcomes.
