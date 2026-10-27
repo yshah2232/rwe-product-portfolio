@@ -74,6 +74,8 @@ interface Props {
 const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
   const [data, setData] = useState<TrialDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fontScale, setFontScale] = useState(1);
+  const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { plainMode } = usePlainMode();
   const [showRaw, setShowRaw] = useState(false);
