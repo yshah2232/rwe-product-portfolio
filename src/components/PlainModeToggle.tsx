@@ -17,15 +17,14 @@ const PlainModeToggle = () => {
             role="switch"
             aria-checked={plainMode}
             onClick={togglePlainMode}
-            className={`inline-flex items-center gap-2 h-7 px-2.5 rounded-sm border text-[11.5px] font-semibold transition-colors ${
+            className={`inline-flex shrink-0 whitespace-nowrap items-center gap-2 h-7 px-2.5 rounded-sm border text-[11.5px] font-semibold transition-colors ${
               plainMode
                 ? 'bg-white text-primary border-white'
                 : 'bg-transparent text-white/90 border-white/40 hover:border-white'
             }`}
           >
             <Sparkles className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{plainMode ? 'Easy read: ON' : 'Easy read'}</span>
-            <span className="sm:hidden">{plainMode ? 'Easy read: ON' : 'Easy read'}</span>
+            <span className="whitespace-nowrap"><span className="hidden sm:inline">{plainMode ? 'Easy read: ON' : 'Easy read'}</span><span className="sm:hidden">Easy read</span></span>
             <span
               aria-hidden
               className={`inline-block w-7 h-3.5 rounded-full relative transition-colors ${
