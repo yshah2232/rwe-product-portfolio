@@ -36,38 +36,43 @@ const pillars = [
   {
     icon: Search,
     title: 'Search the registry',
-    desc: 'Query ClinicalTrials.gov in plain language across condition, phase, status, sponsor, and geography. Semantic re-ranking — not just keyword match.',
+    desc: 'Query ClinicalTrials.gov in plain language across condition, phase, status, sponsor, and geography, with semantic re-ranking on top of keyword retrieval.',
     to: '/search-registry',
-    live: true,
+    status: 'live' as const,
   },
   {
     icon: Layers,
     title: 'Compare trials',
-    desc: 'Compare two to four trial records by sponsor, phase, eligibility and locations. Download a report without saving a cohort.',
+    desc: 'Compare two to four trial records by sponsor, phase, eligibility and locations. Download a report without saving anything.',
     to: '/compare-trials',
-    live: true,
+    status: 'live' as const,
   },
   {
     icon: ScatterChart,
-    title: 'Diversity & access insights',
-    desc: 'See enrollment composition, geographic reach, and access gaps relative to disease burden — surfaced as views, not as buried tables.',
+    title: 'Geographic and population context',
+    desc: 'Compare listed trial sites by state or region and view surrounding statewide population context from the US Census ACS. Population context is not trial enrollment data.',
+    to: '/compare-trials',
+    status: 'live' as const,
   },
   {
     icon: MapPin,
-    title: 'Prioritize sites',
-    desc: 'Rank investigators and sites by historical participation, catchment diversity, and operational track record across prior trials.',
+    title: 'Site prioritization',
+    desc: 'Future exploration of site-level access and operational evidence. The current product does not recommend or rank sites.',
+    status: 'planned' as const,
   },
   {
     icon: FileText,
-    title: 'Transparent rationale',
-    desc: 'Every recommendation comes with the registry IDs, fields, and assumptions used. Auditable diversity planning, not a black box.',
+    title: 'Source-grounded explanations',
+    desc: 'Search explanations, registry fields and NCT source links show why a result matched and where its information came from.',
+    to: '/search-registry',
+    status: 'live' as const,
   },
 ];
 
 const users = [
-  { icon: Compass,    role: 'Clinical Operations Lead', use: 'Stand up site lists faster with operational evidence baked in.' },
-  { icon: Microscope, role: 'Feasibility Lead',         use: 'Pressure-test enrollment assumptions against real registry footprint.' },
-  { icon: HeartPulse, role: 'Diversity Strategy Lead',  use: 'Quantify representation gaps and defend the plan with data.' },
+  { icon: Compass,    role: 'Clinical Operations Lead', use: 'Review where comparable trials list their sites, with links to each record.' },
+  { icon: Microscope, role: 'Feasibility Lead',         use: 'Review the registry footprint of comparable trials for an indication.' },
+  { icon: HeartPulse, role: 'Diversity Strategy Lead',  use: 'See where listed trial sites are, alongside statewide Census population context.' },
   { icon: Stethoscope,role: 'Medical Affairs Lead',     use: 'Map the trial landscape per indication for strategic positioning.' },
 ];
 
@@ -135,56 +140,33 @@ const Index = () => {
               <HeroIntentChips />
             </div>
 
-            {/* Analytical visual artifact — abstract cohort dot-cluster */}
+            {/* High-contrast capability facts */}
             <div className="hidden lg:block lg:col-span-5">
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="relative rounded-sm border border-primary/15 bg-background/70 backdrop-blur-sm p-7 shadow-sm"
+                className="rounded-sm border border-primary bg-background shadow-md overflow-hidden"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="inline-flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-wider" style={{ color: 'hsl(var(--primary))' }}>
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                    Registry pulse · Live
-                  </div>
-                  <span className="text-[10.5px] text-muted-foreground font-medium">trial search and comparison</span>
+                <div className="px-6 py-3 bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-wider">
+                  What you can do here
                 </div>
-
-                <div className="grid grid-cols-8 gap-2.5">
-                  {Array.from({ length: 32 }).map((_, i) => {
-                    const intensities = ['bg-primary/10','bg-primary/20','bg-primary/35','bg-primary/55','bg-primary/80','bg-primary'];
-                    const seed = (i * 73) % intensities.length;
-                    return (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.2 + i * 0.012, duration: 0.3 }}
-                        className={`aspect-square rounded-full ${intensities[seed]}`}
-                      />
-                    );
-                  })}
-                </div>
-
-                <div className="mt-6 space-y-2.5">
-                  <div className="h-1.5 w-3/4 rounded-sm bg-primary/15" />
-                  <div className="h-1.5 w-1/2 rounded-sm bg-primary/10" />
-                  <div className="h-1.5 w-2/3 rounded-sm bg-primary/15" />
-                </div>
-
-                <div className="mt-6 pt-5 border-t border-primary/10 flex items-end justify-between">
-                  <div>
-                    <div className="text-[24px] font-bold leading-none" style={{ color: 'hsl(var(--primary))' }}>500K+</div>
-                    <div className="mt-1 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">studies indexed</div>
-                  </div>
-                  <div>
-                    <div className="text-[24px] font-bold leading-none" style={{ color: 'hsl(var(--primary))' }}>v2 API</div>
-                    <div className="mt-1 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">live · cached 1h</div>
-                  </div>
-                </div>
-
-                <div className="absolute -bottom-8 -right-8 h-40 w-40 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+                <dl className="divide-y divide-border">
+                  {[
+                    { k: '500K+', v: 'ClinicalTrials.gov records searchable', icon: Database },
+                    { k: 'Live', v: 'ClinicalTrials.gov v2 API', icon: ShieldCheck },
+                    { k: '2 to 4', v: 'Trials compared side by side', icon: Layers },
+                    { k: 'State · Region', v: 'Trial site context by state and region', icon: MapPin },
+                  ].map((f) => (
+                    <div key={f.v} className="flex items-center gap-4 px-6 py-4">
+                      <f.icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={2} />
+                      <div>
+                        <dt className="text-[22px] font-bold leading-none text-primary">{f.k}</dt>
+                        <dd className="mt-1 text-[14px] font-medium text-foreground">{f.v}</dd>
+                      </div>
+                    </div>
+                  ))}
+                </dl>
               </motion.div>
             </div>
           </div>
@@ -246,7 +228,8 @@ const Index = () => {
                   <Search className="h-4 w-4" /> Find a trial <ArrowRight className="h-4 w-4" />
                 </Button>
                 <p className="text-[10.5px] text-muted-foreground text-center leading-snug">
-                  Not medical advice. Always confirm with a clinician.
+                  Not medical advice. Always confirm with a clinician.{' '}
+                  <a href="/disclaimer" className="gov-link">Medical Disclaimer</a>
                 </p>
               </div>
             </div>
@@ -321,7 +304,11 @@ const Index = () => {
                     <div className="flex items-center justify-center w-10 h-10 rounded-sm bg-accent">
                       <p.icon className="h-5 w-5" style={{ color: 'hsl(var(--primary))' }} strokeWidth={2} />
                     </div>
-                    {p.live && (
+                    {p.status === 'planned' ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-sm border border-border bg-muted text-[10px] font-bold tracking-wider uppercase text-muted-foreground">
+                        Planned
+                      </span>
+                    ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-primary/10 text-[10px] font-bold tracking-wider uppercase" style={{ color: 'hsl(var(--primary))' }}>
                         <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                         Live
@@ -367,7 +354,7 @@ const Index = () => {
             </h2>
             <p className="mt-2 text-[15px] text-foreground/75 max-w-3xl leading-relaxed">
               Designed against the real workflows of clinical operations, feasibility, diversity strategy, and medical
-              affairs leads — so the same evidence supports every decision.
+              affairs leads — so everyone reviews the same registry records.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -403,14 +390,14 @@ const Index = () => {
               <Database className="h-5 w-5 mb-3" style={{ color: 'hsl(var(--primary))' }} strokeWidth={2} />
               <p className="text-[32px] font-bold leading-none" style={{ color: 'hsl(var(--primary))' }}>500K+</p>
               <p className="mt-2 text-[13px] text-foreground/75 leading-relaxed">
-                Studies in the ClinicalTrials.gov registry, queryable through the studio's live proxy.
+                Registry records searchable through live ClinicalTrials.gov queries. The studio does not keep its own copy of the registry.
               </p>
             </div>
             <div className="ctg-panel p-5">
               <ShieldCheck className="h-5 w-5 mb-3" style={{ color: 'hsl(var(--primary))' }} strokeWidth={2} />
               <p className="text-[32px] font-bold leading-none" style={{ color: 'hsl(var(--primary))' }}>v2 API</p>
               <p className="mt-2 text-[13px] text-foreground/75 leading-relaxed">
-                Official REST endpoint, fetched server-side via an edge function with 1-hour caching.
+                Official ClinicalTrials.gov REST endpoint, queried live for each search.
               </p>
             </div>
             <div className="ctg-panel p-5">
