@@ -25,7 +25,6 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
   const [acs, setAcs] = useState<{ loading: boolean; rows: AcsRow[]; error?: string; year?: number }>({ loading: false, rows: [] });
   const byState = useMemo(() => new Map(geo.states.map((s) => [s.state, s])), [geo]);
   const max = Math.max(1, ...geo.states.map((s) => s.siteCount));
-  const short = (n: string) => n.slice(-4);
 
   useEffect(() => {
     const top = geo.states.slice(0, 30);
@@ -106,11 +105,11 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
                     <td className="py-2 pr-2 font-medium text-foreground">{r.key}</td>
                     <td className="py-2 pr-2 text-right tabular-nums">{r.siteCount}</td>
                     <td className="py-2 pr-2 text-right tabular-nums">
-                      {r.recruitingSites}
-                      {r.statusUnreported > 0 && <span className="block text-[10px] text-muted-foreground">{r.statusUnreported} status not reported</span>}
+                      {r.statusUnreported === r.siteCount ? <span className="italic text-muted-foreground">Not reported</span> : r.recruitingSites}
+                      {r.statusUnreported > 0 && r.statusUnreported < r.siteCount && <span className="block text-[10px] text-muted-foreground">{r.statusUnreported} status not reported</span>}
                     </td>
                     <td className="py-2 pr-2 text-right tabular-nums">{r.trials.length} of {trials.length}</td>
-                    <td className="py-2 font-mono text-[11px] text-muted-foreground">{r.trials.map(short).map((x, i) => <span key={i} className="inline-block mr-1.5" title={r.trials[i]}>…{x}</span>)}</td>
+                    <td className="py-2 font-mono text-[11px] text-muted-foreground">{r.trials.map((n) => <span key={n} className="inline-block mr-1.5">{n}</span>)}</td>
                   </tr>
                 ))}
                 {geo.states.length === 0 && <tr><td colSpan={5} className="py-3 text-muted-foreground italic">No US sites with a state on these records.</td></tr>}
