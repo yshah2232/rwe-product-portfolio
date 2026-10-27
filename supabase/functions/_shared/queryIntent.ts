@@ -172,6 +172,13 @@ function snippetAround(text: string, needle: string): string | null {
   return (start > 0 ? "…" : "") + text.slice(start, idx + needle.length + 40).replace(/\s+/g, " ").trim() + "…";
 }
 
+/** Standard registry spellings for common abbreviations (lookup only, never shown as data). */
+const CONDITION_ALIASES: Record<string, string> = {
+  nsclc: "non small cell lung", sclc: "small cell lung", t2d: "type 2 diabetes", t1d: "type 1 diabetes",
+  copd: "chronic obstructive pulmonary", mbc: "metastatic breast", crc: "colorectal", hcc: "hepatocellular",
+  aml: "acute myeloid", cll: "chronic lymphocytic", ad: "alzheimer",
+};
+
 export function groundConcepts(intent: QueryIntent, f: GroundFields): { evidence: Evidence[]; notFound: { concept: string; type: string }[] } {
   const evidence: Evidence[] = [];
   const notFound: { concept: string; type: string }[] = [];
@@ -182,7 +189,19 @@ export function groundConcepts(intent: QueryIntent, f: GroundFields): { evidence
     }
     notFound.push({ concept, type });
   };
-  intent.conditionTerms.forEach((c) => check(c, "condition", ["conditions", "title", "keywords", "eligibility"]));
+  intent.conditionTerms.forEach((c) => {
+    const before = evidence.length;
+    check(c, "condition", ["conditions", "title", "keywords", "eligibility"]);
+    const alias = CONDITION_ALIASES[c.toLowerCase()];
+    if (evidence.length === before && alias) {
+      notFound.pop();
+      for (const field of ["conditions", "title", "keywords"] as FieldName[]) {
+        const sn = snippetAround(fieldText(f, field), alias);
+        if (sn) { evidence.push({ concept: c, type: "condition", field, snippet: sn }); return; }
+      }
+      notFound.push({ concept: c, type: "condition" });
+    }
+  });
   intent.biomarkers.forEach((b) => check(b, "biomarker", ["title", "conditions", "keywords", "eligibility", "interventions"]));
   intent.priorTreatments.forEach((p) => {
     // Only count prior treatment when the term sits next to a prior-therapy cue in eligibility or title.

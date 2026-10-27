@@ -435,8 +435,8 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
     });
 
     const preferUS = prefersUS(query, intent, browserRegionUS);
-    // Order: registry evidence first (share of query concepts found), then reranker score, then US preference.
-    const key = (t: typeof scored[number]) => t.evidenceRatio * 100 + rankKey(t.semanticScore ?? 0, t.countries ?? [], preferUS) * 0.5;
+    // Order: reranker score plus registry evidence (share of query concepts found) plus US preference.
+    const key = (t: typeof scored[number]) => t.evidenceRatio * 40 + rankKey(t.semanticScore ?? 0, t.countries ?? [], preferUS);
     scored.sort((a, b) => key(b) - key(a));
     const top = scored.slice(0, 10);
     const topScores = top.map((t) => t.semanticScore);
