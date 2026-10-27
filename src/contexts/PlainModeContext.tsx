@@ -3,8 +3,6 @@
 // Plain mode automatically forces "Recruiting only" filtering on Search.
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { getSessionId } from '@/lib/searchSession';
 
 export type Audience = 'clinical' | 'patient' | 'unspecified';
 
@@ -27,17 +25,13 @@ const KEY_PROMPT_SEEN = 'ctd.audience_prompt_seen';
 export const PlainModeProvider = ({ children }: { children: ReactNode }) => {
   const [audience, setAudienceState] = useState<Audience>('unspecified');
   const [plainMode, setPlainModeState] = useState(false);
-  const [audiencePromptSeen, setAudiencePromptSeen] = useState(true); // assume seen until hydrated
+  const [audiencePromptSeen, setAudiencePromptSeen] = useState(false);
 
-  // Hydrate from localStorage on mount
+  // Remove old preferences; all new preferences live only in memory.
   useEffect(() => {
     try {
-      const a = localStorage.getItem(KEY_AUDIENCE) as Audience | null;
-      const p = localStorage.getItem(KEY_PLAIN);
-      const seen = localStorage.getItem(KEY_PROMPT_SEEN);
-      if (a) setAudienceState(a);
-      if (p !== null) setPlainModeState(p === 'true');
-      setAudiencePromptSeen(seen === 'true');
+      [KEY_AUDIENCE, KEY_PLAIN, KEY_PROMPT_SEEN].forEach((key) => localStorage.removeItem(key));
+      sessionStorage.removeItem('ctg_sid_v1');
     } catch {
       /* ignore */
     }
@@ -45,51 +39,28 @@ export const PlainModeProvider = ({ children }: { children: ReactNode }) => {
 
   const setAudience = useCallback((a: Audience, opts?: { skipPlain?: boolean }) => {
     setAudienceState(a);
-    try {
-      localStorage.setItem(KEY_AUDIENCE, a);
-    } catch { /* ignore */ }
 
     // Default plain mode based on audience choice
     if (!opts?.skipPlain) {
       const plainDefault = a === 'patient';
       setPlainModeState(plainDefault);
-      try {
-        localStorage.setItem(KEY_PLAIN, String(plainDefault));
-      } catch { /* ignore */ }
     }
 
-    // Fire-and-forget analytics insert
-    try {
-      supabase.from('audience_selections').insert({
-        session_id: getSessionId(),
-        audience: a,
-        plain_mode_default: a === 'patient',
-      }).then(() => { /* noop */ });
-    } catch { /* ignore */ }
   }, []);
 
   const setPlainMode = useCallback((v: boolean) => {
     setPlainModeState(v);
-    try {
-      localStorage.setItem(KEY_PLAIN, String(v));
-    } catch { /* ignore */ }
   }, []);
 
   const togglePlainMode = useCallback(() => {
     setPlainModeState((prev) => {
       const next = !prev;
-      try {
-        localStorage.setItem(KEY_PLAIN, String(next));
-      } catch { /* ignore */ }
       return next;
     });
   }, []);
 
   const markAudiencePromptSeen = useCallback(() => {
     setAudiencePromptSeen(true);
-    try {
-      localStorage.setItem(KEY_PROMPT_SEEN, 'true');
-    } catch { /* ignore */ }
   }, []);
 
   return (

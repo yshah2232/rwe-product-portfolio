@@ -10,12 +10,7 @@ export type TrackEvent = {
 };
 
 export const track = (name: string, props?: TrackEvent['props']) => {
-  const payload: TrackEvent = { name, props };
-  // eslint-disable-next-line no-console
-  console.info('[track]', name, props ?? {});
-  try {
-    window.dispatchEvent(new CustomEvent('app:track', { detail: payload }));
-  } catch {
-    // no-op (SSR / restricted env)
-  }
+  // Visitor analytics are disabled. Keep callers compatible without emitting activity.
+  void name;
+  void props;
 };

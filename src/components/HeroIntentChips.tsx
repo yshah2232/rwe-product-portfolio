@@ -8,8 +8,6 @@
  */
 import { useEffect, useState } from 'react';
 import { Check, Stethoscope, HeartHandshake, FlaskConical, Building2, Pencil } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { getSessionId } from '@/lib/searchSession';
 import { track } from '@/lib/track';
 import { usePlainMode } from '@/contexts/PlainModeContext';
 
@@ -31,27 +29,17 @@ const HeroIntentChips = () => {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(KEY) as Intent | null;
-      if (stored) setIntent(stored);
+      localStorage.removeItem(KEY);
     } catch { /* ignore */ }
   }, []);
 
   const pick = (id: Intent) => {
     setIntent(id);
     setEditing(false);
-    try { localStorage.setItem(KEY, id); } catch { /* ignore */ }
 
     track('hero_intent_select', { intent: id });
 
-    supabase.from('audience_selections').insert({
-      session_id: getSessionId(),
-      audience: id,
-      plain_mode_default: id === 'patient',
-    }).then(({ error }) => {
-      if (error) console.warn('[intent] insert failed', error.message);
-    });
-
-    if (id === 'patient') setPlainMode(true);
+    setPlainMode(id === 'patient');
 
     // Dismiss the first-visit Audience modal so visitors aren't asked the
     // same question twice. Safe to call even if already seen.
@@ -59,7 +47,8 @@ const HeroIntentChips = () => {
   };
 
   if (intent && !editing) {
-    const chosen = OPTIONS.find((o) => o.id === intent)!;
+    const chosen = OPTIONS.find((o) => o.id === intent);
+    if (!chosen) return null;
     return (
       <div className="mt-5 flex items-center gap-2 text-[13px] text-foreground/70">
         <Check className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} />

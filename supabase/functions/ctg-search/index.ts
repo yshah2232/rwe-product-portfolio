@@ -19,25 +19,11 @@
 //   • Single LLM call per search (not per trial)
 
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
 import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
 import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
-
-// Hash an IP so we never store the raw value
-async function hashIp(ip: string): Promise<string> {
-  const data = new TextEncoder().encode(ip + "::ctg-salt");
-  const buf = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 24);
-}
-
 // ── In-memory rate limiter ──
 // NOTE: edge functions can be cold-started, so this resets periodically.
 // Acceptable for a portfolio demo; not production-grade.
@@ -181,10 +167,6 @@ Deno.serve(async (req) => {
       }
 
       if (!passedChallenge) {
-        console.log("blocked suspicious request", {
-          isBotUA, missingHeaders, isReferrerSpam, isOriginSuspect,
-          uaSnippet: uaLower.slice(0, 60), referer: referer.slice(0, 80), origin,
-        });
         return json({
           query, totalCount: 0, candidatesFetched: 0, results: [],
           sessionId, searchEventId: null,
@@ -449,12 +431,8 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
     if (!usedFallback) scored.sort((a, b) => b.semanticScore - a.semanticScore);
     const top = scored.slice(0, 10);
 
-    const ipHash = await hashIp(ip);
-    const searchEventId = await logSearchEvent({
-      sessionId, ipHash, query, ctgQuery, phase: effPhase, status: effStatus, countryUS,
-      candidatesFetched: candidates.length, resultsReturned: top.length,
-      totalCount, usedFallback, userAgent,
-    });
+    // No visitor search history is written to application storage.
+    const searchEventId = null;
 
     return new Response(
       JSON.stringify({
@@ -477,36 +455,6 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
     return json({ error: err instanceof Error ? err.message : "Unknown error" }, 500);
   }
 });
-
-async function logSearchEvent(p: {
-  sessionId: string; ipHash: string; query: string; ctgQuery: string;
-  phase: string; status: string; countryUS: boolean;
-  candidatesFetched: number; resultsReturned: number; totalCount: number;
-  usedFallback: boolean; userAgent: string;
-}): Promise<string | null> {
-  try {
-    const { data, error } = await sb.from("search_events").insert({
-      session_id: p.sessionId,
-      ip_hash: p.ipHash,
-      query: p.query,
-      query_normalized: p.query.toLowerCase().trim(),
-      ctg_query: p.ctgQuery,
-      filter_phase: p.phase || null,
-      filter_status: p.status || null,
-      filter_country_us: p.countryUS,
-      candidates_fetched: p.candidatesFetched,
-      results_returned: p.resultsReturned,
-      total_count: p.totalCount,
-      used_fallback: p.usedFallback,
-      user_agent: p.userAgent,
-    }).select("id").single();
-    if (error) { console.error("logSearchEvent", error); return null; }
-    return data.id;
-  } catch (e) {
-    console.error("logSearchEvent ex", e);
-    return null;
-  }
-}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {

@@ -42,9 +42,9 @@ const pillars = [
   },
   {
     icon: Layers,
-    title: 'Build canonical cohorts',
-    desc: 'Save reusable trial cohorts by therapeutic area or program. Sponsor and indication strings are normalized so two cohorts can be compared apples-to-apples.',
-    to: '/cohorts',
+    title: 'Compare trials',
+    desc: 'Compare two to four trial records by sponsor, phase, eligibility and locations. Download a report without saving a cohort.',
+    to: '/compare-trials',
     live: true,
   },
   {
@@ -78,7 +78,7 @@ const Index = () => {
   const [heroQuery, setHeroQuery] = useState('');
   useSeo({
     title: 'Clinical Trial Diversity Studio — Search ClinicalTrials.gov',
-    description: 'Search ClinicalTrials.gov in plain English, build canonical cohorts, and see diversity and access overlays from live U.S. Census data.',
+    description: 'Search ClinicalTrials.gov in plain English and compare trial records with source grounded explanations.',
     canonical: '/',
   });
 
@@ -106,8 +106,7 @@ const Index = () => {
               </h1>
               <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-2xl">
                 The Clinical Trial Diversity Studio turns the messy public registry into
-                saved, explainable planning workflows — search studies, build canonical cohorts,
-                evaluate diversity and access context, and prioritize sites.
+                explainable searches and trial comparisons, with links to the original records.
               </p>
 
               {/* Inline live search — drives traffic straight into Search Registry */}
@@ -149,7 +148,7 @@ const Index = () => {
                     <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                     Registry pulse · Live
                   </div>
-                  <span className="text-[10.5px] text-muted-foreground font-medium">cohort × diversity</span>
+                  <span className="text-[10.5px] text-muted-foreground font-medium">trial search and comparison</span>
                 </div>
 
                 <div className="grid grid-cols-8 gap-2.5">
@@ -273,7 +272,7 @@ const Index = () => {
             <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-foreground/75 pt-1">
               <li className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} /> Live v2 API</li>
               <li className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} /> Semantic re-rank · auditable rationale</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} /> Save into a canonical cohort</li>
+              <li className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} /> Compare trials and download a report</li>
             </ul>
           </div>
           <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 md:min-w-[220px]">
