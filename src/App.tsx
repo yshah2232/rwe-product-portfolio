@@ -20,6 +20,8 @@ import HeatmapAnalytics from "./pages/HeatmapAnalytics";
 import SearchEvaluation from "./pages/SearchEvaluation";
 import AdminLogin from "./pages/AdminLogin";
 import AdminOverview from "./pages/AdminOverview";
+import AdminIssues from "./pages/AdminIssues";
+import ReportProblem from "./pages/ReportProblem";
 import AdminLayout from "./components/AdminLayout";
 import { AdminAccessProvider } from "./contexts/AdminAccessContext";
 
@@ -41,6 +43,7 @@ const App = () => (
               <Route path="/admin" element={<AdminOverview />} />
               <Route path="/analytics/heatmap" element={<HeatmapAnalytics />} />
               <Route path="/analytics/search-eval" element={<SearchEvaluation />} />
+              <Route path="/admin/issues" element={<AdminIssues />} />
             </Route>
             <Route element={<SiteLayout />}>
               <Route path="/" element={<Index />} />
@@ -57,6 +60,7 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/medical-disclaimer" element={<MedicalDisclaimer />} />
+              <Route path="/report" element={<ReportProblem />} />
               {/* Deactivated legacy synthetic dashboards */}
               <Route path="/dashboard" element={<Navigate to="/search-registry" replace />} />
               <Route path="/journey-analytics" element={<Navigate to="/search-registry" replace />} />

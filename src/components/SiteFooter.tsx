@@ -67,6 +67,17 @@ const SiteFooter = () => {
             <Link to="/terms" className="text-muted-foreground hover:text-primary underline-offset-2 hover:underline">
               Terms
             </Link>
+            <Link to="/report" className="text-muted-foreground hover:text-primary underline-offset-2 hover:underline">
+              Report a problem
+            </Link>
+            <a
+              href="https://www.ysclin.xyz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary underline-offset-2 hover:underline"
+            >
+              Contact the creator
+            </a>
             <a
               href="https://clinicaltrials.gov/"
               target="_blank"
