@@ -6,7 +6,8 @@
 // from ctg-plain-language and shows it at the top with a switch to view raw.
 
 import { useEffect, useMemo, useState } from 'react';
-import { ExternalLink, Loader2, MapPin, Users, Calendar, FlaskConical, AlertCircle, Sparkles, Phone, Mail } from 'lucide-react';
+import type React from 'react';
+import { ExternalLink, Loader2, MapPin, Users, Calendar, FlaskConical, AlertCircle, Sparkles, Phone, Mail, Plus, Minus, Maximize2, Minimize2 } from 'lucide-react';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from '@/components/ui/sheet';
@@ -144,7 +145,35 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+      <SheetContent
+        side="right"
+        className={`w-full overflow-y-auto transition-[max-width] duration-200 ${expanded ? 'sm:max-w-[min(1200px,95vw)]' : 'sm:max-w-2xl'}`}
+      >
+        <div className="flex items-center gap-1 pr-8 mb-3 -mt-1" role="toolbar" aria-label="Reading options">
+          <span className="text-xs text-muted-foreground mr-1">Text size</span>
+          <Button type="button" variant="outline" size="sm" className="h-7 px-2"
+            aria-label="Decrease text size" disabled={fontScale <= 0.9}
+            onClick={() => setFontScale((s) => Math.max(0.9, +(s - 0.1).toFixed(1)))}>
+            <Minus className="h-3.5 w-3.5" />
+          </Button>
+          <span className="text-xs w-10 text-center tabular-nums" aria-live="polite">{Math.round(fontScale * 100)}%</span>
+          <Button type="button" variant="outline" size="sm" className="h-7 px-2"
+            aria-label="Increase text size" disabled={fontScale >= 1.6}
+            onClick={() => setFontScale((s) => Math.min(1.6, +(s + 0.1).toFixed(1)))}>
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+          {fontScale !== 1 && (
+            <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setFontScale(1)}>
+              Reset
+            </Button>
+          )}
+          <Button type="button" variant="outline" size="sm" className="h-7 px-2 ml-auto hidden sm:inline-flex gap-1 text-xs"
+            aria-pressed={expanded} onClick={() => setExpanded((e) => !e)}>
+            {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            {expanded ? 'Collapse' : 'Expand'}
+          </Button>
+        </div>
+        <div style={{ zoom: fontScale } as React.CSSProperties}>
         <SheetHeader className="text-left">
           <SheetTitle className="font-display text-xl pr-8">
             {usePlain && plain
@@ -598,6 +627,7 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
             </div>
           </div>
         )}
+        </div>
       </SheetContent>
     </Sheet>
   );
