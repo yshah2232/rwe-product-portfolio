@@ -1,4 +1,4 @@
-// Privacy Policy — template copy. Edit before legal review.
+// Privacy Policy.
 // Routes: /privacy
 
 import { useSeo } from '@/hooks/useSeo';
@@ -120,8 +120,9 @@ const Privacy = () => {
           <p>
             Because we don't tie data to identifiable accounts, we generally cannot locate
             "your" data to delete it. If you believe specific data should be removed (e.g., a
-            testimonial you submitted), contact us via the project repository and we will
-            attempt to honor the request.
+            report you submitted), use the Report a problem form and we will attempt to honor
+            the request. Do not include medical information, account credentials or other
+            sensitive information in a report.
           </p>
           <p className="mt-2">
             If you are in the EU/EEA or California, you have additional rights under GDPR / CCPA.
@@ -140,16 +141,12 @@ const Privacy = () => {
         <div>
           <h2 className="font-display text-[20px] font-bold mb-2">10. Contact</h2>
           <p>
-            Privacy questions: open an issue at the project's public repository, or reach the
-            maintainer via the link in the site footer.
+            Product corrections and privacy concerns: use the{' '}
+            <a href="/report" className="underline">Report a problem</a> form. Do not include
+            medical information, account credentials or other sensitive information in a report.
           </p>
         </div>
 
-        <p className="text-[12px] text-muted-foreground italic pt-4 border-t border-border">
-          Template policy drafted for an MVP information tool. Have qualified counsel review
-          before broad public launch, especially if you add accounts, payments, or expand
-          beyond U.S. users.
-        </p>
       </section>
     </article>
   );

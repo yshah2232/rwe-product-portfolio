@@ -1,16 +1,26 @@
 # Clinical Trial Diversity Studio
 
-> Search ClinicalTrials.gov in plain language. AI-rewritten trial summaries, eligibility checklists, recruiting trial sites, and diversity/access overlays for clinical operations and patients.
+> Search ClinicalTrials.gov in plain language, compare trials side by side, and view trial site geography with statewide US Census ACS population context.
 
-Clinical Trial Diversity Studio is an independent information tool built on the public U.S. National Library of Medicine ClinicalTrials.gov registry. It supports two audiences: patients and caregivers who need plain-English summaries of recruiting trials, and clinical operations, feasibility, and diversity-strategy teams who need to build cohorts and compare enrollment composition against disease burden using live U.S. Census ACS and CDC reference data. The site does not provide medical advice and does not store protected health information.
+Clinical Trial Diversity Studio is an independent demo built on the public U.S. National Library of Medicine ClinicalTrials.gov registry. It does not provide medical advice and is not designed to collect or store protected health information.
+
+## Live functionality
+
+- Plain-language search across live ClinicalTrials.gov records
+- Semantic reranking of registry candidates
+- Source-grounded explanations tied to ClinicalTrials.gov fields, with links to each record
+- Trial comparison of 2 to 4 trials using registry fields
+- Trial site geography by state and region from reported facility locations
+- Statewide US Census ACS population context, shown separately from trial enrollment
+- Optional AI document review against listed eligibility criteria, with clear limitations; not a medical determination
 
 ## Pages
 
-- [Home](/): Product overview, hero search, and entry points into the registry, cohorts, and method.
-- [Search Registry](/search-registry): Plain-language search across live ClinicalTrials.gov, with AI summaries, eligibility checklist, and recruiting site links.
-- [Saved Cohorts](/cohorts): Reusable trial cohorts by therapeutic area or program, with canonicalized sponsor and indication strings.
-- [Data & Method](/data-method): Data sources, canonicalization rules, trust scoring, and AI reporting standards.
-- [About](/about): Background on the maintainer and the product's positioning.
-- [Medical Disclaimer](/medical-disclaimer): Important limits — this site is informational only and is not medical advice.
-- [Privacy](/privacy): How site analytics, search logs, and uploaded documents are handled.
-- [Terms](/terms): Terms of service governing use of the site.
+- [Home](/): Product overview and search entry point.
+- [Search Registry](/search-registry): Plain-language search across live ClinicalTrials.gov.
+- [Data & Method](/data-method): Data sources, parameters and limitations.
+- [About](/about): What the platform is for and who it serves.
+- [Medical Disclaimer](/medical-disclaimer): This site is informational only and is not medical advice.
+- [Privacy](/privacy): How searches and uploaded documents are handled.
+- [Terms](/terms): Terms of use.
+- [Report a problem](/report): Submit product corrections or privacy concerns.
