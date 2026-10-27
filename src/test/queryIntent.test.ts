@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseQuery, groundConcepts, verifyQuotes, isWeak, RETRIEVAL_LIMITS, type GroundFields } from '../../supabase/functions/_shared/queryIntent';
+import { parseQuery, groundConcepts, verifyQuotes, isWeak, RETRIEVAL_LIMITS, dedupeEvidence, type GroundFields, type Evidence } from '../../supabase/functions/_shared/queryIntent';
 
 const rec: GroundFields = {
   briefTitle: 'Sotorasib in KRAS G12C Mutated NSCLC',
