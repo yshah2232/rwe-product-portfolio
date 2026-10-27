@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
     const phase = url.searchParams.get("phase") ?? "";
     const status = url.searchParams.get("status") ?? "";
     const countryUS = url.searchParams.get("countryUS") === "true";
+    const browserRegionUS = url.searchParams.get("region") === "US";
     const sessionId = (url.searchParams.get("sid") ?? "").trim().slice(0, 64) || crypto.randomUUID();
     const userAgent = (req.headers.get("user-agent") ?? "").slice(0, 200);
 
@@ -423,7 +424,9 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
       };
     });
 
-    if (!usedFallback) scored.sort((a, b) => b.semanticScore - a.semanticScore);
+    const preferUS = prefersUS(query, intent, browserRegionUS);
+    if (!usedFallback) scored.sort((a, b) => rankKey(b.semanticScore, b.countries ?? [], preferUS) - rankKey(a.semanticScore, a.countries ?? [], preferUS));
+    else if (preferUS) scored.sort((a, b) => rankKey(0, b.countries ?? [], true) - rankKey(0, a.countries ?? [], true));
     const top = scored.slice(0, 10);
 
     // No visitor search history is written to application storage.
