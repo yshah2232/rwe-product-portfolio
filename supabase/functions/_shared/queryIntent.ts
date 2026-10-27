@@ -75,26 +75,54 @@ export function parseQuery(raw: string): QueryIntent {
   // Location: "near X" / "in X" where X is a US state, "us", or a place name (urban or rural).
   // "rural"/"urban" qualifiers are skipped; the place itself is sent to CTG.gov as query.locn.
   let location: string | null = null;
+  let locationConfidence: 'high' | 'low' | null = null;
   const LOC_STOP = /^(phase|patients?|adults?|children|kids|people|women|men|the|a|an|my|elderly|trials?|studies|recruiting|early|late|stage|after|with|for|who|that|and|or)$/i;
+  // Words that are medical terms, not places — guards the no-cue fallback below.
+  const GENERIC_MEDICAL = new Set(["cancer", "carcinoma", "tumor", "tumour", "lymphoma", "leukemia", "leukaemia", "disease", "syndrome", "diabetes", "alzheimer", "alzheimers", "parkinson", "parkinsons", "asthma", "melanoma", "myeloma", "sarcoma", "infection", "obesity", "stroke", "copd", "hiv", "covid"]);
   const rawNoQual = raw.replace(/\b(rural|urban|suburban|small[- ]town)\s+/gi, "");
   const locM = rawNoQual.match(/\b(?:near|in|around|within)\s+([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,2})/);
-  if (locM && !LOC_STOP.test(locM[1].split(/\s+/)[0])) location = locM[1].trim();
+  if (locM && !LOC_STOP.test(locM[1].split(/\s+/)[0])) { location = locM[1].trim(); locationConfidence = 'high'; }
   if (!location) {
     // lowercase "near boston" / "around tulsa": "near"/"around" are unambiguous location cues
     const lowM = rawNoQual.match(/\b(?:near|around)\s+([a-z][a-z.'-]+(?:\s+[a-z][a-z.'-]+){0,2})/i);
     if (lowM) {
       const words: string[] = [];
       for (const w of lowM[1].split(/\s+/)) { if (LOC_STOP.test(w)) break; words.push(w); }
-      if (words.length) location = words.join(" ").replace(/\b\w/g, (c) => c.toUpperCase());
+      if (words.length) { location = words.join(" ").replace(/\b\w/g, (c) => c.toUpperCase()); locationConfidence = 'high'; }
     }
   }
   if (!location) {
+    // A US state named anywhere in the query, no cue word needed: "breast cancer New Jersey".
+    // Longest names first so "west virginia" wins over "virginia".
     const qNoQual = q.replace(/\b(rural|urban|suburban)\s+/g, "");
-    const st = US_STATES.find((s) => new RegExp(`\\b(?:near|in|around) ${s}\\b`).test(qNoQual));
-    if (st) location = st.replace(/\b\w/g, (c) => c.toUpperCase());
+    const st = [...US_STATES].sort((a, b) => b.length - a.length).find((s) => new RegExp(`\\b${s}\\b`).test(qNoQual));
+    if (st) {
+      const stateName = st.replace(/\b\w/g, (c) => c.toUpperCase());
+      // A capitalized city directly before the state is part of the location: "diabetes Dallas Texas".
+      const cityM = rawNoQual.match(new RegExp(`([A-Z][A-Za-z.'-]+(?:\\s+[A-Z][A-Za-z.'-]+){0,1})\\s+${stateName.replace(/\s+/g, "\\s+")}\\b`));
+      location = cityM && !LOC_STOP.test(cityM[1].split(/\s+/)[0]) && !GENERIC_MEDICAL.has(cityM[1].split(/\s+/)[0].toLowerCase())
+        ? `${cityM[1]} ${stateName}`
+        : stateName;
+      locationConfidence = 'high';
+    }
+  }
+  if (!location) {
+    // Trailing capitalized place with no cue word: "lung cancer Boston". Uncertain —
+    // surfaced as "Possible location" so the user can confirm or remove it.
+    const tailM = rawNoQual.match(/([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,1})\s*[,.;]?\s*$/);
+    if (tailM && tailM.index !== undefined) {
+      const words = tailM[1].split(/\s+/);
+      const ok = words.every((w) =>
+        !LOC_STOP.test(w) && !GENERIC_MEDICAL.has(w.toLowerCase()) &&
+        !BIOMARKER_WORDS.includes(w.toLowerCase()) && !MUTATION_RE.test(w) && !FILLER.has(w.toLowerCase()));
+      const remaining = rawNoQual.slice(0, tailM.index).trim().split(/\s+/).filter(Boolean);
+      if (ok && remaining.length >= 2) { location = tailM[1]; locationConfidence = 'low'; }
+    }
   }
   if (location) {
-    q = q.replace(new RegExp(`\\b(near|in|around|within)\\s+(?:(?:rural|urban|suburban)\\s+)?${location.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`), " ");
+    const escLoc = location.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    q = q.replace(new RegExp(`\\b(near|in|around|within)\\s+(?:(?:rural|urban|suburban)\\s+)?${escLoc}\\b`), " ");
+    q = q.replace(new RegExp(`\\b${escLoc}\\b`), " "); // no-cue match
     q = q.replace(/\b(rural|urban|suburban)\b/g, " ");
   }
 
