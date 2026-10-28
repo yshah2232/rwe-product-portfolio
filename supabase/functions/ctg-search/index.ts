@@ -1,27 +1,10 @@
-// ── Semantic Trial Search ──
-// Architecture B: CTG.gov v2 keyword search → LLM-as-reranker (semantic).
-//
-// Pipeline:
-//   1. Validate + rate-limit request
-//   2. Pull up to 25 candidate trials from CTG.gov v2 using the user's query
-//      as the condition term + optional structured filters
-//   3. Send the query + candidate titles/conditions to a cheap LLM
-//      (gemini-2.5-flash-lite) which returns a relevance score 0-100 per NCT
-//   4. Re-rank candidates by that score, return top 10 with score + reason
-//
-// GUARDRAILS (cost protection — this is a portfolio demo, not a SaaS):
-//   • Query length: 3-200 chars
-//   • Max candidates fetched: 25
-//   • Max returned: 10
-//   • Per-IP daily cap: 30 requests (in-memory; resets on cold start)
-//   • Per-IP minute cap: 6 requests (burst protection)
-//   • Edge cache: 1h on identical queries
-//   • Single LLM call per search (not per trial)
-
+// Live CTG retrieval → BM25 and dense embeddings → RRF → registry constraint reranking.
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { hybridScores, HybridError } from "../_shared/hybridSearch.ts";
+import { diabetesSubtype, subtypeTier } from "../_shared/hybridRanking.ts";
 import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
-import { parseQuery, groundConcepts, verifyQuotes, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, rankKey, matchLocation, locationSentence, stripLocationClaims, matchLabels, scoresAreDifferentiated, dedupeEvidence, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
+import { parseQuery, groundConcepts, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, matchLocation, locationSentence, matchLabels, dedupeEvidence, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -192,7 +175,7 @@ Deno.serve(async (req) => {
     if (effPhase) filters.push(`AREA[Phase]${effPhase}`);
     if (countryUS) filters.push(`AREA[LocationCountry]United States`);
 
-    const broadTerm = simplifyForCTG(query);
+    const broadTerm = diabetesSubtype(query) ? `"${intent.conditionTerms[0]}"` : simplifyForCTG(query);
     const ctgQuery = broadTerm;
     const hasTargeted = intent.conditionTerms.length > 0 || intent.biomarkers.length > 0;
     const isComplex = intent.complexity >= 2;
@@ -255,7 +238,7 @@ Deno.serve(async (req) => {
 
     try {
       // Pass 1: targeted for complex queries, broad (original behaviour) for simple ones.
-      await runPass(isComplex && hasTargeted ? targeted : broad);
+      await runPass((isComplex || diabetesSubtype(query)) && hasTargeted ? targeted : broad);
       let cands = shapeAll();
       const weakNow = () => isWeak(cands.length, coverageOf(cands));
       if (weakNow()) adaptiveReasons.push(`first pass weak (${cands.length} candidates)`);
@@ -302,147 +285,41 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── 3. Single LLM call to score all candidates ──
-    const compactList = candidates.map((c, idx) => ({
-      idx,
-      nct: c.nctId,
-      title: c.briefTitle.slice(0, 180),
-      conds: c.conditions.slice(0, 4).join("; ").slice(0, 140),
-      intv: c.interventions.slice(0, 4).join("; ").slice(0, 140),
-      phase: c.phase.join(",") || "not stated",
-      status: c.status || "not stated",
-      elig: c.ground.eligibility.replace(/\s+/g, " ").slice(0, candidates.length > 40 ? 220 : 400),
-    }));
-
-    const systemPrompt = `You are a clinical trial relevance scorer. Score each candidate 0-100 for how well it matches the *meaning* of the query. Consider synonyms, abbreviations, drug classes, and disease equivalents. Be strict: 90+ excellent, 60-89 solid, 30-59 tangential, <30 poor.
-GROUNDING RULES (mandatory): Your reason may only mention attributes that appear in the candidate's title, conditions, interventions or eligibility text shown to you. Never infer, guess or call "implied" any locations, biomarkers, eligibility requirements, phases or prior treatments that are not written there. For each candidate also return 1-3 short verbatim quotes (copied exactly) with the field they came from (title, conditions, interventions, eligibility, phase, status). Site locations are NOT shown to you and are checked separately against facility data, so ignore any place names in the query when scoring and never mention location, sites, states or countries. Use the full 0-100 range so scores separate candidates; do not give every candidate the same score. If a query concept is absent from the record, say it is not stated. Write each reason as a plain sentence with no em dashes and no hyphens.`;
-
-    const userPrompt = `User query: "${query}"
-
-Candidates:
-${compactList
-  .map((c) => `[${c.idx}] ${c.nct} | title: ${c.title} | conditions: ${c.conds} | interventions: ${c.intv} | phase: ${c.phase} | status: ${c.status} | eligibility: ${c.elig}`)
-  .join("\n")}
-
-Return a relevance score, a one-sentence grounded reason, and verbatim quotes for each candidate.`;
-
-    const llmRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "rank_candidates",
-            description: "Return a relevance score, grounded reason and verbatim quotes for each candidate trial.",
-            parameters: {
-              type: "object",
-              properties: {
-                rankings: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      idx: { type: "integer" },
-                      score: { type: "integer", minimum: 0, maximum: 100 },
-                      reason: { type: "string" },
-                      quotes: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          properties: {
-                            field: { type: "string", enum: ["title", "conditions", "interventions", "eligibility", "phase", "status"] },
-                            quote: { type: "string" },
-                          },
-                          required: ["field", "quote"],
-                          additionalProperties: false,
-                        },
-                      },
-                    },
-                    required: ["idx", "score", "reason", "quotes"],
-                    additionalProperties: false,
-                  },
-                },
-              },
-              required: ["rankings"],
-              additionalProperties: false,
-            },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "rank_candidates" } },
-      }),
-    });
-
-    if (llmRes.status === 429) return json({ error: "AI gateway rate limit. Try again in a moment." }, 429);
-    if (llmRes.status === 402) return json({ error: "AI credits exhausted on the demo workspace." }, 402);
-
-    let rankings: { idx: number; score: number; reason: string; quotes?: { field: string; quote: string }[] }[] = [];
-    let usedFallback = false;
-    if (!llmRes.ok) {
-      console.error("LLM error", llmRes.status, await llmRes.text());
-      usedFallback = true;
-    } else {
-      const llmData = await llmRes.json();
-      const toolCall = llmData.choices?.[0]?.message?.tool_calls?.[0];
-      try {
-        rankings = JSON.parse(toolCall?.function?.arguments ?? "{}").rankings ?? [];
-      } catch (e) {
-        console.error("Failed to parse rankings", e);
-      }
-      if (rankings.length === 0) usedFallback = true;
+    // Real request scoped BM25 + dense cosine search, reciprocal rank fusion,
+    // then deterministic constraint reranking. No generated relevance facts.
+    let hybrid;
+    try { hybrid = await hybridScores(query, candidates.map((c) => c.ground), LOVABLE_API_KEY, req.signal); }
+    catch (error) {
+      if (error instanceof HybridError) return json({ error: error.message, code: 'hybrid_unavailable' }, error.status);
+      throw error;
     }
-
-    // ── 4. Ground every explanation in CTG fields ──
-    const HARD_TYPES = new Set(["biomarker", "location", "status", "phase"]);
+    const preferUS = prefersUS(query, intent, browserRegionUS);
     const queryConceptCount = intent.conditionTerms.length + intent.biomarkers.length + intent.priorTreatments.length
       + (intent.location ? 1 : 0) + (intent.status ? 1 : 0) + (intent.phase ? 1 : 0);
     const scored = candidates.map((c, idx) => {
-      const r = rankings.find((x) => x.idx === idx);
       const { evidence, notFound } = groundConcepts(intent, c.ground);
-      const llmVerified = !!r && verifyQuotes(r.quotes, c.ground);
-      // Score comes only from the reranker; no default value is invented when it is missing.
-      let score: number | null = typeof r?.score === "number" ? r.score : null;
-      const missingHard = notFound.filter((n) => HARD_TYPES.has(n.type));
-      if (score !== null && missingHard.length && score > 59) score = 59;
       const loc = intent.location ? matchLocation(intent.location, c.ground.sites ?? []) : null;
-      // Location is never left to the reranker (it does not see sites); state it from facility data.
-      const nonLocNotFound = notFound.filter((n) => n.type !== "location");
-      const deterministic = groundedReason(evidence.filter((e) => e.type !== "location"), nonLocNotFound);
-      const llmText = llmVerified ? stripLocationClaims(r!.reason.trim(), intent.location) : "";
-      let reason = llmText
-        ? `${llmText}${nonLocNotFound.length ? ` Not found in record: ${nonLocNotFound.map((n) => n.concept).join(", ")}.` : ""}`
-        : usedFallback ? `Semantic ranking unavailable. ${deterministic}` : deterministic;
-      if (intent.location && loc) reason = `${locationSentence(intent.location, loc.confirmed, c.status === "RECRUITING")} ${reason}`;
+      const reason = groundedReason(evidence.filter((e) => e.type !== 'location'), notFound.filter((e) => e.type !== 'location'));
       const { ground, ...pub } = c;
       return {
-        ...pub,
-        semanticScore: score,
-        semanticReason: reason,
-        reasonSource: llmText ? "llm_verified" : "registry_fields",
+        ...pub, semanticScore: null,
+        semanticReason: (intent.location && loc ? `${locationSentence(intent.location, loc.confirmed, c.status === 'RECRUITING')} ` : '') + reason,
+        reasonSource: 'registry_fields',
+        keywordScore: hybrid.keyword[idx], denseSimilarity: hybrid.dense[idx], hybridScore: hybrid.fused[idx],
+        subtype: subtypeTier(query, ground),
         locationEvidence: intent.location && loc ? { location: intent.location, confirmed: loc.confirmed, matchedSites: loc.matchedSites, recruitingSites: loc.recruitingMatched } : null,
         matchLabels: matchLabels(evidence, !!loc?.confirmed),
-        evidenceRatio: queryConceptCount ? evidence.filter((e) => e.type !== "quote").length / queryConceptCount : 0,
-        evidence: dedupeEvidence([
-          ...evidence,
-          ...(llmVerified ? r!.quotes!.slice(0, 3).map((q) => ({ concept: "reranker quote", type: "quote", field: q.field, snippet: q.quote })) : []),
-        ]),
-        notFound,
+        evidenceRatio: queryConceptCount ? evidence.length / queryConceptCount : 0,
+        evidence: dedupeEvidence(evidence), notFound,
       };
     });
-
-    const preferUS = prefersUS(query, intent, browserRegionUS);
-    // Order: reranker score plus registry evidence (share of query concepts found) plus US preference.
-    const key = (t: typeof scored[number]) => t.evidenceRatio * 40 + rankKey(t.semanticScore ?? 0, t.countries ?? [], preferUS);
-    scored.sort((a, b) => key(b) - key(a));
-    const top = scored.slice(0, 10);
-    const topScores = top.map((t) => t.semanticScore);
-    const scoreShown = !usedFallback && topScores.every((x) => typeof x === "number") && scoresAreDifferentiated(topScores as number[]);
-    if (!scoreShown) for (const t of top) (t as any).semanticScore = null;
+    // Explicit subtype conflicts never outrank confirmed matches, whatever vector score or US preference.
+    const key = (t: typeof scored[number]) => t.hybridScore * 1000 + t.evidenceRatio * 4 + (preferUS && t.countries.includes('United States') ? 0.5 : 0);
+    scored.sort((a, b) => b.subtype - a.subtype || key(b) - key(a) || a.nctId.localeCompare(b.nctId));
+    const top = scored.filter((t) => t.subtype >= 0).slice(0, 10);
+    const scoreShown = false;
+    const usedFallback = false;
+    Object.assign(retrieval, { method: 'BM25 + dense cosine + reciprocal rank fusion + constraint reranking', embeddingModel: hybrid.model });
 
     // No visitor search history is written to application storage.
     const searchEventId = null;
@@ -457,7 +334,7 @@ Return a relevance score, a one-sentence grounded reason, and verbatim quotes fo
         fallback: usedFallback || undefined,
         interpretation,
         retrieval,
-        warnings: [...buildWarnings({ intent, interpretation, totalCount, candidates, results: top, fallback: usedFallback, countryUS }), ...(preferUS ? [{ code: "us_first", message: "Trials with United States sites are listed first." }] : [])],
+        warnings: [...buildWarnings({ intent, interpretation, totalCount, candidates, results: top, fallback: usedFallback, countryUS }), ...(preferUS ? [{ code: "us_first", message: "United States sites receive preference among similarly relevant trials." }] : [])],
         sessionId,
         searchEventId,
         usage: { rateLimitRemaining: DAILY_CAP - (ipDailyCount.get(ip)?.count ?? 0) },
