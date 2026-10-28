@@ -57,6 +57,9 @@ const FILLER = new Set([
 
 export function parseQuery(raw: string): QueryIntent {
   let q = ` ${raw.toLowerCase().replace(/[^\p{L}\p{N}\s\-,.;]/gu, " ").replace(/\s+/g, " ").trim()} `;
+  const subtype = q.match(/\b(?:type[ -]*([12])\s+diabetes|diabetes(?:\s+mellitus)?[ ,]*type[ -]*([12])|t([12])d(?:m)?)\b/i);
+  const subtypeTerm = subtype ? `type ${subtype[1] ?? subtype[2] ?? subtype[3]} diabetes` : null;
+  if (subtype) q = q.replace(subtype[0], ' ');
 
   let status: string | null = null;
   for (const [re, val] of STATUS_PATTERNS) if (re.test(q)) { status = val; break; }
@@ -147,7 +150,7 @@ export function parseQuery(raw: string): QueryIntent {
     } else rest.push(t);
   }
 
-  const conditionTerms = Array.from(new Set(rest)).slice(0, 6);
+  const conditionTerms = Array.from(new Set([...(subtypeTerm ? [subtypeTerm] : []), ...rest])).slice(0, 6);
   const complexity = [conditionTerms.length > 0, biomarkers.length > 0, !!location, !!status, !!phase, priorTreatments.length > 0]
     .filter(Boolean).length;
 
