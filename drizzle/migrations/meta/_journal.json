@@ -43,6 +43,13 @@
       "when": 1793121681222,
       "tag": "0005_create_issue_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793223769084,
+      "tag": "0006_anonymous_report_feedback",
+      "breakpoints": true
     }
   ]
 }
