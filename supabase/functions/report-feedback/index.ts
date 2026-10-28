@@ -10,7 +10,7 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers });
   if (req.method !== 'POST') return reply({ error: 'POST only' }, 405);
-  if (!isAllowedSearchOrigin(req.headers.get('origin'))) return reply({ error: 'Origin not allowed' }, 403);
+  if (!isAllowedSearchOrigin(req.headers.get('origin') ?? '')) return reply({ error: 'Origin not allowed' }, 403);
   if (Number(req.headers.get('content-length')) > 10000) return reply({ error: 'Request too large' }, 413);
   const parsed = ReportFeedbackSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return reply({ error: 'Choose a rating from 1 to 5 and keep comments within 1000 characters.' }, 400);
