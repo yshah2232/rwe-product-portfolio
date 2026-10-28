@@ -19,7 +19,7 @@ const Privacy = () => {
           Privacy Policy
         </h1>
         <p className="text-[13px] text-muted-foreground mt-3">
-          Last updated: October 27, 2026
+          Last updated: October 28, 2026
         </p>
       </header>
 
@@ -48,6 +48,7 @@ const Privacy = () => {
           <ul className="list-disc pl-5 space-y-1">
             <li>Documents uploaded to the eligibility self check.</li>
             <li>Search queries needed to retrieve and interpret registry records, processed without application history storage.</li>
+            <li>Optional PDF experience ratings and comments, submitted only when you press Send feedback. Do not include names, contact details or medical information.</li>
           </ul>
         </div>
 
@@ -57,7 +58,7 @@ const Privacy = () => {
             <li><strong>Search queries</strong> are forwarded to ClinicalTrials.gov and to an AI gateway for semantic reranking.</li>
             <li><strong>Click and dwell collection</strong> is disabled.</li>
             <li><strong>Uploaded documents</strong> are sent to an AI provider for the requested analysis and discarded as soon as the response is returned. They are not written to durable storage.</li>
-            <li><strong>Visitor feedback and eligibility outcomes</strong> are not written to application storage.</li>
+            <li><strong>Voluntary feedback</strong>: PDF experience ratings, comments and submission time are saved for restricted admin review. No visitor identifier, search query, selected trials or PDF contents are attached. Deliberately submitted problem reports are also stored. Eligibility outcomes and passive visitor activity are not written to application storage.</li>
             <li><strong>Earlier records</strong> have not been deleted by this change. Restricted administrator evaluation and security records remain separate.</li>
           </ul>
         </div>

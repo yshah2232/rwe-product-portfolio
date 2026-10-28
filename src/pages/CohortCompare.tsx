@@ -11,6 +11,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useTrialComparison } from '@/contexts/TrialComparisonContext';
 import { buildComparisonReport, downloadReport } from '@/lib/comparisonReport';
 import { TrialGeographyPanel } from '@/components/compare/TrialGeographyPanel';
+import { ReportFeedback } from '@/components/compare/ReportFeedback';
+import type { ReportPopulation } from '@/lib/reportContext';
+import { usePlainMode } from '@/contexts/PlainModeContext';
 import { useSeo } from '@/hooks/useSeo';
 import {
   COMPARE_FIELDS, CompareTrial, MAX_COMPARE, MIN_COMPARE, fieldDiffers, fieldValue,
@@ -22,6 +25,9 @@ type Slot = { nct: string; data?: CompareTrial; error?: string };
 
 const CohortCompare = () => {
   const { selected: ncts } = useTrialComparison();
+  const { termsAccepted } = usePlainMode();
+  const [population, setPopulation] = useState<ReportPopulation | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [onlyDiff, setOnlyDiff] = useState(false);
@@ -31,8 +37,10 @@ const CohortCompare = () => {
   useSeo({ title: 'Compare trials | Clinical Trial Diversity Studio', description: 'Side by side comparison of live ClinicalTrials.gov records.', canonical: '/compare-trials', noindex: true });
 
   useEffect(() => {
+    if (!termsAccepted) return;
     let cancelled = false;
     setLoading(true);
+    setPopulation(null);
     Promise.all(
       ncts.map(async (nct): Promise<Slot> => {
         try {
@@ -45,19 +53,19 @@ const CohortCompare = () => {
       }),
     ).then((s) => { if (!cancelled) { setSlots(s); setLoading(false); } });
     return () => { cancelled = true; };
-  }, [ncts]);
+  }, [ncts, termsAccepted]);
 
   const loaded = useMemo(() => slots.flatMap((slot) => slot.data ? [slot.data] : []), [slots]);
   useEffect(() => {
     let cancelled = false;
     setReport(null);
     setReportError(false);
-    if (!loading && loaded.length >= MIN_COMPARE) {
-      buildComparisonReport(loaded).then((bytes) => { if (!cancelled) setReport(bytes); })
+    if (termsAccepted && !loading && loaded.length >= MIN_COMPARE && population && !population.loading) {
+      buildComparisonReport(loaded, population).then((bytes) => { if (!cancelled) setReport(bytes); })
         .catch(() => { if (!cancelled) setReportError(true); });
     }
     return () => { cancelled = true; };
-  }, [loading, loaded]);
+  }, [loading, loaded, population, termsAccepted]);
   const back = '/search-registry';
 
   if (ncts.length < MIN_COMPARE) {
@@ -89,7 +97,7 @@ const CohortCompare = () => {
             <Button
               variant="outline"
               disabled={!report || loading}
-              onClick={() => { if (report) downloadReport(report); }}
+              onClick={() => { if (report && termsAccepted) { downloadReport(report); setFeedbackOpen(true); } }}
               className="gap-1.5"
             >
               <Download className="h-3.5 w-3.5" /> Download report (PDF)
@@ -187,11 +195,12 @@ const CohortCompare = () => {
               <p className="mt-2 rounded-sm border border-border bg-muted/50 p-3 text-[12px] leading-relaxed text-muted-foreground" data-testid="compare-disclaimer">
                 <strong className="text-foreground">Not medical advice.</strong> This comparison shows registry fields side by side as entered by each sponsor. It does not rank trials, recommend a trial, or say whether anyone is eligible. Records can be incomplete or out of date; confirm details on ClinicalTrials.gov and talk with a qualified clinician or the study team before making any decision. See the <a href="/medical-disclaimer" className="text-primary underline">medical disclaimer</a>.
               </p>
-              {loaded.length > 0 && <TrialGeographyPanel trials={loaded} />}
+              {loaded.length > 0 && <TrialGeographyPanel trials={loaded} onPopulation={setPopulation} />}
             </>
           )}
         </div>
       </section>
+      <ReportFeedback open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </div>
   );
 };
