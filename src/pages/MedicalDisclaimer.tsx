@@ -6,7 +6,7 @@ import { useSeo } from '@/hooks/useSeo';
 
 const MedicalDisclaimer = () => {
   useSeo({
-    title: 'Medical Disclaimer — Clinical Trial Diversity Studio',
+    title: 'Medical Disclaimer | Clinical Trial Diversity Studio',
     description:
       'Important: This site is informational only. It is not medical advice. Always consult a qualified healthcare professional.',
     canonical: '/medical-disclaimer',
@@ -55,16 +55,16 @@ const MedicalDisclaimer = () => {
           <ul className="list-disc pl-5 space-y-1.5">
             <li>Diagnose your condition.</li>
             <li>Recommend any specific clinical trial.</li>
-            <li>Confirm whether you qualify for a trial — only the trial site can do that.</li>
+            <li>Confirm whether you qualify for a trial; only the trial site can do that.</li>
             <li>Replace your doctor, oncologist, neurologist, or any other clinician.</li>
-            <li>Guarantee that information is current — verify on ClinicalTrials.gov.</li>
+            <li>Guarantee that information is current. Verify on ClinicalTrials.gov.</li>
           </ul>
         </div>
 
         <div>
-          <h2 className="font-display text-[20px] font-bold mb-2">About AI-generated content</h2>
+          <h2 className="font-display text-[20px] font-bold mb-2">About AI generated content</h2>
           <p>
-            Plain-language summaries and the document eligibility self-check are produced by
+            Plain language summaries and the document eligibility self check are produced by
             large language models (AI). AI can:
           </p>
           <ul className="list-disc pl-5 space-y-1 mt-2">
@@ -97,9 +97,9 @@ const MedicalDisclaimer = () => {
         </div>
 
         <div>
-          <h2 className="font-display text-[20px] font-bold mb-2">No doctor-patient relationship</h2>
+          <h2 className="font-display text-[20px] font-bold mb-2">No doctor patient relationship</h2>
           <p>
-            Use of this Service does not create a doctor-patient, therapist-patient, or any other
+            Use of this Service does not create a doctor patient, therapist patient, or any other
             professional relationship between you and the maintainers of this Service.
           </p>
         </div>

@@ -36,7 +36,7 @@ const pillars = [
   {
     icon: Search,
     title: 'Search the registry',
-    desc: 'Query ClinicalTrials.gov in plain language across condition, phase, status, sponsor, and geography, with semantic re-ranking on top of keyword retrieval.',
+    desc: 'Query ClinicalTrials.gov in plain language across condition, phase, status, sponsor, and geography, with semantic reranking on top of keyword retrieval.',
     to: '/search-registry',
     status: 'live' as const,
   },
@@ -82,7 +82,7 @@ const Index = () => {
   const showPatientEntry = plainMode || audience === 'patient';
   const [heroQuery, setHeroQuery] = useState('');
   useSeo({
-    title: 'Clinical Trial Diversity Studio — Search ClinicalTrials.gov',
+    title: 'Clinical Trial Diversity Studio | Search ClinicalTrials.gov',
     description: 'Search ClinicalTrials.gov in plain English and compare trial records with source grounded explanations.',
     canonical: '/',
   });
@@ -135,7 +135,7 @@ const Index = () => {
                 </Button>
               </form>
               <p className="mt-2 text-[12px] text-muted-foreground">
-                Live ClinicalTrials.gov data · semantic re-ranking · every result deep-links to CTG.gov
+                Live ClinicalTrials.gov data · semantic reranking · every result links directly to CTG.gov
               </p>
               <HeroIntentChips />
             </div>
@@ -249,12 +249,12 @@ const Index = () => {
             </h2>
             <p className="text-[15px] text-foreground/80 leading-relaxed max-w-2xl">
               Plain-language search across the full ClinicalTrials.gov registry, with semantic
-              re-ranking and canonicalized sponsor / indication / asset names. Every result
+              reranking and canonicalized sponsor / indication / asset names. Every result
               deep-links to CTG.gov.
             </p>
             <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-foreground/75 pt-1">
               <li className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} /> Live v2 API</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} /> Semantic re-rank · auditable rationale</li>
+              <li className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} /> Semantic rerank · auditable rationale</li>
               <li className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} /> Compare trials and download a report</li>
             </ul>
           </div>
@@ -291,7 +291,7 @@ const Index = () => {
             </h2>
             <p className="mt-2 text-[15px] text-foreground/75 max-w-3xl leading-relaxed">
               Each capability is built directly against the public registry. No imported spreadsheets,
-              no opaque scoring — every output is traceable back to the source field.
+              no opaque scoring, every output is traceable back to the source field.
             </p>
           </div>
 
@@ -354,7 +354,7 @@ const Index = () => {
             </h2>
             <p className="mt-2 text-[15px] text-foreground/75 max-w-3xl leading-relaxed">
               Designed against the real workflows of clinical operations, feasibility, diversity strategy, and medical
-              affairs leads — so everyone reviews the same registry records.
+              affairs leads, so everyone reviews the same registry records.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

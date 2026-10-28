@@ -82,7 +82,7 @@ const ctgUrl = (nct: string) => `https://clinicaltrials.gov/study/${nct}`;
 
 const SearchRegistry = () => {
   useSeo({
-    title: 'Search Registry — Clinical Trial Diversity Studio',
+    title: 'Search Registry | Clinical Trial Diversity Studio',
     description: 'Plain-language search across live ClinicalTrials.gov. Filter by condition, phase, status, sponsor, and geography with AI-rewritten summaries.',
     canonical: '/search-registry',
   });
@@ -242,7 +242,7 @@ const SearchRegistry = () => {
       nctId: trial.nctId,
       rating,
     });
-    toast.success(rating === 'up' ? 'Thanks — noted as a good match' : 'Thanks — noted as off-topic');
+    toast.success(rating === 'up' ? 'Thanks, noted as a good match' : 'Thanks, noted as off-topic');
   };
 
   const submitOutcome = async () => {
@@ -319,7 +319,7 @@ const SearchRegistry = () => {
                   Find clinical trials in plain language.
                 </h1>
                 <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
-                  Type the health problem you (or someone you care about) are facing — in everyday words.
+                  Type the health problem you (or someone you care about) are facing, in everyday words.
                   We'll search the official ClinicalTrials.gov registry and rewrite each study so you can
                   read it without a medical degree. Only studies that are <strong>currently recruiting</strong> are shown.
                 </p>
@@ -331,8 +331,8 @@ const SearchRegistry = () => {
                 </h1>
                 <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
                   Type a clinical scenario in plain language. We pull live candidates from the CTG.gov v2 API
-                  and re-rank them semantically — so &ldquo;elderly lung tumor&rdquo; finds NSCLC trials in
-                  patients ≥65 even when those exact words never appear in the protocol. Every result deep-links
+                  and rerank them semantically, so &ldquo;elderly lung tumor&rdquo; finds NSCLC trials in
+                  patients ≥65 even when those exact words never appear in the protocol. Every result links directly
                   to the authoritative CTG.gov page.
                 </p>
               </div>
@@ -477,7 +477,7 @@ const SearchRegistry = () => {
                     >
                       {data.totalCount.toLocaleString()} broad keyword matches on ClinicalTrials.gov
                     </span>
-                    {data.fallback && ' · semantic re-rank unavailable, showing CTG default order'}
+                    {data.fallback && ' · semantic rerank unavailable, showing CTG default order'}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -531,7 +531,7 @@ const SearchRegistry = () => {
                   rel="noopener noreferrer"
                   className="font-medium text-foreground/80 hover:text-primary underline-offset-2 hover:underline"
                 >ClinicalTrials.gov</a> · Live API · Fetched {new Date().toLocaleString()} ·
-                Re-ranking is AI-assisted — not a clinical recommendation.
+                Reranking is AI assisted, not a clinical recommendation.
               </p>
 
               {/* View toggle */}
@@ -814,7 +814,7 @@ const SearchRegistry = () => {
       <Dialog open={outcomeOpen} onOpenChange={setOutcomeOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Quick check — is this useful?</DialogTitle>
+            <DialogTitle>Quick check: is this useful?</DialogTitle>
             <DialogDescription>
               Two-second rating helps the platform learn. Optional testimonial helps us prioritize what to build next.
             </DialogDescription>

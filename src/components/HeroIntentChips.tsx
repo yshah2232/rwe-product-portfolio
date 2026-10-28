@@ -50,7 +50,7 @@ const HeroIntentChips = () => {
     return (
       <div className="mt-5 flex items-center gap-2 text-[13px] text-foreground/70">
         <Check className="h-4 w-4" style={{ color: 'hsl(var(--primary))' }} />
-        <span>Thanks — showing this for <strong>{chosen.label}</strong>.</span>
+        <span>Thanks, showing this for <strong>{chosen.label}</strong>.</span>
         <button
           type="button"
           onClick={() => setEditing(true)}

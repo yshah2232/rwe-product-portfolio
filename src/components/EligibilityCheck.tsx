@@ -138,9 +138,9 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
       <div className="p-4 space-y-3">
         <p className="text-[12px] text-muted-foreground leading-snug">
           Bring these to your appointment. You can also drop them here and an AI model will flag which
-          criteria they appear to address — <strong className="text-foreground">this is not a determination
+          criteria they appear to address. <strong className="text-foreground">This is not a determination
           of eligibility</strong>. Only the trial site can confirm whether you qualify.{' '}
-          <strong className="text-foreground">Files are not stored</strong> — they're sent for analysis and discarded.{' '}
+          <strong className="text-foreground">Files are not stored</strong>. They are sent for analysis and discarded.{' '}
           <a href="/medical-disclaimer" className="underline text-primary">Read full disclaimer</a>.
         </p>
 

@@ -16,7 +16,7 @@ const mentions = (r: Result, concept: string) =>
     .toLowerCase().replace(/[\s-]+/g, ' ').includes(concept.toLowerCase().replace(/[\s-]+/g, ' '));
 
 const SearchEvaluation = () => {
-  useSeo({ title: 'Search Evaluation — Internal', description: 'Internal search quality evaluation.', canonical: '/analytics/search-eval', noindex: true });
+  useSeo({ title: 'Search Evaluation | Internal', description: 'Internal search quality evaluation.', canonical: '/analytics/search-eval', noindex: true });
   const { request } = useAdminAccess();
   const [loadError, setLoadError] = useState<string | null>(null);
   const [cases, setCases] = useState<EvalCase[]>([]);

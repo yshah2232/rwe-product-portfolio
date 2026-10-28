@@ -1,7 +1,7 @@
 // /cohorts/:id/barriers — Module 3: Barriers & Access (Phase 1)
 // Scores each US trial site on two access barriers, both from Census ACS
 // 2022 5-year (real, citable):
-//   - Language access — members of limited-English-speaking households,
+//   - Language access — members of limited English speaking households,
 //     pop 5+ (ACS Table C16002)
 //   - Socioeconomic strain — income below poverty level (ACS Table B17001)
 // Composite barrier score is relative to the US national rate.
@@ -51,9 +51,9 @@ const CohortBarriers = () => {
   const [keyMissing, setKeyMissing] = useState(false);
 
   useSeo({
-    title: cohort ? `${cohort.name} — Barriers & Access` : 'Barriers & Access',
+    title: cohort ? `${cohort.name} | Barriers & Access` : 'Barriers & Access',
     description: cohort
-      ? `Access barriers for ${cohort.name} trial sites: limited-English-speaking households and poverty from US Census ACS, scored against the national rate.`
+      ? `Access barriers for ${cohort.name} trial sites: limited English speaking households and poverty from US Census ACS, scored against the national rate.`
       : 'Access barriers for trial sites from US Census ACS data.',
     noindex: true,
   });
@@ -119,7 +119,7 @@ const CohortBarriers = () => {
       if (!res.ok) {
         if (body?.error === 'census_key_required') {
           setKeyMissing(true);
-          throw new Error('Census data source is not configured yet — barrier scoring needs a Census API key. Ask the site owner to add it.');
+          throw new Error('Census data source is not configured yet; barrier scoring needs a Census API key. Ask the site owner to add it.');
         }
         throw new Error(body?.error ?? `Compute ${res.status}`);
       }
@@ -182,11 +182,11 @@ const CohortBarriers = () => {
             <ArrowLeft className="h-3.5 w-3.5" /> Back to cohort
           </Link>
           <h1 className="font-display text-3xl md:text-4xl font-medium leading-tight text-foreground">
-            Barriers &amp; Access — {cohort.name}
+            Barriers &amp; Access: {cohort.name}
           </h1>
           <p className="mt-3 text-[14px] text-muted-foreground max-w-3xl leading-relaxed">
             How hard it may be for people near each trial site to take part, measured from
-            US Census ACS 2022 5-year data: limited-English-speaking households (Table C16002)
+            US Census ACS 2022 5-year data: limited English speaking households (Table C16002)
             and income below the poverty level (Table B17001), each compared with the US national rate.
             A site scores High when its county rate is at least 1.5× the national rate.
           </p>
@@ -265,7 +265,7 @@ const CohortBarriers = () => {
                 Scored sites ({rows.scored.length})
               </h2>
               <p className="text-[11px] text-muted-foreground mb-3">
-                LEP = share of residents 5+ in limited-English-speaking households (ACS C16002).
+                LEP = share of residents 5+ in limited English speaking households (ACS C16002).
                 Poverty = share below the poverty level (ACS B17001). Score = county rate relative
                 to national, averaged across the two components, capped at 100 each.
               </p>

@@ -24,7 +24,7 @@ const Section = ({ title, items, delay }: { title: string; items: string[]; dela
 
 const About = () => {
   useSeo({
-    title: 'About — Clinical Trial Diversity Studio',
+    title: 'About | Clinical Trial Diversity Studio',
     description: 'What Clinical Trial Diversity Studio is, why it exists, and how it helps patients, clinicians, researchers and sponsors use the public ClinicalTrials.gov registry.',
     canonical: '/about',
   });

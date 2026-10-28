@@ -51,7 +51,7 @@ class ErrorBoundary extends Component<Props, State> {
             Something interrupted this view.
           </h2>
           <p className="text-[14px] text-muted-foreground leading-relaxed mb-5">
-            The page hit a render glitch — usually a transient UI hiccup. Click below to recover without losing your place.
+            The page hit a render glitch, usually a transient UI hiccup. Click below to recover without losing your place.
           </p>
           <div className="flex items-center justify-center gap-2">
             <Button onClick={this.reset} className="gap-2" size="sm">

@@ -25,7 +25,7 @@ export default function TrialJourney({ steps }: { steps: JourneyStep[] }) {
             Your journey, day by day
           </p>
         </div>
-        <span className="text-[10.5px] text-muted-foreground italic">From the public protocol — your actual schedule may differ</span>
+        <span className="text-[10.5px] text-muted-foreground italic">From the public protocol. Your actual schedule may differ</span>
       </div>
 
       <div className="relative px-4 py-5 overflow-x-auto">

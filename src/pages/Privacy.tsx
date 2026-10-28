@@ -5,7 +5,7 @@ import { useSeo } from '@/hooks/useSeo';
 
 const Privacy = () => {
   useSeo({
-    title: 'Privacy Policy — Clinical Trial Diversity Studio',
+    title: 'Privacy Policy | Clinical Trial Diversity Studio',
     description:
       'How Clinical Trial Diversity Studio handles search queries, uploaded documents, and anonymous usage signals.',
     canonical: '/privacy',
@@ -25,12 +25,12 @@ const Privacy = () => {
 
       <section className="space-y-6 text-[14.5px] leading-relaxed text-foreground/90">
         <div>
-          <h2 className="font-display text-[20px] font-bold mb-2">Plain-English summary</h2>
+          <h2 className="font-display text-[20px] font-bold mb-2">Plain English summary</h2>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>We do not require an account or collect your name, email, or address.</li>
             <li>New visitor search queries, clicks, audience choices and eligibility outcomes are not saved in our application database.</li>
             <li>Trial selections and display preferences exist only while this page session is open. Reports are generated on your device and are not emailed.</li>
-            <li>Documents you upload for the eligibility self-check are sent to an AI provider and discarded immediately — never stored.</li>
+            <li>Documents you upload for the eligibility self check are sent to an AI provider and discarded immediately and never stored.</li>
             <li>We share data with ClinicalTrials.gov (search forwarding) and AI providers (rewrites + checks). That's it.</li>
             <li>Do not upload anything you wouldn't paste into a public form.</li>
           </ul>
@@ -41,12 +41,12 @@ const Privacy = () => {
           <p className="font-semibold mt-2">Automatically:</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Temporary request identifiers and IP based limits help prevent abuse. They are not used to save visitor history.</li>
-            <li>IP address — used only for rate limiting and discarded after the rate-limit window expires.</li>
+            <li>IP address: used only for rate limiting and discarded after the rate limit window expires.</li>
             <li>Standard web logs (user agent, referrer, timestamp).</li>
           </ul>
           <p className="font-semibold mt-3">From you, only when you choose to:</p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Documents uploaded to the eligibility self-check.</li>
+            <li>Documents uploaded to the eligibility self check.</li>
             <li>Search queries needed to retrieve and interpret registry records, processed without application history storage.</li>
           </ul>
         </div>
@@ -54,7 +54,7 @@ const Privacy = () => {
         <div>
           <h2 className="font-display text-[20px] font-bold mb-2">2. What we do with it</h2>
           <ul className="list-disc pl-5 space-y-1.5">
-            <li><strong>Search queries</strong> are forwarded to ClinicalTrials.gov and to an AI gateway for semantic re-ranking.</li>
+            <li><strong>Search queries</strong> are forwarded to ClinicalTrials.gov and to an AI gateway for semantic reranking.</li>
             <li><strong>Click and dwell collection</strong> is disabled.</li>
             <li><strong>Uploaded documents</strong> are sent to an AI provider for the requested analysis and discarded as soon as the response is returned. They are not written to durable storage.</li>
             <li><strong>Visitor feedback and eligibility outcomes</strong> are not written to application storage.</li>
@@ -68,7 +68,7 @@ const Privacy = () => {
             <li>Sell, rent, or trade your data.</li>
             <li>Use your data to train AI models.</li>
             <li>Track you across other websites.</li>
-            <li>Run ad networks or third-party trackers (no Facebook Pixel, no Google Ads).</li>
+            <li>Run ad networks or third party trackers (no Facebook Pixel, no Google Ads).</li>
           </ul>
         </div>
 
@@ -76,9 +76,9 @@ const Privacy = () => {
           <h2 className="font-display text-[20px] font-bold mb-2">4. Subprocessors</h2>
           <p>The Service relies on:</p>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>ClinicalTrials.gov</strong> (NIH/NLM) — receives forwarded search queries.</li>
-            <li><strong>Lovable Cloud</strong> — hosts the application, public registry caches and restricted administrator records.</li>
-            <li><strong>Lovable AI Gateway (Google Gemini, OpenAI)</strong> — receives queries, trial text, and uploaded documents for AI processing.</li>
+            <li><strong>ClinicalTrials.gov</strong> (NIH/NLM): receives forwarded search queries.</li>
+            <li><strong>Lovable Cloud</strong>: hosts the application, public registry caches and restricted administrator records.</li>
+            <li><strong>Lovable AI Gateway (Google Gemini, OpenAI)</strong>: receives queries, trial text, and uploaded documents for AI processing.</li>
           </ul>
           <p className="mt-2">
             Each service has its own privacy and logging practices. Disabling application history does not
@@ -101,8 +101,8 @@ const Privacy = () => {
             <strong>The Service is not a HIPAA-covered entity and is not designed to receive
             Protected Health Information (PHI).</strong> Do not upload documents containing
             identifying information about another person. If you upload your own medical
-            documents for the eligibility self-check, you do so at your own risk and
-            acknowledge they will be transmitted to a third-party AI provider for processing
+            documents for the eligibility self check, you do so at your own risk and
+            acknowledge they will be transmitted to a third party AI provider for processing
             and then discarded.
           </p>
         </div>

@@ -27,7 +27,7 @@ function checkRateLimit(ip: string): { ok: boolean; reason?: string } {
   }
   minute.count += 1;
   if (minute.count > MINUTE_CAP) {
-    return { ok: false, reason: `Slow down — max ${MINUTE_CAP} cohort refreshes per minute.` };
+    return { ok: false, reason: `Slow down, max ${MINUTE_CAP} cohort refreshes per minute.` };
   }
   return { ok: true };
 }

@@ -136,7 +136,7 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
 
   useSeo({
     title: seoActive
-      ? `${data!.briefTitle || nctId} (${nctId}) — Clinical Trial Diversity Studio`
+      ? `${data!.briefTitle || nctId} (${nctId}) | Clinical Trial Diversity Studio`
       : 'Clinical Trial Diversity Studio',
     description: seoActive
       ? `${data!.status?.replace(/_/g, ' ') || 'Clinical trial'}${data!.phase?.length ? ` · ${data!.phase.join(', ').replace(/PHASE/g, 'Phase ')}` : ''}${data!.conditions?.[0] ? ` · ${cleanIndication(data!.conditions[0]).clean}` : ''}. ${(data!.briefSummary || '').slice(0, 140)}`
@@ -196,10 +196,10 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
               <Sparkles className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'hsl(var(--primary))' }} />
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-semibold" style={{ color: 'hsl(var(--primary))' }}>
-                  AI-assisted Easy read · Not medical advice
+                  AI assisted Easy read · Not medical advice
                 </p>
                 <p className="text-[11.5px] text-foreground/75 leading-snug mt-0.5">
-                  Numbers and eligibility paraphrased from the public registry by an AI model — it can
+                  Numbers and eligibility paraphrased from the public registry by an AI model, so it can
                   misread or simplify. Always verify on{' '}
                   <a href={data?.ctgUrl ?? `https://clinicaltrials.gov/study/${nctId}`}
                      target="_blank" rel="noreferrer" className="underline">
@@ -623,7 +623,7 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
                   </p>
                 )}
                 <p className="text-[10.5px] text-muted-foreground/80">
-                  Authoritative source — verify eligibility and contact info before acting.
+                  Authoritative source. Verify eligibility and contact info before acting.
                 </p>
               </div>
             </div>

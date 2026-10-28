@@ -112,7 +112,7 @@ const SaveCohortDialog = ({ open, onOpenChange, trials, query, filters }: Props)
         <DialogHeader>
           <DialogTitle>Save {trials.length} trial{trials.length === 1 ? '' : 's'} as cohort</DialogTitle>
           <DialogDescription>
-            Cohorts are scoped to this browser session. The link is stable — bookmark it to come back.
+            Cohorts are scoped to this browser session. The link is stable. Bookmark it to come back.
           </DialogDescription>
         </DialogHeader>
 

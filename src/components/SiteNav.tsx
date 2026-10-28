@@ -70,7 +70,7 @@ const SiteNav = () => {
                   <span
                     key={link.to}
                     aria-disabled="true"
-                    title="Temporarily hidden — focusing on Search Registry"
+                    title="Temporarily hidden while Search Registry is the focus"
                     className="px-4 py-3 text-[14px] font-semibold border-b-2 border-transparent text-foreground/30 cursor-not-allowed select-none inline-flex items-center gap-1.5"
                   >
                     {link.label}
