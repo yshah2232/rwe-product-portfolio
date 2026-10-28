@@ -114,32 +114,30 @@ export async function buildComparisonReport(trials: CompareTrial[], population?:
   write('This report is not medical advice. It cannot confirm eligibility, predict enrollment or identify a better trial. Verify the original records and speak with the study team or a qualified healthcare professional.', 10);
   if (!trials.length) return pdf.save();
 
-  newPage('02 / Selected records');
-  heading('The trials at a glance', 'Trial titles and original source records. Registry data may be incomplete or out of date.');
+  newPage('02 / Side by side');
+  heading('Compare the essentials', 'Tinted rows differ, including missing values. Verify full criteria using the source links below.');
   for (const trial of trials) {
-    if (y < 160) newPage('Selected records continued');
-    write(trial.nctId, 13, bold, blue);
-    write(trial.briefTitle ?? 'Title not reported', 13, bold);
-    write(`https://clinicaltrials.gov/study/${trial.nctId}`, 10, font, blue);
-    write(`Recruitment: ${fieldValue(trial, 'status') ?? 'Not reported'}  |  Phase: ${fieldValue(trial, 'phase') ?? 'Not reported'}`, 10);
-    y -= 8;
+    if (y < 170) newPage('Selected records continued');
+    write(`${trial.nctId}: ${trial.briefTitle ?? 'Title not reported'}`, 10, bold);
+    write(`https://clinicaltrials.gov/study/${trial.nctId}`, 9, font, blue);
   }
-  newPage('03 / Side by side');
-  heading('Compare the essentials', 'Tinted rows differ, including missing values. Enrollment is reported as estimated or actual, not site population.');
+  y -= 4;
   const fields = COMPARE_FIELDS.filter((f) => !['eligibility', 'locations'].includes(f.key));
   const col = (width - 130) / trials.length;
   table(['Registry field', ...trials.map((t) => t.nctId)], fields.map((f) => [f.label, ...trials.map((t) => fieldValue(t, f.key) ?? 'Not reported')]), [130, ...trials.map(() => col)], fields.map((f) => fieldDiffers(trials, f.key)));
 
   const geo = summarizeGeography(trials);
-  newPage('04 / Geographic footprint');
+  newPage('03 / Sites and population');
   heading('Where the listed sites are', 'ClinicalTrials.gov facility listings. Shared facilities may appear once per trial; counts are not unique sites or enrollment.');
   table(['Trial', 'Listed facilities', 'US facilities', 'US state gaps'], geo.trials.map((t) => [t.nctId, t.coverage === 'none_listed' ? 'Not reported' : String(t.totalSites), t.coverage === 'none_listed' ? 'Not reported' : String(t.usSites), t.coverage === 'none_listed' ? 'Not reported' : String(t.usSitesWithoutState)]), [190, 190, 190, width - 570]);
   y -= 20;
   if (geo.regions.length) table(['Census region group', 'Site listings', 'Trials represented'], geo.regions.map((r) => [r.region, String(r.siteCount), r.trials.join(', ')]), [210, 150, width - 360]);
   else write('No US facility with a recognized state is reported. No regional footprint can be shown.');
 
-  newPage('05 / Population context');
-  heading('Statewide residents, not trial participants', 'US Census American Community Survey (ACS) 5 year estimates. No participant demographic data is inferred.');
+  if (y < 260) newPage('Population context');
+  else y -= 20;
+  write('Statewide residents, not trial participants', 18, bold, blue);
+  write('US Census American Community Survey (ACS) 5 year estimates. No participant demographic data is inferred.', 10, font, muted);
   write('Each state appears once. Figures describe entire states with listed trial sites, not catchment areas, eligible patients, disease prevalence or enrollment. No combined median income or site weighted population is calculated.', 11);
   const rows = population?.rows ?? [];
   const valid = rows.filter((r) => r.data && !r.error);
@@ -149,7 +147,7 @@ export async function buildComparisonReport(trials: CompareTrial[], population?:
     return [r.state, d?.total_population?.toLocaleString('en-US') ?? 'Not available', populationPercent(d?.pop_hispanic, d?.total_population), populationPercent(d?.pop_black_nh, d?.total_population), populationPercent(d?.pop_asian_nh, d?.total_population), populationPercent(d?.pop_age_65plus, d?.total_population), d?.median_household_income == null ? 'Not reported' : `$${d.median_household_income.toLocaleString('en-US')}`];
   }), [130, 110, 110, 110, 110, 80, width - 650]);
 
-  newPage('06 / Sources and limits');
+  newPage('04 / Sources and limits');
   heading('Evidence you can verify', 'Values reflect the records loaded for this comparison. This is a snapshot, not monitoring of trial changes.');
   write('ClinicalTrials.gov API v2', 14, bold, blue);
   for (const t of trials) write(`${t.nctId}: https://clinicaltrials.gov/study/${t.nctId}`, 10, font, blue);
