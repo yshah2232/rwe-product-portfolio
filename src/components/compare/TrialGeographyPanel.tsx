@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { MapPin, Users, Info, Loader2 } from 'lucide-react';
 import type { CompareTrial } from '@/lib/trialCompare';
 import { STATE_TILES, summarizeGeography, type TrialCoverage } from '@/lib/trialGeography';
+import type { AcsRow, ReportPopulation } from '@/lib/reportContext';
+import { usePlainMode } from '@/contexts/PlainModeContext';
 
 const ACS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/acs-demographics`;
 
@@ -16,10 +18,10 @@ const COVERAGE_TEXT: Record<TrialCoverage, string> = {
   us_state_missing: 'US facilities listed without a usable state, so they cannot be placed on the map.',
 };
 
-type AcsRow = { state: string; data?: any; error?: string };
 const pct = (n?: number | null, d?: number | null) => (n == null || !d ? null : `${((n / d) * 100).toFixed(1)}%`);
 
-export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
+export function TrialGeographyPanel({ trials, onPopulation }: { trials: CompareTrial[]; onPopulation?: (population: ReportPopulation) => void }) {
+  const { termsAccepted } = usePlainMode();
   const geo = useMemo(() => summarizeGeography(trials), [trials]);
   const [view, setView] = useState<'state' | 'region'>('state');
   const [acs, setAcs] = useState<{ loading: boolean; rows: AcsRow[]; error?: string; year?: number }>({ loading: false, rows: [] });
@@ -28,7 +30,8 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
 
   useEffect(() => {
     const top = geo.states.slice(0, 30);
-    if (!top.length) return;
+    if (!termsAccepted) return;
+    if (!top.length) { setAcs({ loading: false, rows: [] }); return; }
     let cancelled = false;
     setAcs({ loading: true, rows: [] });
     fetch(ACS_URL, {
@@ -44,7 +47,9 @@ export function TrialGeographyPanel({ trials }: { trials: CompareTrial[] }) {
       setAcs({ loading: false, rows: keyErr ? [] : rows, error: keyErr, year: b.acsYear });
     }).catch(() => { if (!cancelled) setAcs({ loading: false, rows: [], error: 'network' }); });
     return () => { cancelled = true; };
-  }, [geo]);
+  }, [geo, termsAccepted]);
+
+  useEffect(() => { onPopulation?.(acs); }, [acs, onPopulation]);
 
   const gaps = geo.trials.filter((t) => t.coverage !== 'us' || t.usSitesWithoutState > 0);
 

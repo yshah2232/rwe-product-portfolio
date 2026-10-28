@@ -1,4 +1,6 @@
 # Current task
+- [x] Improve PDF hierarchy, grounded takeaways, concise comparison and sourced ACS context. Live two trial report downloaded and all four pages visually inspected. Fixed excess whitespace and an orphaned table row. Takeaways are deterministic, not AI generated verdicts.
+- [x] Offer optional anonymous post download rating/comments and admin review, with no search/report linkage. Live submission and signed in AdminCEO readback verified; invalid ratings, extra identifiers, unauthenticated admin reads and direct table reads rejected. 80 tests passed; build clean. One explicitly labeled launch verification submission remains for inspection.
 - [x] Correct preview origin blocking: live browser requests with actual hosted preview Origin returned 10 trials for Cancer trials in US (45 candidates, 749 registry matches) and Prostate cancer. Invalid origins return 403 with visible error, not zero results; 12 tests passed.
 - [ ] Search relevance review: Prostate cancer retrieves an overly broad registry pool and includes weak matches. Origin blocking is corrected; ranking accuracy must not be described as fully verified.
 - [x] Replace public saved cohorts with direct trial comparison (2 to 4 trials). Verified live search, deselection, four trial cap, separate tabs and reload reset.

@@ -616,6 +616,27 @@ export type Database = {
         }
         Relationships: []
       }
+      report_feedback: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          rating: number
+        }
+        Insert: {
+          comment?: string
+          created_at?: string
+          id?: string
+          rating: number
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          rating?: number
+        }
+        Relationships: []
+      }
       result_feedback: {
         Row: {
           created_at: string

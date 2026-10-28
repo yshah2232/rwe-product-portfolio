@@ -14,6 +14,7 @@ type Report = {
 };
 
 const STATUSES: Report['status'][] = ['new', 'in_review', 'resolved', 'dismissed'];
+type DownloadFeedback = { id: string; rating: number; comment: string; created_at: string };
 const CATEGORY_LABELS: Record<string, string> = {
   bug: 'Broken',
   wrong_information: 'Wrong info',
@@ -25,6 +26,7 @@ export default function AdminIssues() {
   useSeo({ title: 'Issue reports | Admin', canonical: '/admin/issues', noindex: true });
   const { request } = useAdminAccess();
   const [rows, setRows] = useState<Report[]>([]);
+  const [feedback, setFeedback] = useState<DownloadFeedback[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +38,10 @@ export default function AdminIssues() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'Could not load reports.');
       setRows(data.rows ?? []);
+      const feedbackResponse = await request('admin-report-feedback');
+      const feedbackData = await feedbackResponse.json();
+      if (!feedbackResponse.ok) throw new Error(feedbackData.error || 'Could not load download feedback.');
+      setFeedback(feedbackData.rows ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load reports.');
     } finally {
@@ -65,6 +71,15 @@ export default function AdminIssues() {
           <RefreshCw className="h-4 w-4" /> Refresh
         </Button>
       </div>
+
+      <section className="mb-8 border-b border-border pb-6" aria-labelledby="download-feedback-heading">
+        <h2 id="download-feedback-heading" className="text-lg font-semibold mb-2">PDF experience feedback</h2>
+        <p className="text-sm text-muted-foreground mb-4">{feedback.length ? `${feedback.length} submissions in the latest 200. Average rating: ${(feedback.reduce((sum, row) => sum + row.rating, 0) / feedback.length).toFixed(1)} / 5.` : 'No download feedback loaded.'} Voluntary submissions only, not a count of completed downloads or unique visitors.</p>
+        <div className="space-y-3">{feedback.map((row) => <article key={row.id} className="border border-border rounded-sm p-4">
+          <div className="flex flex-wrap gap-3 items-center text-sm"><strong className="text-primary">{row.rating} / 5</strong><span className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleString()}</span></div>
+          {row.comment && <p className="mt-2 text-sm whitespace-pre-wrap">{row.comment}</p>}
+        </article>)}</div>
+      </section>
 
       {error && <p className="text-sm text-destructive mb-4">{error}</p>}
       {!error && !loading && rows.length === 0 && (
