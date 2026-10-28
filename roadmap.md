@@ -1,4 +1,7 @@
 # Current task
+- [ ] Implement genuine BM25 and dense vector hybrid ranking with explicit disease subtype safeguards; agree retrieval scope before building a registry index.
+- [ ] Restrict Mr. Trial to current verified page/search evidence; fix unrelated Census examples, duplicate disclaimer and confusing review notes.
+- [ ] Evaluate every active AI feature against source verified expected outputs, with per run scores and Approved, Okay to be accepted, Risky and False segments; clarify run budget and publish sample outputs, failures and limits.
 - [x] Add on demand comparison AI summary below the data, grounded in server fetched registry records and verified Census cache. Live two trial summary verified, with no AI calls before Summarize.
 - [x] Add Mr. Trial comparison assistant with a temporary conversation and source links. Live first answer and follow up verified; fixed streamed step-start history validation. 82 tests pass and build clean. Desktop assistant remains hidden on phones as previously requested; summary is available on the page. Existing repository lint debt remains outside this task.
 - [x] Improve PDF hierarchy, grounded takeaways, concise comparison and sourced ACS context. Live two trial report downloaded and all four pages visually inspected. Fixed excess whitespace and an orphaned table row. Takeaways are deterministic, not AI generated verdicts.
