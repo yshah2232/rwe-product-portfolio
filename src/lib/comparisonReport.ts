@@ -77,11 +77,11 @@ export async function buildComparisonReport(trials: CompareTrial[], population?:
       const wrapped = cells.map((c, i) => lines(c, widths[i] - 16, head ? 9 : 10, head || i === 0 ? bold : font));
       const maxLines = Math.max(...wrapped.map((c) => c.length));
       const end = count == null ? maxLines : Math.min(maxLines, offset + count);
-      const height = (end - offset) * 14 + 16;
+      const height = (end - offset) * 12 + 12;
       if (head || highlight) page.drawRectangle({ x: 45, y: y - height, width, height, color: light });
       let x = 45;
       wrapped.forEach((cell, i) => {
-        cell.slice(offset, end).forEach((line, j) => text(line, x + 8, y - 8 - j * 14, head ? 9 : 10, head || i === 0 ? bold : font, head ? blue : ink));
+        cell.slice(offset, end).forEach((line, j) => text(line, x + 8, y - 8 - j * 12, head ? 9 : 10, head || i === 0 ? bold : font, head ? blue : ink));
         x += widths[i];
       });
       page.drawLine({ start: { x: 45, y: y - height }, end: { x: 797, y: y - height }, thickness: .5, color: border });
@@ -90,10 +90,10 @@ export async function buildComparisonReport(trials: CompareTrial[], population?:
     row(headers, true);
     rows.forEach((cells, i) => {
       const required = Math.max(...cells.map((c, j) => lines(c, widths[j] - 16, 10, j === 0 ? bold : font).length));
-      if (y - (required * 14 + 16) < 65 && required * 14 + 16 < 360) { newPage('Comparison continued'); row(headers, true); }
+      if (y - (required * 12 + 12) < 65 && required * 12 + 12 < 360) { newPage('Comparison continued'); row(headers, true); }
       let offset = 0;
       while (offset < required) {
-        const available = Math.floor((y - 65 - 16) / 14);
+        const available = Math.floor((y - 65 - 12) / 12);
         if (available < 1) { newPage('Comparison continued'); row(headers, true); continue; }
         const count = Math.min(required - offset, available);
         row(cells, false, highlights[i], offset, count); offset += count;
