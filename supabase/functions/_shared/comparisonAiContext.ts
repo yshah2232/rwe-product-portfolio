@@ -1,7 +1,19 @@
 export const COMPARISON_TERMS_VERSION = '2026-10-27';
 export const validNcts = (ids: string[]) => ids.length >= 2 && ids.length <= 4 && new Set(ids).size === ids.length && ids.every((id) => /^NCT\d{8}$/.test(id));
 
-export function compactTrial(study: any) {
+type RegistryStudy = { protocolSection?: {
+  identificationModule?: { nctId?: string; briefTitle?: string };
+  descriptionModule?: { briefSummary?: string };
+  statusModule?: { overallStatus?: string; lastUpdatePostDateStruct?: { date?: string } };
+  designModule?: { phases?: string[]; studyType?: string; designInfo?: Record<string, unknown>; enrollmentInfo?: { count?: number; type?: string } };
+  sponsorCollaboratorsModule?: { leadSponsor?: { name?: string } };
+  conditionsModule?: { conditions?: string[] };
+  armsInterventionsModule?: { interventions?: { name?: string; type?: string }[] };
+  eligibilityModule?: { sex?: string; minimumAge?: string; maximumAge?: string; eligibilityCriteria?: string };
+  contactsLocationsModule?: { locations?: { country?: string; state?: string }[]; centralContacts?: unknown[] };
+} };
+
+export function compactTrial(study: RegistryStudy) {
   const p = study.protocolSection ?? {};
   const text = (value: unknown, max = 1800) => typeof value === 'string' ? value.slice(0, max) : null;
   const locations = p.contactsLocationsModule?.locations ?? [];
@@ -17,11 +29,11 @@ export function compactTrial(study: any) {
     enrollment: p.designModule?.enrollmentInfo ?? null,
     sponsor: p.sponsorCollaboratorsModule?.leadSponsor?.name ?? null,
     conditions: p.conditionsModule?.conditions ?? [],
-    interventions: (p.armsInterventionsModule?.interventions ?? []).slice(0, 20).map((i: any) => ({ name: text(i.name, 300), type: i.type })),
+    interventions: (p.armsInterventionsModule?.interventions ?? []).slice(0, 20).map((i) => ({ name: text(i.name, 300), type: i.type })),
     eligibility: { sex: p.eligibilityModule?.sex ?? null, minimumAge: p.eligibilityModule?.minimumAge ?? null, maximumAge: p.eligibilityModule?.maximumAge ?? null, criteria: text(p.eligibilityModule?.eligibilityCriteria, 6000) },
     listedSiteCount: locations.length || null,
-    countries: [...new Set(locations.map((l: any) => l.country).filter(Boolean))],
-    usStates: [...new Set(locations.filter((l: any) => l.country === 'United States').map((l: any) => l.state).filter(Boolean))],
+    countries: [...new Set(locations.flatMap((l) => l.country ? [l.country] : []))],
+    usStates: [...new Set(locations.filter((l) => l.country === 'United States').flatMap((l) => l.state ? [l.state] : []))],
     source: `https://clinicaltrials.gov/study/${p.identificationModule?.nctId}`,
   };
 }
