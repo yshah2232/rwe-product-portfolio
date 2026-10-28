@@ -67,8 +67,8 @@ const TrustDrawer = ({ field, fieldType, hit, sourceField, refreshedAt, classNam
       setEditing(false);
       toast.success(
         body.deduped
-          ? `Thanks — your vote brings this suggestion to ${body.voteCount} support${body.voteCount === 1 ? '' : 's'}.`
-          : 'Thanks — submitted for review.',
+          ? `Thanks, your vote brings this suggestion to ${body.voteCount} support${body.voteCount === 1 ? '' : 's'}.`
+          : 'Thanks, submitted for review.',
       );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Failed to submit suggestion.');
@@ -147,7 +147,7 @@ const TrustDrawer = ({ field, fieldType, hit, sourceField, refreshedAt, classNam
             )}
             {isPassthrough && (
               <p className="text-[11px] text-amber-700 mt-1 pt-2 border-t border-border/40">
-                No mapping rule matched. Raw registry value shown as-is — treat as observed, not normalized.
+                No mapping rule matched. Raw registry value shown as is, treated as observed, not normalized.
               </p>
             )}
           </dl>
@@ -164,7 +164,7 @@ const TrustDrawer = ({ field, fieldType, hit, sourceField, refreshedAt, classNam
             )}
             {submitted && (
               <p className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary">
-                <Check className="h-3 w-3" /> Submitted — thanks for improving the mapping.
+                <Check className="h-3 w-3" /> Submitted. Thanks for improving the mapping.
               </p>
             )}
             {editing && (

@@ -88,14 +88,14 @@ const INTENTS: {
     patterns: /skill|pm|product manager|competenc|qualification/i,
     response: () => ({
       role: 'assistant',
-      content: 'This portfolio demonstrates five core PM skills:\n\n1. **Data Driven Decisions** — KPIs and persistence analytics from claims data\n2. **AI Product Integration** — Rule based AI Q&A on live cohort metrics\n3. **Roadmapping** — Modular product roadmap across patient journey, market access, and HCP intelligence\n4. **Stakeholder Empathy** — Designed for brand managers and payer strategists\n5. **Technical Fluency** — End to end React/TypeScript build with synthetic data pipelines',
+      content: 'This portfolio demonstrates five core PM skills:\n\n1. **Data Driven Decisions**: KPIs and persistence analytics from claims data\n2. **AI Product Integration**: Rule based AI Q&A on live cohort metrics\n3. **Roadmapping**: Modular product roadmap across patient journey, market access, and HCP intelligence\n4. **Stakeholder Empathy**: Designed for brand managers and payer strategists\n5. **Technical Fluency**: End to end React/TypeScript build with synthetic data pipelines',
     }),
   },
   {
     patterns: /roadmap|next|upcoming|future|plan/i,
     response: () => ({
       role: 'assistant',
-      content: 'The roadmap includes four upcoming modules:\n\n• **Patient Journey Analytics** — Diagnosis to treatment milestone mapping\n• **Market Access & Coverage** — Payer rule impact on adoption\n• **HCP Prescribing Intelligence** — Provider level prescribing patterns\n• **Clinical Trials & Signals** — Trial activity to real world adoption',
+      content: 'The roadmap includes four upcoming modules:\n\n• **Patient Journey Analytics**: Diagnosis to treatment milestone mapping\n• **Market Access & Coverage**: Payer rule impact on adoption\n• **HCP Prescribing Intelligence**: Provider level prescribing patterns\n• **Clinical Trials & Signals**: Trial activity to real world adoption',
     }),
   },
   {
@@ -163,7 +163,7 @@ const AgentChatbot = () => {
           ...prev,
           {
             role: 'assistant',
-            content: `I can help you with:\n\n• **Navigate** — "Open dashboard", "Show methodology"\n• **Data** — "How was the data created?"\n• **Analysis** — "Compare brands", "Payer breakdown"\n• **Features** — "Persistence curves", "Export report"\n• **About** — "What PM skills?", "Roadmap"\n• **Connect** — "LinkedIn", "GitHub"\n\nTry asking one of these!`,
+            content: `I can help you with:\n\n• **Navigate**: "Open dashboard", "Show methodology"\n• **Data**: "How was the data created?"\n• **Analysis**: "Compare brands", "Payer breakdown"\n• **Features**: "Persistence curves", "Export report"\n• **About**: "What PM skills?", "Roadmap"\n• **Connect**: "LinkedIn", "GitHub"\n\nTry asking one of these!`,
           },
         ]);
       }

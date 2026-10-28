@@ -83,7 +83,7 @@ const AudienceModal = () => {
 
         <div role="radiogroup" aria-label="Audience" className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
           {option('clinical', Stethoscope, "I'm a clinician or researcher",
-            'Show registry-standard terminology — phases, masking, eligibility criteria, ICD/MeSH terms.')}
+            'Show registry standard terminology: phases, masking, eligibility criteria, ICD/MeSH terms.')}
           {option('patient', HeartHandshake, "I'm a patient, caregiver, or just curious",
             'Rewrite trials in plain language. Default to studies that are currently recruiting.')}
         </div>

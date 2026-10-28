@@ -5,9 +5,9 @@ import { useSeo } from '@/hooks/useSeo';
 
 const Terms = () => {
   useSeo({
-    title: 'Terms of Service — Clinical Trial Diversity Studio',
+    title: 'Terms of Service | Clinical Trial Diversity Studio',
     description:
-      'Terms governing use of Clinical Trial Diversity Studio — an information tool built on public ClinicalTrials.gov data.',
+      'Terms governing use of Clinical Trial Diversity Studio, an information tool built on public ClinicalTrials.gov data.',
     canonical: '/terms',
   });
 
@@ -48,8 +48,8 @@ const Terms = () => {
           <p>
             The Service is for informational and educational purposes only. Nothing on the Service
             constitutes medical advice, diagnosis, treatment, or a recommendation to enroll or not
-            enroll in any clinical trial. AI-generated plain-language summaries and eligibility
-            self-checks are best-effort interpretations and may contain errors. Always consult a
+            enroll in any clinical trial. AI generated plain language summaries and eligibility
+            self checks are best effort interpretations and may contain errors. Always consult a
             qualified healthcare professional and verify all information directly with the trial
             site and on ClinicalTrials.gov before making any health decision.
           </p>
@@ -66,9 +66,9 @@ const Terms = () => {
         </div>
 
         <div>
-          <h2 className="font-display text-[20px] font-bold mb-2">5. AI-generated content</h2>
+          <h2 className="font-display text-[20px] font-bold mb-2">5. AI generated content</h2>
           <p>
-            Plain-language rewrites and document eligibility self-checks are produced by large
+            Plain language rewrites and document eligibility self checks are produced by large
             language models. They may misinterpret eligibility criteria, miss exclusions, or
             paraphrase numbers inaccurately. Treat them as a starting point, never as the final
             word. Decisions about trial enrollment must be made with the trial team using the
@@ -79,10 +79,10 @@ const Terms = () => {
         <div>
           <h2 className="font-display text-[20px] font-bold mb-2">6. Documents you upload</h2>
           <p>
-            When you use the optional eligibility self-check, files you select are sent to our
+            When you use the optional eligibility self check, files you select are sent to our
             AI provider for analysis and discarded immediately after the response is returned.
             We do not retain your documents on our servers. Do not upload documents containing
-            information you are not comfortable sending to a third-party AI provider.
+            information you are not comfortable sending to a third party AI provider.
           </p>
         </div>
 
@@ -107,7 +107,7 @@ const Terms = () => {
         </div>
 
         <div>
-          <h2 className="font-display text-[20px] font-bold mb-2">9. Third-party services</h2>
+          <h2 className="font-display text-[20px] font-bold mb-2">9. Third party services</h2>
           <p>
             The Service relies on ClinicalTrials.gov, the US Census ACS, and AI gateway providers.
             Their availability and accuracy are outside our control. Outbound links to trial

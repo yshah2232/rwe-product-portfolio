@@ -18,7 +18,7 @@ const PATHS = ['/', '/search-registry'];
 
 const HeatmapAnalytics = () => {
   useSeo({
-    title: 'Interaction Heatmap — Internal Analytics',
+    title: 'Interaction Heatmap | Internal Analytics',
     description: 'Internal click heatmap and scroll depth view for tracked pages.',
     canonical: '/analytics/heatmap',
     noindex: true,

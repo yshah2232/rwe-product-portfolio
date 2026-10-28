@@ -16,9 +16,9 @@ const apiParams = [
   { key: 'pageSize', value: '50 (capped 1–200)', desc: 'How many studies to return per request. Tuned to balance latency and coverage.' },
   { key: 'format', value: 'json', desc: 'Response format. We always request structured JSON.' },
   { key: 'countTotal', value: 'true', desc: 'Include the total matching study count for pagination & sizing.' },
-  { key: 'filter.advanced', value: 'AREA[OverallStatus] / AREA[Phase] / AREA[LocationCountry]', desc: 'Optional advanced filters joined with AND — used when the studio narrows by status, phase, or country.' },
+  { key: 'filter.advanced', value: 'AREA[OverallStatus] / AREA[Phase] / AREA[LocationCountry]', desc: 'Optional advanced filters joined with AND, used when the studio narrows by status, phase, or country.' },
   { key: 'pageToken', value: 'opaque cursor', desc: 'Used to walk additional pages of results without losing the query context.' },
-  { key: 'fields', value: 'pipe-separated paths', desc: 'Restricts the response to only the fields the studio renders — keeps payloads small.' },
+  { key: 'fields', value: 'pipe separated paths', desc: 'Restricts the response to only the fields the studio renders, keeping payloads small.' },
 ];
 
 const fields = [
@@ -38,7 +38,7 @@ const conditions = [
 ];
 
 const pipeline = [
-  { icon: Database, label: 'Source', body: 'ClinicalTrials.gov v2 REST API — the U.S. National Library of Medicine\'s public registry of ~500K studies.' },
+  { icon: Database, label: 'Source', body: 'ClinicalTrials.gov v2 REST API, the U.S. National Library of Medicine\'s public registry of ~500K studies.' },
   { icon: Filter, label: 'Edge proxy', body: 'A server-side function calls the registry, applies country/phase/status filters, and trims to only the fields the studio renders.' },
   { icon: RefreshCw, label: 'Cache', body: 'Edge cache: 1-hour s-maxage with 24-hour stale-while-revalidate. Trial data does not change second-by-second.' },
   { icon: Layers, label: 'Shape', body: 'Studies are grouped by therapeutic area, then aggregated for KPIs (enrollment, status mix, phase mix) and detail views.' },
@@ -48,7 +48,7 @@ const pipeline = [
 const DataMethod = () => {
   const navigate = useNavigate();
   useSeo({
-    title: 'Data & Method — Clinical Trial Diversity Studio',
+    title: 'Data & Method | Clinical Trial Diversity Studio',
     description: 'Data sources, canonicalization rules, trust scoring, and AI reporting standards behind Clinical Trial Diversity Studio.',
     canonical: '/data-method',
   });
@@ -66,7 +66,7 @@ const DataMethod = () => {
           </motion.h1>
           <motion.p {...anim(0.18)} className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
             Trial data comes directly from the ClinicalTrials.gov v2 API, and surrounding population context comes from the US Census American Community Survey (ACS). This page documents
-            the exact source, the parameters we send, the fields we display, and how often the data refreshes — so any
+            the exact source, the parameters we send, the fields we display, and how often the data refreshes, so any
             recommendation surfaced in the studio is fully traceable.
           </motion.p>
 
@@ -91,10 +91,10 @@ const DataMethod = () => {
               CTG.gov vs Search Registry
             </p>
             <h2 className="font-display text-3xl md:text-[40px] font-medium leading-[1.1] tracking-[-0.01em] text-foreground">
-              Same source. Better question-answering.
+              Same source. Better question answering.
             </h2>
             <p className="mt-4 text-sm md:text-base text-muted-foreground leading-relaxed">
-              The Search Registry pulls from the exact same authoritative source as the public CTG.gov website —
+              The Search Registry pulls from the exact same authoritative source as the public CTG.gov website,
               the v2 API. The difference is in the layer on top: how the query is understood, how results are
               ranked, and how the platform learns from use.
             </p>
@@ -132,9 +132,9 @@ const DataMethod = () => {
                   </p>
                 </div>
                 <p className="text-[13px] text-muted-foreground leading-relaxed">
-                  Strips filler, fetches NSCLC candidates, then re-ranks by full intent — surfacing{' '}
+                  Strips filler, fetches NSCLC candidates, then reranks by full intent, surfacing{' '}
                   <span className="font-semibold text-foreground">Phase 2/3 NSCLC trials in patients ≥65 with
-                  prior chemotherapy exposure</span>, ranked by semantic match with a one-line rationale on each.
+                  prior chemotherapy exposure</span>, ranked by semantic match with a short rationale on each.
                 </p>
               </div>
             </div>
@@ -167,7 +167,7 @@ const DataMethod = () => {
                     {
                       cap: 'Ranking',
                       ctg: 'Recency + keyword frequency.',
-                      ours: 'Semantic relevance to clinical intent (LLM-as-reranker, 0–100).',
+                      ours: 'Semantic relevance to clinical intent (LLM as reranker, 0–100).',
                     },
                     {
                       cap: 'Why this trial?',
@@ -176,12 +176,12 @@ const DataMethod = () => {
                     },
                     {
                       cap: 'Synonyms & abbreviations',
-                      ctg: 'Manual — user must include both "NSCLC" and "non-small cell lung cancer".',
+                      ctg: 'Manual, user must include both "NSCLC" and "non-small cell lung cancer".',
                       ours: 'Handled implicitly by the semantic layer.',
                     },
                     {
                       cap: 'Cross-verification',
-                      ctg: 'N/A — it is the source.',
+                      ctg: 'N/A. It is the source.',
                       ours: 'Every result deep-links back to CTG.gov in one click. Header link cross-checks the same query.',
                     },
                     {
@@ -219,7 +219,7 @@ const DataMethod = () => {
           </motion.div>
 
           <motion.p {...anim(0.26)} className="mt-6 text-[12.5px] text-muted-foreground italic">
-            We are not replacing CTG.gov — we sit on top of it. Same trials, same NCT IDs, faster path from a
+            We are not replacing CTG.gov; we sit on top of it. Same trials, same NCT IDs, faster path from a
             clinical question to a defensible shortlist.
           </motion.p>
 
@@ -279,8 +279,8 @@ const DataMethod = () => {
               </div>
               <p className="font-display text-[16px] font-semibold text-foreground mb-1.5">3. Passthrough</p>
               <p className="text-[13px] text-muted-foreground leading-relaxed">
-                If no rule matches, the raw registry value is shown as-is and flagged at 70% confidence with an
-                amber warning in the Trust Drawer — never silently &ldquo;guessed&rdquo;.
+                If no rule matches, the raw registry value is shown as is and flagged at 70% confidence with an
+                amber warning in the Trust Drawer, never silently &ldquo;guessed&rdquo;.
               </p>
             </div>
           </motion.div>
@@ -344,7 +344,7 @@ const DataMethod = () => {
               <p className="text-[13.5px] text-foreground/85 leading-relaxed">
                 Every mapping is open: click the <span className="font-mono text-[12px]">ⓘ</span> next to any
                 cleaned value to see the raw input, the rule that matched, and the confidence. There is no
-                hidden ML — the rule table is the entire logic, and you can read every entry.
+                hidden ML; the rule table is the entire logic, and you can read every entry.
               </p>
             </div>
             <div className="rounded-xl border border-border/60 bg-muted/30 p-5">
@@ -352,7 +352,7 @@ const DataMethod = () => {
                 What about outliers?
               </p>
               <p className="text-[13.5px] text-foreground/85 leading-relaxed">
-                Anything not covered by a rule passes through with the raw value at 70% confidence — flagged
+                Anything not covered by a rule passes through with the raw value at 70% confidence, flagged
                 amber. That is by design: the platform never invents a normalization. If you see a wrong or
                 missing mapping, suggest it inline in the Trust Drawer; it lands in the review queue with your vote.
               </p>
@@ -374,7 +374,7 @@ const DataMethod = () => {
             <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed">
               The score is produced by an LLM reranker (Google Gemini 2.5 Flash Lite via the Lovable AI Gateway).
               It receives your full plain-language query and the title + conditions + interventions of every
-              candidate fetched from CTG.gov, and assigns each one a single integer 0–100 with a one-sentence
+              candidate fetched from CTG.gov, and assigns each one a single integer 0–100 with a one sentence
               rationale.
             </p>
           </motion.div>
@@ -431,10 +431,10 @@ Be strict:
               Guardrails
             </p>
             <ul className="space-y-2 text-[13.5px] text-foreground/85 leading-relaxed">
-              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Single LLM call per search</strong> — all candidates scored in one batch (no per-trial costs).</span></li>
-              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Structured output via tool-calling</strong> — the model must return a typed JSON array, no free-text parsing.</span></li>
-              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Graceful fallback</strong> — if the AI gateway is unavailable, results fall back to CTG.gov default order and the UI surfaces this honestly.</span></li>
-              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Score &amp; rationale on every card</strong> — you can see what the model thought and disagree with it via the thumbs up/down feedback loop.</span></li>
+              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Single LLM call per search</strong>: all candidates scored in one batch (no per trial costs).</span></li>
+              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Structured output via tool calling</strong>: the model must return a typed JSON array, no free text parsing.</span></li>
+              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Graceful fallback</strong>: if the AI gateway is unavailable, results fall back to CTG.gov default order and the UI surfaces this honestly.</span></li>
+              <li className="flex gap-2.5"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> <span><strong>Score &amp; rationale on every card</strong>: you can see what the model thought and disagree with it via the thumbs up/down feedback loop.</span></li>
             </ul>
           </motion.div>
         </div>
@@ -481,7 +481,7 @@ Be strict:
               Exactly what we ask the registry.
             </h2>
             <p className="mt-4 text-sm md:text-base text-muted-foreground leading-relaxed">
-              The studio's edge function calls a single endpoint per query. No scraping, no third-party feeds, no manual
+              The studio's edge function calls a single endpoint per query. No scraping, no third party feeds, no manual
               CSVs.
             </p>
           </motion.div>
@@ -546,7 +546,7 @@ Be strict:
               The fields we display.
             </h2>
             <p className="mt-4 text-sm md:text-base text-muted-foreground leading-relaxed">
-              Each field below is requested explicitly and rendered as-is. Anything the studio shows about a study can
+              Each field below is requested explicitly and rendered as is. Anything the studio shows about a study can
               be traced back to one of these registry fields.
             </p>
           </motion.div>

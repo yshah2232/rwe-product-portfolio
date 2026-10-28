@@ -33,7 +33,7 @@ function checkRateLimit(ip: string): { ok: boolean; reason?: string } {
     return { ok: true };
   }
   m.count += 1;
-  if (m.count > MINUTE_CAP) return { ok: false, reason: `Slow down — max ${MINUTE_CAP} eligibility checks per minute.` };
+  if (m.count > MINUTE_CAP) return { ok: false, reason: `Slow down, max ${MINUTE_CAP} eligibility checks per minute.` };
   return { ok: true };
 }
 

@@ -74,7 +74,7 @@ export default function ReportProblem() {
       </div>
       <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
         Spotted a bug, information that looks wrong, or have an idea to improve the site?
-        Tell us below. We only store what you type here — no account, no email, no tracking.
+        Tell us below. We only store what you type here. No account, no email, no tracking.
       </p>
 
       {stats && stats.total > 0 && (
@@ -90,7 +90,7 @@ export default function ReportProblem() {
             In review: <span className="font-semibold text-foreground">{stats.in_review}</span>
           </span>
           <span className="text-xs text-muted-foreground basis-full sm:basis-auto">
-            Reports contain no personal information, so we can't reply to the sender — resolutions are shown here as site-wide counts.
+            Reports contain no personal information, so we can't reply to the sender; resolutions are shown here as site-wide counts.
           </span>
         </div>
       )}
@@ -99,7 +99,7 @@ export default function ReportProblem() {
         <div className="ctg-panel p-6 flex items-start gap-3">
           <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold">Thanks — your report was sent.</p>
+            <p className="font-semibold">Thanks, your report was sent.</p>
             <p className="text-sm text-muted-foreground mt-1">The site owner reviews reports in the admin workspace.</p>
           </div>
         </div>

@@ -307,7 +307,7 @@ const CohortDiversity = () => {
             <ArrowLeft className="h-3.5 w-3.5" /> Back to cohort
           </Link>
           <h1 className="font-display text-3xl md:text-4xl font-medium leading-tight text-foreground">
-            Diversity & Access — {cohort.name}
+            Diversity & Access: {cohort.name}
           </h1>
           <p className="mt-3 text-[14px] text-muted-foreground max-w-3xl leading-relaxed">
             US Census ACS 5-year ({national ? 2022 : '—'}) demographics for the catchment areas of this cohort's

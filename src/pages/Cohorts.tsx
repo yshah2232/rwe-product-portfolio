@@ -26,7 +26,7 @@ interface CohortRow {
 
 const Cohorts = () => {
   useSeo({
-    title: 'Saved Cohorts — Clinical Trial Diversity Studio',
+    title: 'Saved Cohorts | Clinical Trial Diversity Studio',
     description: 'Reusable trial cohorts grouped by therapeutic area or program, with canonicalized sponsors and indications for apples-to-apples comparison.',
     canonical: '/cohorts',
   });

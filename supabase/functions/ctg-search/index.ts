@@ -43,7 +43,7 @@ function checkRateLimit(ip: string): { ok: boolean; reason?: string } {
   } else {
     minute.count += 1;
     if (minute.count > MINUTE_CAP) {
-      return { ok: false, reason: `Slow down — max ${MINUTE_CAP} searches per minute.` };
+      return { ok: false, reason: `Slow down, max ${MINUTE_CAP} searches per minute.` };
     }
   }
 

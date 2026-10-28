@@ -53,7 +53,7 @@ export function cleanSponsor(raw: string): MappingHit {
       if (clean && clean !== raw) return { raw, clean, confidence: 95, source: "rule", note };
     }
   }
-  return { raw, clean: raw, confidence: 70, source: "passthrough", note: "No mapping rule matched — raw value shown" };
+  return { raw, clean: raw, confidence: 70, source: "passthrough", note: "No mapping rule matched, raw value shown" };
 }
 
 export function cleanIndication(raw: string): MappingHit {
@@ -61,7 +61,7 @@ export function cleanIndication(raw: string): MappingHit {
   for (const [re, clean, note] of INDICATION_RULES) {
     if (re.test(raw)) return { raw, clean, confidence: 95, source: "rule", note };
   }
-  return { raw, clean: raw, confidence: 70, source: "passthrough", note: "No mapping rule matched — raw value shown" };
+  return { raw, clean: raw, confidence: 70, source: "passthrough", note: "No mapping rule matched, raw value shown" };
 }
 
 export function cleanAsset(raw: string): MappingHit {
@@ -69,5 +69,5 @@ export function cleanAsset(raw: string): MappingHit {
   for (const [re, clean, note] of ASSET_RULES) {
     if (re.test(raw)) return { raw, clean, confidence: 95, source: "rule", note };
   }
-  return { raw, clean: raw, confidence: 70, source: "passthrough", note: "No mapping rule matched — raw value shown" };
+  return { raw, clean: raw, confidence: 70, source: "passthrough", note: "No mapping rule matched, raw value shown" };
 }
