@@ -12,7 +12,7 @@ const schema = z.object({
   ncts: z.array(z.string()).refine(validNcts),
   acceptance: z.object({ accepted: z.literal(true), termsVersion: z.literal(COMPARISON_TERMS_VERSION), audience: z.enum(['clinical', 'patient']) }),
   mode: z.enum(['summary', 'chat']),
-  messages: z.array(z.object({ id: z.string().max(100), role: z.enum(['user', 'assistant']), parts: z.array(z.object({ type: z.enum(['text', 'reasoning']), text: z.string().max(12000) }).passthrough()).max(20) }).passthrough()).min(1).max(40),
+  messages: z.array(z.object({ id: z.string().max(100), role: z.enum(['user', 'assistant']), parts: z.array(z.object({ type: z.enum(['text', 'reasoning', 'step-start']), text: z.string().max(12000).optional() }).passthrough()).max(20) }).passthrough()).min(1).max(40),
 }).passthrough();
 const limits = new Map<string, { minute: number; count: number; day: number; daily: number }>();
 const reply = (error: string, status: number) => new Response(JSON.stringify({ error }), { status, headers });
