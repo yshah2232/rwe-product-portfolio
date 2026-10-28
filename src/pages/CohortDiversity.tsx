@@ -82,7 +82,7 @@ const CohortDiversity = () => {
   const [normalizing, setNormalizing] = useState(false);
   const [acsLoading, setAcsLoading] = useState(false);
   useSeo({
-    title: cohort ? `${cohort.name} — Diversity & Access` : 'Diversity & Access',
+    title: cohort ? `${cohort.name} | Diversity & Access` : 'Diversity & Access',
     description: cohort
       ? `Diversity and access overlay for ${cohort.name}: cohort composition vs national U.S. Census ACS demographics and disease prevalence.`
       : 'Diversity and access overlay: cohort composition vs national U.S. Census ACS demographics and disease prevalence.',
@@ -498,7 +498,7 @@ const RaceComparisonChart = ({
   const bars = [
     { label: 'Cohort sites (catchment)', shares: cohortShares, sub: `${cohort.total.toLocaleString()} ppl across ${cohort.uniqueGeos} geos` },
     nationalShares ? { label: 'US national (ACS)', shares: nationalShares, sub: `${national!.total_population!.toLocaleString()} ppl` } : null,
-    prevalence ? { label: `Disease prevalence — ${prevalence.indication}`, shares: prevalence.shares, sub: prevalence.sources.join(' · ') } : null,
+    prevalence ? { label: `Disease prevalence: ${prevalence.indication}`, shares: prevalence.shares, sub: prevalence.sources.join(' · ') } : null,
   ].filter(Boolean) as Array<{ label: string; shares: Record<string, number>; sub: string }>;
 
   // Gap callouts — find biggest under/over rep vs national

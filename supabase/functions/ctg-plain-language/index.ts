@@ -54,6 +54,7 @@ STRICT RULES:
 - If the source is missing information, say "Not specified by the study" — do not guess.
 - Do NOT give medical advice. Do NOT recommend joining or avoiding any trial.
 - Be neutral and factual.
+- Writing style: never use em dashes or hyphens in any text you write. Write plain sentences with normal punctuation.
 - For "key_numbers" array: extract real numbers from the source and put them in human terms.
 - For "journey_steps": build a chronological participant journey. Use ONLY information from the source (eligibility, design, cycle length, follow-up duration). Each step has:
    - "label": short marker like "Day 0", "Week 1", "Day 21", "Month 3", "Year 1", "End of study". If a specific timing is not in the source, use ordinal markers like "Step 1", "Step 2".

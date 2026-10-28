@@ -65,7 +65,7 @@ const CohortDetail = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const navigate = useNavigate();
   useSeo({
-    title: cohort ? `${cohort.name} — Cohort` : 'Cohort | Clinical Trial Diversity Studio',
+    title: cohort ? `${cohort.name} | Cohort` : 'Cohort | Clinical Trial Diversity Studio',
     description: cohort
       ? `Cohort detail for ${cohort.name}: trials, sponsors, sites, and diversity overlay built on live ClinicalTrials.gov and U.S. Census data.`
       : 'Cohort detail view with trials, sponsors, sites, and diversity overlay.',

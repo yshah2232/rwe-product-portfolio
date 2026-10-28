@@ -51,7 +51,7 @@ const CohortBarriers = () => {
   const [keyMissing, setKeyMissing] = useState(false);
 
   useSeo({
-    title: cohort ? `${cohort.name} — Barriers & Access` : 'Barriers & Access',
+    title: cohort ? `${cohort.name} | Barriers & Access` : 'Barriers & Access',
     description: cohort
       ? `Access barriers for ${cohort.name} trial sites: limited English speaking households and poverty from US Census ACS, scored against the national rate.`
       : 'Access barriers for trial sites from US Census ACS data.',
@@ -182,7 +182,7 @@ const CohortBarriers = () => {
             <ArrowLeft className="h-3.5 w-3.5" /> Back to cohort
           </Link>
           <h1 className="font-display text-3xl md:text-4xl font-medium leading-tight text-foreground">
-            Barriers &amp; Access — {cohort.name}
+            Barriers &amp; Access: {cohort.name}
           </h1>
           <p className="mt-3 text-[14px] text-muted-foreground max-w-3xl leading-relaxed">
             How hard it may be for people near each trial site to take part, measured from
