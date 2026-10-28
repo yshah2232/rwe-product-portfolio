@@ -12,7 +12,7 @@ const schema = z.object({
   ncts: z.array(z.string()).refine(validNcts),
   acceptance: z.object({ accepted: z.literal(true), termsVersion: z.literal(COMPARISON_TERMS_VERSION), audience: z.enum(['clinical', 'patient']) }),
   mode: z.enum(['summary', 'chat']),
-  messages: z.array(z.object({ id: z.string().max(100), role: z.enum(['user', 'assistant']), parts: z.array(z.object({ type: z.literal('text'), text: z.string().max(12000) }).passthrough()).max(20) }).passthrough()).min(1).max(40),
+  messages: z.array(z.object({ id: z.string().max(100), role: z.enum(['user', 'assistant']), parts: z.array(z.object({ type: z.enum(['text', 'reasoning']), text: z.string().max(12000) }).passthrough()).max(20) }).passthrough()).min(1).max(40),
 }).passthrough();
 const limits = new Map<string, { minute: number; count: number; day: number; daily: number }>();
 const reply = (error: string, status: number) => new Response(JSON.stringify({ error }), { status, headers });
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       try { const url = new URL(c.source_url); url.searchParams.delete('key'); if (url.hostname === 'api.census.gov') source = url.toString(); } catch { /* missing source */ }
       return { ...c, state: fips?.find((s) => s.state_fips === c.geo_id)?.state_name, source_url: source };
     }).filter((c) => c.source_url);
-    const messages = input.data.messages as UIMessage[];
+    const messages = input.data.messages.map((message) => ({ ...message, parts: message.parts.filter((part) => part.type === 'text') })) as UIMessage[];
     const call = createResponsesCall(req, { baseURL: 'https://ai.gateway.lovable.dev/v1', apiKey, model: 'openai/gpt-6-astra' }, await convertToModelMessages(messages), `${COMPARISON_INSTRUCTIONS}\nMode: ${input.data.mode}\n<untrusted_registry_context>${JSON.stringify({ records, census, missingCensusStates: states.filter((s) => !census.some((c) => c.state === s)) })}</untrusted_registry_context>`);
     const response = call.result.toUIMessageStreamResponse({ originalMessages: messages, sendReasoning: true, onFinish: () => { /* No persistence. */ }, onError: (error) => error instanceof Error ? error.message : 'AI request failed.' });
     return await withLovableAiGatewayRunIdHeader(response, call.gateway, { ...corsHeaders, 'Cache-Control': 'no-store' });
