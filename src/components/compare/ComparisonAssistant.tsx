@@ -9,13 +9,15 @@ import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit 
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { usePlainMode, TERMS_VERSION } from '@/contexts/PlainModeContext';
 import mrTrial from '@/assets/mr-trial.png';
+import type { ReportPopulation } from '@/lib/reportContext';
 
-function useComparisonChat(ncts: string[], mode: 'summary' | 'chat') {
+function useComparisonChat(ncts: string[], mode: 'summary' | 'chat', population?: ReportPopulation | null) {
   const { termsAccepted, audience } = usePlainMode();
+  const visibleCensus = useMemo(() => population?.rows.flatMap((r) => r.data?.acs_year && !r.error ? [{ state: r.state, year: r.data.acs_year }] : []) ?? [], [population]);
   const transport = useMemo(() => new DefaultChatTransport({
     api: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/comparison-ai`,
     headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-    body: { ncts, mode, acceptance: { accepted: termsAccepted, termsVersion: TERMS_VERSION, audience } },
+    body: { ncts, mode, visibleCensus, acceptance: { accepted: termsAccepted, termsVersion: TERMS_VERSION, audience } },
     fetch: async (url, init) => {
       if (!termsAccepted) throw new Error('Accept the agreement before using AI.');
       const response = await fetch(url, init);
@@ -25,13 +27,13 @@ function useComparisonChat(ncts: string[], mode: 'summary' | 'chat') {
       }
       return response;
     },
-  }), [ncts, mode, termsAccepted, audience]);
+  }), [ncts, mode, visibleCensus, termsAccepted, audience]);
   const chat = useChat({ transport });
   return { ...chat, termsAccepted, busy: chat.status === 'submitted' || chat.status === 'streaming' };
 }
 
-export function ComparisonSummary({ ncts, ready }: { ncts: string[]; ready: boolean }) {
-  const chat = useComparisonChat(ncts, 'summary');
+export function ComparisonSummary({ ncts, ready, population }: { ncts: string[]; ready: boolean; population?: ReportPopulation | null }) {
+  const chat = useComparisonChat(ncts, 'summary', population);
   const clickGuard = useRef(false);
   const summarize = async () => {
     if (!ready || !chat.termsAccepted || chat.busy || clickGuard.current) return;
@@ -51,12 +53,12 @@ export function ComparisonSummary({ ncts, ready }: { ncts: string[]; ready: bool
   </section>;
 }
 
-export function ComparisonAssistant({ ncts, ready }: { ncts: string[]; ready: boolean }) {
+export function ComparisonAssistant({ ncts, ready, population }: { ncts: string[]; ready: boolean; population?: ReportPopulation | null }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const textarea = useRef<HTMLTextAreaElement>(null);
   const guard = useRef(false);
-  const chat = useComparisonChat(ncts, 'chat');
+  const chat = useComparisonChat(ncts, 'chat', population);
   useEffect(() => { if (open && !chat.busy) textarea.current?.focus(); }, [open, chat.busy]);
   const send = async (text: string) => {
     if (!text.trim() || !ready || !chat.termsAccepted || chat.busy || guard.current) return;
@@ -69,7 +71,7 @@ export function ComparisonAssistant({ ncts, ready }: { ncts: string[]; ready: bo
       <header className="flex items-center gap-3 border-b border-border p-3 bg-accent"><img src={mrTrial} alt="Mr. Trial mascot" width={44} height={44} /><div className="flex-1"><h2 className="text-base font-semibold">Mr. Trial</h2><p className="text-xs text-muted-foreground">Comparison guide · Temporary conversation</p></div><Button variant="ghost" size="icon" aria-label="Clear conversation" title="Clear conversation" disabled={chat.busy} onClick={() => { chat.setMessages([]); chat.clearError(); textarea.current?.focus(); }}><RotateCcw /></Button><Button variant="ghost" size="icon" aria-label="Close Mr. Trial" onClick={() => setOpen(false)}><X /></Button></header>
       <Conversation className="min-h-0 flex-1"><ConversationContent className="p-4 gap-4">
         {!chat.messages.length && <div className="space-y-4"><p className="text-sm text-foreground">Which differences would you like to explore?</p>{['Explain the important differences', 'What is the recruitment status?', 'Explain the site and Census information'].map((q) => <Button key={q} variant="outline" className="h-auto whitespace-normal justify-start text-left w-full" disabled={!ready || !chat.termsAccepted} onClick={() => void send(q)}>{q}</Button>)}</div>}
-        {chat.messages.map((message) => <Message key={message.id} from={message.role}><MessageContent className={message.role === 'user' ? 'bg-primary text-primary-foreground' : ''}>{message.parts.map((part, i) => part.type === 'text' ? <MessageResponse key={i} className="text-sm [&_a]:underline">{part.text}</MessageResponse> : part.type === 'reasoning' ? <details key={i} className="text-xs text-muted-foreground"><summary>Review notes</summary>{part.text}</details> : null)}</MessageContent></Message>)}
+        {chat.messages.map((message) => <Message key={message.id} from={message.role}><MessageContent className={message.role === 'user' ? 'bg-primary text-primary-foreground' : ''}>{message.parts.map((part, i) => part.type === 'text' ? <MessageResponse key={i} className="text-sm [&_a]:underline">{part.text}</MessageResponse> : null)}</MessageContent></Message>)}
         {chat.status === 'submitted' && <Shimmer>Reviewing the selected records</Shimmer>}
         {chat.error && <p role="alert" className="text-sm text-destructive">{chat.error.message}</p>}
       </ConversationContent><ConversationScrollButton /></Conversation>
