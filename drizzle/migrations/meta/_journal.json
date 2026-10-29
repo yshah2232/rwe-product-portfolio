@@ -71,6 +71,13 @@
       "when": 1793248439681,
       "tag": "0009_mapping_submission_abuse_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793248846546,
+      "tag": "0010_public_ai_abuse_guard",
+      "breakpoints": true
     }
   ]
 }
