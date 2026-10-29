@@ -64,6 +64,13 @@
       "when": 1793248170093,
       "tag": "0008_retire_legacy_public_access",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793248439681,
+      "tag": "0009_mapping_submission_abuse_guard",
+      "breakpoints": true
     }
   ]
 }

@@ -490,6 +490,24 @@ export type Database = {
         }
         Relationships: []
       }
+      mapping_submission_limits: {
+        Row: {
+          attempts: number
+          bucket_key: string
+          expires_at: string
+        }
+        Insert: {
+          attempts?: number
+          bucket_key: string
+          expires_at: string
+        }
+        Update: {
+          attempts?: number
+          bucket_key?: string
+          expires_at?: string
+        }
+        Relationships: []
+      }
       normalized_locations: {
         Row: {
           county_fips: string | null
@@ -1123,6 +1141,16 @@ export type Database = {
           total_trials_surfaced: number
           unique_sessions: number
         }[]
+      }
+      submit_mapping_correction: {
+        Args: {
+          p_bucket: string
+          p_clean: string
+          p_field: string
+          p_note: string
+          p_raw: string
+        }
+        Returns: string
       }
     }
     Enums: {
