@@ -13,10 +13,12 @@
 //   it does not search the web or invent criteria.
 
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
 import { ALLOWED_MIME, REVIEW_DISCLAIMER, sanitizeReviewText } from "../_shared/reviewLanguage.ts";
 import { validateReviewFiles } from '../_shared/reviewInput.ts';
 import { sourceClinicalView } from '../_shared/plainGrounding.ts';
+import { acceptedAiAgreement, readBoundedBody } from '../_shared/aiSafety.ts';
+import { consumeAiRequest } from '../_shared/aiAbuse.ts';
+import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
 const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -24,25 +26,10 @@ const MODEL = "google/gemini-2.5-flash"; // multimodal; can read images / pdf pa
 const MAX_FILES = 6;
 const MAX_TOTAL_BYTES = 8 * 1024 * 1024; // 8 MB combined
 
-const ipMinuteCount = new Map<string, { count: number; resetAt: number }>();
-const MINUTE_CAP = 4;
-
-function checkRateLimit(ip: string): { ok: boolean; reason?: string } {
-  const now = Date.now();
-  const m = ipMinuteCount.get(ip);
-  if (!m || now > m.resetAt) {
-    ipMinuteCount.set(ip, { count: 1, resetAt: now + 60_000 });
-    return { ok: true };
-  }
-  m.count += 1;
-  if (m.count > MINUTE_CAP) return { ok: false, reason: `Slow down, max ${MINUTE_CAP} eligibility checks per minute.` };
-  return { ok: true };
-}
-
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }
 
@@ -72,7 +59,7 @@ STRICT RULES:
 interface FilePayload { name: string; mimeType: string; dataBase64: string }
 interface ReqBody {
   nctId: string;
-  sessionId?: string;
+  acceptance?: unknown;
   notes?: string;
   files: FilePayload[];
 }
@@ -80,16 +67,13 @@ interface ReqBody {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
+  if (!isAllowedSearchOrigin(req.headers.get('origin') ?? '')) return json({ error: 'Origin not allowed' }, 403);
 
   try {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-      req.headers.get("cf-connecting-ip") ??
-      "unknown";
-    const rl = checkRateLimit(ip);
-    if (!rl.ok) return json({ error: rl.reason }, 429);
-
-    const body = (await req.json()) as ReqBody;
+    const textBody = await readBoundedBody(req, 12 * 1024 * 1024);
+    if (textBody === null) return json({ error: 'Request too large' }, 413);
+    const body = JSON.parse(textBody) as ReqBody;
+    if (!acceptedAiAgreement(body?.acceptance)) return json({ error: 'Accept the current agreement and select an audience before document review.' }, 400);
     const nctId = (body.nctId ?? "").trim().toUpperCase();
     if (!/^NCT\d{8}$/.test(nctId)) return json({ error: "Invalid NCT ID" }, 400);
 
@@ -103,14 +87,11 @@ Deno.serve(async (req) => {
 
     const bad = files.find((f) => !ALLOWED_MIME.test(f.mimeType || ""));
     if (bad) return json({ error: `Unsupported file type: ${String(bad.name).slice(0, 80)}. Use PDF, PNG, JPEG, WebP or plain text.` }, 415);
+    const limit = await consumeAiRequest(req, 'review');
+    if (limit !== 'allowed') return json({ error: limit === 'limited' ? 'Document review limit reached. Please try again later.' : 'Document review is temporarily unavailable.' }, limit === 'limited' ? 429 : 503);
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ error: "AI not configured" }, 500);
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
 
     // Review exact current criteria, never an AI authored cached eligibility rubric.
     const r = await fetch(`${CTG_BASE}/studies/${nctId}?format=json`);
@@ -171,8 +152,7 @@ Deno.serve(async (req) => {
 
     if (aiRes.status === 429) return json({ error: "AI rate limited, try again in a moment" }, 429);
     if (!aiRes.ok) {
-      const error = await aiRes.json().catch(() => ({}));
-      return json({ error: error.message || error.error?.message || `AI error ${aiRes.status}` }, aiRes.status);
+      return json({ error: 'Document review could not be processed. Please try again later.' }, 502);
     }
 
     const aiBody = await aiRes.json();
@@ -205,7 +185,6 @@ Deno.serve(async (req) => {
       disclaimer: REVIEW_DISCLAIMER,
     });
   } catch (err) {
-    console.error("ctg-eligibility-check error", err);
-    return json({ error: err instanceof Error ? err.message : "Unknown error" }, 500);
+    return json({ error: 'Document review could not be processed. Check your files and try again.' }, 400);
   }
 });
