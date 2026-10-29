@@ -12,4 +12,6 @@
 - Retired saved cohort deletion, refresh, normalization and barriers functions use the shared retiredService handler and return 410 without parsing input or processing data; historical records remain locked, so retirement is enforced beyond hidden routes.
 - Mapping corrections use strict bounded input, current agreement and allowed origins, plus an atomic service-role RPC with short-lived keyed abuse counters and duplicate suppression; never store visitor session identifiers or increment anonymous votes.
 - Assistant output supports ordinary markdown but no generated diagram plugin; removing its parser reduces unneeded untrusted rendering surface.
+- Public AI uses bounded request streams and service-role-only atomic keyed abuse counters that expire, with no raw IP or conversation/document retention; failures deny metered processing rather than bypassing limits.
+- All caller-supplied AI history becomes user-role context; claimed assistant replies are quoted untrusted references, never model assistant/system/tool authority, preserving memory-only follow-ups without trusting invented history.
 - All active Census API calls require CENSUS_API_KEY; without it show an explanatory unavailable state and never estimate values.
