@@ -196,7 +196,7 @@ function snippetAround(text: string, needle: string): string | null {
   let idx = nt.indexOf(norm(needle));
   if (idx < 0) {
     // Multi word concept: every significant word must appear in the field.
-    const words = norm(needle).split(" ").filter((w) => w.length >= 4);
+    const words = norm(needle).split(" ").filter((w) => w.length >= 4 || /^\d+$/.test(w));
     if (words.length < 2 || !words.every((w) => nt.includes(w))) return null;
     idx = nt.indexOf(words[0]);
     needle = words[0];
