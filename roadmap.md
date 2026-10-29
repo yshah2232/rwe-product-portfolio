@@ -1,4 +1,7 @@
 # Current task
+- [ ] Correct audience based status restrictions and all nine registry status filters, including search wording.
+- [ ] Replace the legacy homepage assistant with page grounded Mr. Trial; remove summary task checkboxes and make takeaways actionable without clinical advice. Keep PDF generation independent of AI.
+- [ ] Fail closed on unsafe Easy read clinical rewrites and retest historical failures; exercise three real file uploads through the UI and evaluate source fidelity.
 - [x] Implement genuine BM25 and dense vector hybrid ranking with subtype safeguards on live CTG candidates only. Ten searches repeated after condition-targeted retrieval; type 1/type 2, Alzheimer, sickle cell and prostate results corrected. Full registry recall is not claimed.
 - [x] Restrict Mr. Trial to selected records and verified Census rows displayed on the page; remove duplicate generated disclaimer and Review notes. Actual UI summary, displayed Massachusetts Census answer and refusal verified without page errors.
 - [x] Evaluate all five active AI features: 73 scored live runs (50 baseline plus 23 targeted retests), with full outputs, scores, four categories and sample expected versus observed results delivered as local files. Additional actual UI summary plus two chat turns verified. 98 regression tests pass. Historical and retest scores are separate, not a current production accuracy estimate.
