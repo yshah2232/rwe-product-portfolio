@@ -1,7 +1,8 @@
 // Live CTG retrieval → BM25 and dense embeddings → RRF → registry constraint reranking.
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { hybridScores, HybridError } from "../_shared/hybridSearch.ts";
-import { diabetesSubtype, subtypeTier } from "../_shared/hybridRanking.ts";
+import { diabetesSubtype, subtypeTier, passesSubtype } from "../_shared/hybridRanking.ts";
+import { isTrialStatus } from '../_shared/trialStatus.ts';
 import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
 import { parseQuery, groundConcepts, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, matchLocation, locationSentence, matchLabels, dedupeEvidence, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
@@ -77,6 +78,7 @@ Deno.serve(async (req) => {
     const query = (url.searchParams.get("q") ?? "").trim();
     const phase = url.searchParams.get("phase") ?? "";
     const status = url.searchParams.get("status") ?? "";
+    if (status && !isTrialStatus(status)) return json({ error: 'Unknown trial status.' }, 400);
     const countryUS = url.searchParams.get("countryUS") === "true";
     const browserRegionUS = url.searchParams.get("region") === "US";
     const sessionId = (url.searchParams.get("sid") ?? "").trim().slice(0, 64) || crypto.randomUUID();
@@ -316,7 +318,7 @@ Deno.serve(async (req) => {
     // Explicit subtype conflicts never outrank confirmed matches, whatever vector score or US preference.
     const key = (t: typeof scored[number]) => t.hybridScore * 1000 + t.evidenceRatio * 4 + (preferUS && t.countries.includes('United States') ? 0.5 : 0);
     scored.sort((a, b) => b.subtype - a.subtype || key(b) - key(a) || a.nctId.localeCompare(b.nctId));
-    const top = scored.filter((t) => t.subtype >= 0).slice(0, 10);
+    const top = scored.filter((t) => passesSubtype(query, t.subtype)).slice(0, 10);
     const scoreShown = false;
     const usedFallback = false;
     Object.assign(retrieval, { method: 'BM25 + dense cosine + reciprocal rank fusion + constraint reranking', embeddingModel: hybrid.model });
@@ -334,7 +336,7 @@ Deno.serve(async (req) => {
         fallback: usedFallback || undefined,
         interpretation,
         retrieval,
-        warnings: [...buildWarnings({ intent, interpretation, totalCount, candidates, results: top, fallback: usedFallback, countryUS }), ...(preferUS ? [{ code: "us_first", message: "United States sites receive preference among similarly relevant trials." }] : [])],
+        warnings: [...buildWarnings({ intent, interpretation, totalCount, candidates, results: top, fallback: usedFallback, countryUS }), ...(diabetesSubtype(query) && top.length < 10 ? [{ code: 'subtype_constraint', message: 'Only trials explicitly listing the requested diabetes subtype in their title or conditions are shown. Other candidates were omitted; this bounded search may miss additional registry records.' }] : []), ...(preferUS ? [{ code: "us_first", message: "United States sites receive preference among similarly relevant trials." }] : [])],
         sessionId,
         searchEventId,
         usage: { rateLimitRemaining: DAILY_CAP - (ipDailyCount.get(ip)?.count ?? 0) },

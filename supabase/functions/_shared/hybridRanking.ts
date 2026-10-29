@@ -13,9 +13,16 @@ export function subtypeTier(query: string, fields: GroundFields): number {
   // Eligibility can mention an excluded subtype; it is not evidence of the target condition.
   const declared = diabetesSubtype(fields.conditions.join(' '));
   const title = diabetesSubtype(`${fields.briefTitle} ${fields.officialTitle}`);
+  const explicit = (text: string) => new RegExp(`\\b(?:type[\\s-]*${requested}\\s+(?:diabetes|diabetic)|diabetes(?:\\s+mellitus)?[\\s,]*type[\\s-]*${requested}|t${requested}d(?:m)?)\\b`, 'i').test(text);
+  const sections = fields.eligibility.split(/exclusion criteria:?/i);
+  // Prevention studies may list diabetes as a condition while excluding diagnosed patients.
+  if (sections.length > 1 && explicit(sections.slice(1).join(' ')) && !explicit(sections[0])) return -1;
+  if (explicit(fields.conditions.join(' ')) || explicit(`${fields.briefTitle} ${fields.officialTitle}`)) return 2;
   const actual = declared ?? title;
   return actual === requested ? 2 : actual ? -1 : 0;
 }
+
+export const passesSubtype = (query: string, tier: number) => diabetesSubtype(query) ? tier === 2 : tier >= 0;
 
 export function cosine(a: number[], b: number[]): number {
   if (!a.length || a.length !== b.length || [...a, ...b].some((v) => !Number.isFinite(v))) throw new Error('Invalid embedding dimensions.');

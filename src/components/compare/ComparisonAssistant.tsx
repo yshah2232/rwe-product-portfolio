@@ -10,8 +10,9 @@ import { Shimmer } from '@/components/ai-elements/shimmer';
 import { usePlainMode, TERMS_VERSION } from '@/contexts/PlainModeContext';
 import mrTrial from '@/assets/mr-trial.png';
 import type { ReportPopulation } from '@/lib/reportContext';
+import { summaryProse } from '@/lib/summaryPresentation';
 
-function useComparisonChat(ncts: string[], mode: 'summary' | 'chat', population?: ReportPopulation | null) {
+function useComparisonChat(ncts: string[], mode: 'summary' | 'chat' | 'guide', population?: ReportPopulation | null) {
   const { termsAccepted, audience } = usePlainMode();
   const visibleCensus = useMemo(() => population?.rows.flatMap((r) => r.data?.acs_year && !r.error ? [{ state: r.state, year: r.data.acs_year }] : []) ?? [], [population]);
   const transport = useMemo(() => new DefaultChatTransport({
@@ -48,17 +49,17 @@ export function ComparisonSummary({ ncts, ready, population }: { ncts: string[];
     </div>
     {chat.busy && <div role="status" className="mt-4 flex items-center gap-3"><Shimmer>Reviewing source records</Shimmer><Button size="icon" variant="ghost" aria-label="Stop summary" onClick={() => void chat.stop()}><Square /></Button></div>}
     {chat.error && <p role="alert" className="mt-4 text-sm text-destructive">{chat.error.message}</p>}
-    <div className="mt-5 space-y-4 max-w-4xl">{chat.messages.filter((m) => m.role === 'assistant').map((m) => <div key={m.id}>{m.parts.map((part, i) => part.type === 'text' ? <MessageResponse key={i} className="text-sm leading-relaxed [&_a]:text-primary [&_a]:underline">{part.text}</MessageResponse> : null)}</div>)}</div>
+    <div className="mt-5 space-y-4 max-w-4xl">{chat.messages.filter((m) => m.role === 'assistant').map((m) => <div key={m.id}>{m.parts.map((part, i) => part.type === 'text' ? <MessageResponse key={i} className="text-sm leading-relaxed [&_a]:text-primary [&_a]:underline">{summaryProse(part.text)}</MessageResponse> : null)}</div>)}</div>
     <p className="mt-4 text-xs text-muted-foreground">AI interpretation, not medical advice. Verify trial details on ClinicalTrials.gov. Statewide residents are not trial participants. This summary is temporary and is not added to the PDF.</p>
   </section>;
 }
 
-export function ComparisonAssistant({ ncts, ready, population }: { ncts: string[]; ready: boolean; population?: ReportPopulation | null }) {
+export function ComparisonAssistant({ ncts, ready, population, guide = false }: { ncts: string[]; ready: boolean; population?: ReportPopulation | null; guide?: boolean }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const textarea = useRef<HTMLTextAreaElement>(null);
   const guard = useRef(false);
-  const chat = useComparisonChat(ncts, 'chat', population);
+  const chat = useComparisonChat(ncts, guide ? 'guide' : 'chat', population);
   useEffect(() => { if (open && !chat.busy) textarea.current?.focus(); }, [open, chat.busy]);
   const send = async (text: string) => {
     if (!text.trim() || !ready || !chat.termsAccepted || chat.busy || guard.current) return;
@@ -68,14 +69,14 @@ export function ComparisonAssistant({ ncts, ready, population }: { ncts: string[
   return <>
     {!open && <Button variant="outline" className="hidden md:flex fixed bottom-6 right-6 z-40 h-14 gap-2 shadow-lg bg-background" onClick={() => setOpen(true)} aria-label="Open Mr. Trial"><img src={mrTrial} alt="" width={42} height={42} />Mr. Trial</Button>}
     {open && <aside aria-label="Mr. Trial assistant" className="hidden md:flex fixed bottom-6 right-6 z-40 w-[420px] max-w-[calc(100vw-3rem)] h-[640px] max-h-[calc(100vh-4rem)] flex-col rounded-md border border-border bg-background shadow-xl">
-      <header className="flex items-center gap-3 border-b border-border p-3 bg-accent"><img src={mrTrial} alt="Mr. Trial mascot" width={44} height={44} /><div className="flex-1"><h2 className="text-base font-semibold">Mr. Trial</h2><p className="text-xs text-muted-foreground">Comparison guide · Temporary conversation</p></div><Button variant="ghost" size="icon" aria-label="Clear conversation" title="Clear conversation" disabled={chat.busy} onClick={() => { chat.setMessages([]); chat.clearError(); textarea.current?.focus(); }}><RotateCcw /></Button><Button variant="ghost" size="icon" aria-label="Close Mr. Trial" onClick={() => setOpen(false)}><X /></Button></header>
+      <header className="flex items-center gap-3 border-b border-border p-3 bg-accent"><img src={mrTrial} alt="Mr. Trial mascot" width={44} height={44} /><div className="flex-1"><h2 className="text-base font-semibold">Mr. Trial</h2><p className="text-xs text-muted-foreground">{guide ? 'Registry guide' : 'Comparison guide'} · Temporary conversation</p></div><Button variant="ghost" size="icon" aria-label="Clear conversation" title="Clear conversation" disabled={chat.busy} onClick={() => { chat.setMessages([]); chat.clearError(); textarea.current?.focus(); }}><RotateCcw /></Button><Button variant="ghost" size="icon" aria-label="Close Mr. Trial" onClick={() => setOpen(false)}><X /></Button></header>
       <Conversation className="min-h-0 flex-1"><ConversationContent className="p-4 gap-4">
-        {!chat.messages.length && <div className="space-y-4"><p className="text-sm text-foreground">Which differences would you like to explore?</p>{['Explain the important differences', 'What is the recruitment status?', 'Explain the site and Census information'].map((q) => <Button key={q} variant="outline" className="h-auto whitespace-normal justify-start text-left w-full" disabled={!ready || !chat.termsAccepted} onClick={() => void send(q)}>{q}</Button>)}</div>}
+        {!chat.messages.length && <div className="space-y-4"><p className="text-sm text-foreground">{guide ? 'What would you like to explore?' : 'Which differences would you like to explore?'}</p>{(guide ? (ncts.length ? ['What are the statuses of these results?', 'How can I compare these trials?', 'What does Easy read change?'] : ['How can I search for trials?', 'What does Easy read change?', 'What is included in a downloaded report?']) : ['Explain the important differences', 'What is the recruitment status?', 'Explain the site and Census information']).map((q) => <Button key={q} variant="outline" className="h-auto whitespace-normal justify-start text-left w-full" disabled={!ready || !chat.termsAccepted} onClick={() => void send(q)}>{q}</Button>)}</div>}
         {chat.messages.map((message) => <Message key={message.id} from={message.role}><MessageContent className={message.role === 'user' ? 'bg-primary text-primary-foreground' : ''}>{message.parts.map((part, i) => part.type === 'text' ? <MessageResponse key={i} className="text-sm [&_a]:underline">{part.text}</MessageResponse> : null)}</MessageContent></Message>)}
         {chat.status === 'submitted' && <Shimmer>Reviewing the selected records</Shimmer>}
         {chat.error && <p role="alert" className="text-sm text-destructive">{chat.error.message}</p>}
       </ConversationContent><ConversationScrollButton /></Conversation>
-      <div className="p-3 border-t border-border"><PromptInput onSubmit={({ text }) => send(text)} maxFiles={0}><PromptInputTextarea ref={textarea} value={input} onChange={(e) => setInput(e.target.value)} maxLength={2000} placeholder="Ask about these trials" aria-label="Ask Mr. Trial" /><PromptInputFooter className="justify-end"><PromptInputSubmit status={chat.status} disabled={!ready || !chat.termsAccepted || (!input.trim() && !chat.busy)} onStop={() => void chat.stop()} /></PromptInputFooter></PromptInput><p className="mt-2 text-[11px] text-muted-foreground">No medical advice or eligibility verdicts. Do not include personal or medical information. Messages are processed by Lovable AI, not saved as app history.</p></div>
+      <div className="p-3 border-t border-border"><PromptInput onSubmit={({ text }) => send(text)} maxFiles={0}><PromptInputTextarea ref={textarea} value={input} onChange={(e) => setInput(e.target.value)} maxLength={2000} placeholder={guide ? 'Ask Mr. Trial' : 'Ask about these trials'} aria-label="Ask Mr. Trial" /><PromptInputFooter className="justify-end"><PromptInputSubmit status={chat.status} disabled={!ready || !chat.termsAccepted || (!input.trim() && !chat.busy)} onStop={() => void chat.stop()} /></PromptInputFooter></PromptInput><p className="mt-2 text-[11px] text-muted-foreground">No medical advice or eligibility verdicts. Do not include personal or medical information. Messages are processed by Lovable AI, not saved as app history.</p></div>
     </aside>}
   </>;
 }

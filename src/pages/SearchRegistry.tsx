@@ -28,6 +28,8 @@ import TrialMap from '@/components/TrialMap';
 import { cleanSponsor, cleanIndication } from '@/lib/canonicalize';
 import { usePlainMode } from '@/contexts/PlainModeContext';
 import { createPendingSearchGate } from '@/lib/agreementGate';
+import { audienceStatus, restrictToRecruiting, TRIAL_STATUSES } from '../../supabase/functions/_shared/trialStatus';
+import { useRegistryPage } from '@/contexts/RegistryPageContext';
 import { SearchDiagnostics, EvidenceList, type SearchInterpretation, type SearchRetrieval, type SearchWarning, type Evidence } from '@/components/SearchDiagnostics';
 
 interface RankedTrial {
@@ -86,7 +88,9 @@ const SearchRegistry = () => {
     description: 'Plain-language search across live ClinicalTrials.gov. Filter by condition, phase, status, sponsor, and geography with AI-rewritten summaries.',
     canonical: '/search-registry',
   });
-  const { plainMode, termsAccepted } = usePlainMode();
+  const { plainMode, termsAccepted, audience } = usePlainMode();
+  const recruitingOnly = restrictToRecruiting(audience);
+  const { setRecords } = useRegistryPage();
   const [query, setQuery] = useState('');
   const [phase, setPhase] = useState<string>('any');
   const [status, setStatus] = useState<string>('any');
@@ -101,6 +105,10 @@ const SearchRegistry = () => {
   }, [loading]);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SearchResponse | null>(null);
+  useEffect(() => {
+    setRecords({ ncts: data?.results.map((trial) => trial.nctId) ?? [], query: data?.query ?? '' });
+    return () => setRecords({ ncts: [], query: '' });
+  }, [data, setRecords]);
   const [feedbackGiven, setFeedbackGiven] = useState<Record<string, 'up' | 'down'>>({});
 
   // Study detail sheet
@@ -144,8 +152,7 @@ const SearchRegistry = () => {
 
     const params = new URLSearchParams({ q: q.trim(), sid: sessionId });
     if (phase !== 'any') params.set('phase', phase);
-    // Plain mode forces "Recruiting only" so non-clinical visitors don't see closed trials.
-    const effectiveStatus = plainMode ? 'RECRUITING' : status;
+    const effectiveStatus = audienceStatus(audience, status);
     if (effectiveStatus !== 'any') params.set('status', effectiveStatus);
     if (countryUS) params.set('countryUS', 'true');
     // Browser language region only (e.g. en-US), sent as a ranking hint and never stored.
@@ -321,7 +328,7 @@ const SearchRegistry = () => {
                 <p className="mt-4 text-[16px] text-foreground/80 leading-[1.6] max-w-3xl">
                   Type the health problem you (or someone you care about) are facing, in everyday words.
                   We'll search the official ClinicalTrials.gov registry and rewrite each study so you can
-                  read it without a medical degree. Only studies that are <strong>currently recruiting</strong> are shown.
+                  read it without a medical degree. {recruitingOnly && <>Only studies that are <strong>currently recruiting</strong> are shown.</>}
                 </p>
               </div>
             ) : (
@@ -378,10 +385,10 @@ const SearchRegistry = () => {
                   <SelectItem value="PHASE4">Phase 4</SelectItem>
                 </SelectContent>
               </Select>
-              {plainMode ? (
+              {recruitingOnly ? (
                 <span key="status-plain" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-sm border border-primary/30 bg-primary/10 text-[11.5px] font-semibold text-primary">
                   <Sparkles className="h-3 w-3" />
-                  Recruiting only (Plain mode)
+                  Recruiting only (Patients and caregivers)
                 </span>
               ) : (
                 <Select key="status-clinical" value={status} onValueChange={setStatus}>
@@ -390,10 +397,7 @@ const SearchRegistry = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="any">Any status</SelectItem>
-                    <SelectItem value="RECRUITING">Recruiting</SelectItem>
-                    <SelectItem value="ACTIVE_NOT_RECRUITING">Active, not recruiting</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                    <SelectItem value="NOT_YET_RECRUITING">Not yet recruiting</SelectItem>
+                    {TRIAL_STATUSES.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )}

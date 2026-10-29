@@ -5,16 +5,16 @@ import { createResponsesCall } from '../_shared/responses.ts';
 import { withLovableAiGatewayRunIdHeader } from '../_shared/run-id.ts';
 import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 import { adminClient } from '../_shared/adminServer.ts';
-import { compactTrial, COMPARISON_INSTRUCTIONS, COMPARISON_TERMS_VERSION, validNcts, visibleCensusRows } from '../_shared/comparisonAiContext.ts';
+import { compactTrial, COMPARISON_INSTRUCTIONS, COMPARISON_TERMS_VERSION, validNcts, validGuideNcts, WEBSITE_GUIDE, visibleCensusRows } from '../_shared/comparisonAiContext.ts';
 
 const headers = { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
 const schema = z.object({
-  ncts: z.array(z.string()).refine(validNcts),
+  ncts: z.array(z.string()).max(10),
   acceptance: z.object({ accepted: z.literal(true), termsVersion: z.literal(COMPARISON_TERMS_VERSION), audience: z.enum(['clinical', 'patient']) }),
-  mode: z.enum(['summary', 'chat']),
+  mode: z.enum(['summary', 'chat', 'guide']),
   visibleCensus: z.array(z.object({ state: z.string().max(80), year: z.number().int().min(2000).max(2100) })).max(30).default([]),
   messages: z.array(z.object({ id: z.string().max(100), role: z.enum(['user', 'assistant']), parts: z.array(z.object({ type: z.enum(['text', 'reasoning', 'step-start']), text: z.string().max(12000).optional() }).passthrough()).max(20) }).passthrough()).min(1).max(40),
-}).passthrough();
+}).passthrough().refine((value) => value.mode === 'guide' ? validGuideNcts(value.ncts) : validNcts(value.ncts));
 const limits = new Map<string, { minute: number; count: number; day: number; daily: number }>();
 const reply = (error: string, status: number) => new Response(JSON.stringify({ error }), { status, headers });
 
@@ -55,7 +55,8 @@ Deno.serve(async (req) => {
       return { ...c, state: fips?.find((s) => s.state_fips === c.geo_id)?.state_name, source_url: source };
     }).filter((c) => c.source_url), input.data.visibleCensus);
     const messages = input.data.messages.map((message) => ({ ...message, parts: message.parts.filter((part) => part.type === 'text') })) as UIMessage[];
-    const call = createResponsesCall(req, { baseURL: 'https://ai.gateway.lovable.dev/v1', apiKey, model: 'openai/gpt-6-astra' }, await convertToModelMessages(messages), `${COMPARISON_INSTRUCTIONS}\nMode: ${input.data.mode}\n<untrusted_registry_context>${JSON.stringify({ records, census, missingCensusStates: states.filter((s) => !census.some((c) => c.state === s)) })}</untrusted_registry_context>`);
+    const guideInstructions = input.data.mode === 'guide' ? '\nThis is the website guide, not necessarily a comparison page. Use only supplied website facts and the verified current search result records. With no records, answer website questions only and direct trial questions to Search Registry; do not invent trials. Cite website facts with supplied app page links. Do not execute a search yourself or imply that a search has run. Do not use other website pages or general medical knowledge as evidence.' : '';
+    const call = createResponsesCall(req, { baseURL: 'https://ai.gateway.lovable.dev/v1', apiKey, model: 'openai/gpt-6-astra' }, await convertToModelMessages(messages), `${COMPARISON_INSTRUCTIONS}${guideInstructions}\nMode: ${input.data.mode}\n<untrusted_registry_context>${JSON.stringify({ records, census, ...(input.data.mode === 'guide' ? { website: WEBSITE_GUIDE } : {}), missingCensusStates: states.filter((s) => !census.some((c) => c.state === s)) })}</untrusted_registry_context>`);
     const response = call.result.toUIMessageStreamResponse({ originalMessages: messages, sendReasoning: false, onFinish: () => { /* No persistence. */ }, onError: (error) => error instanceof Error ? error.message : 'AI request failed.' });
     return await withLovableAiGatewayRunIdHeader(response, call.gateway, { ...corsHeaders, 'Cache-Control': 'no-store' });
   } catch (error) {

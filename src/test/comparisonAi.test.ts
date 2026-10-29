@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { compactTrial, validNcts, visibleCensusRows } from '../../supabase/functions/_shared/comparisonAiContext';
+import { compactTrial, validNcts, validGuideNcts, visibleCensusRows } from '../../supabase/functions/_shared/comparisonAiContext';
 
 describe('comparison AI grounding', () => {
+  it('allows the homepage guide without inventing a selection and bounds result context to ten', () => {
+    expect(validGuideNcts([])).toBe(true);
+    expect(validGuideNcts(['NCT00003666'])).toBe(true);
+    expect(validGuideNcts(['NCT00003666', 'NCT00003666'])).toBe(false);
+    expect(validGuideNcts(Array.from({ length: 11 }, (_, i) => `NCT${String(i).padStart(8, '0')}`))).toBe(false);
+  });
   it('excludes cache rows that are not displayed on the current page', () => {
     const rows = [{ state: 'Massachusetts', acs_year: 2022 }, { state: 'California', acs_year: 2022 }, { state: 'Massachusetts', acs_year: 2021 }];
     expect(visibleCensusRows(rows, [{ state: 'Massachusetts', year: 2022 }])).toEqual([rows[0]]);

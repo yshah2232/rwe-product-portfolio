@@ -42,6 +42,7 @@ export interface PlainTrial {
   demographics: Demographics;
   is_recruiting: boolean;
   cached?: boolean;
+  source_wording?: boolean;
 }
 
 const URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-plain-language`;
