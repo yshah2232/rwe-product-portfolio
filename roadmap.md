@@ -1,4 +1,7 @@
 # Current task
+- [ ] Tonight: remove obsolete permissive access rules and verify current admin/privacy protections; preserve historical records.
+- [ ] Tonight: apply compatible dependency security fixes and regression checks; obtain user review before major upgrades.
+- [ ] Tonight: report unresolved launch risks and guardrail options; do not publish until the user approves.
 - [x] Correct audience based status restrictions and all nine registry status filters, including search wording. Clinical Easy read retains all status choices; active not recruiting query verified live and direct query runs once after acceptance.
 - [x] Replace the legacy homepage assistant with page grounded Mr. Trial; remove summary task checkboxes and lead with operational differences and verification steps. Two live summaries and two homepage answers inspected. PDF downloads trigger no AI request and exclude AI summaries.
 - [x] Fail closed on unsafe Easy read clinical rewrites: preserve current registry clinical text and typed enrollment counts, suppress generated timelines and key quantities, overlay cached responses. Ten previous Easy read IDs verified against exact source text; three actual UI text file uploads return insufficient information safely. Four search retests verify earlier disease failures and prevention exclusion. 120 tests pass, preview build OK. Full repository lint still fails on existing debt; not launch approval.
