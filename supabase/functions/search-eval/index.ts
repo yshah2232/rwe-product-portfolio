@@ -1,6 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { verifiedAdmin } from '../_shared/adminServer.ts';
-import { z } from 'npm:zod@3';
+import { z } from 'npm:zod@4.6.6';
 
 const headers = { ...corsHeaders, 'Access-Control-Allow-Headers': `${corsHeaders['Access-Control-Allow-Headers']}, x-admin-session`, 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
 const res = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers });

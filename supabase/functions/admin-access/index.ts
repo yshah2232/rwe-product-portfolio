@@ -1,5 +1,5 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { z } from 'npm:zod@3';
+import { z } from 'npm:zod@4.6.6';
 import { ADMIN_SESSION_SECONDS, credentialsMatch, digest } from '../_shared/adminAccess.ts';
 import { adminClient, credentialVersion, verifiedAdmin } from '../_shared/adminServer.ts';
 

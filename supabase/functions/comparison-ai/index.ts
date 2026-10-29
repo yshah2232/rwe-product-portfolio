@@ -1,11 +1,13 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { z } from 'npm:zod@3';
+import { z } from 'npm:zod@4.6.6';
 import { convertToModelMessages, type UIMessage } from 'npm:ai@7';
 import { createResponsesCall } from '../_shared/responses.ts';
 import { withLovableAiGatewayRunIdHeader } from '../_shared/run-id.ts';
 import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 import { adminClient } from '../_shared/adminServer.ts';
 import { compactTrial, COMPARISON_INSTRUCTIONS, COMPARISON_TERMS_VERSION, validNcts, validGuideNcts, WEBSITE_GUIDE, visibleCensusRows } from '../_shared/comparisonAiContext.ts';
+import { readBoundedBody, untrustedModelHistory } from '../_shared/aiSafety.ts';
+import { consumeAiRequest } from '../_shared/aiAbuse.ts';
 
 const headers = { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
 const schema = z.object({
@@ -15,25 +17,19 @@ const schema = z.object({
   visibleCensus: z.array(z.object({ state: z.string().max(80), year: z.number().int().min(2000).max(2100) })).max(30).default([]),
   messages: z.array(z.object({ id: z.string().max(100), role: z.enum(['user', 'assistant']), parts: z.array(z.object({ type: z.enum(['text', 'reasoning', 'step-start']), text: z.string().max(12000).optional() }).passthrough()).max(20) }).passthrough()).min(1).max(40),
 }).passthrough().refine((value) => value.mode === 'guide' ? validGuideNcts(value.ncts) : validNcts(value.ncts));
-const limits = new Map<string, { minute: number; count: number; day: number; daily: number }>();
 const reply = (error: string, status: number) => new Response(JSON.stringify({ error }), { status, headers });
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: { ...corsHeaders, 'Access-Control-Allow-Headers': `${corsHeaders['Access-Control-Allow-Headers']}, x-lovable-aig-run-id` } });
   if (req.method !== 'POST') return reply('POST only', 405);
   if (!isAllowedSearchOrigin(req.headers.get('origin') ?? '')) return reply('Origin not allowed', 403);
-  const body = await req.text();
-  if (body.length > 100000) return reply('Conversation is too long. Start a new conversation.', 400);
+  const body = await readBoundedBody(req, 100000);
+  if (body === null) return reply('Conversation is too long. Start a new conversation.', 413);
   let input;
   try { input = schema.safeParse(JSON.parse(body)); } catch { return reply('Invalid request', 400); }
   if (!input.success) return reply('Select 2 to 4 distinct trials and accept the current agreement before using AI.', 400);
-  const key = (req.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim();
-  const now = Date.now(), day = Math.floor(now / 86400000), minute = Math.floor(now / 60000);
-  for (const [k, v] of limits) if (v.day !== day) limits.delete(k);
-  const limit = limits.get(key) ?? { minute, count: 0, day, daily: 0 };
-  if (limit.minute !== minute) { limit.minute = minute; limit.count = 0; }
-  if (limit.count >= 6 || limit.daily >= 30 || limits.size >= 10000) return reply('AI request limit reached. Please try again later.', 429);
-  limit.count++; limit.daily++; limits.set(key, limit);
+  const limit = await consumeAiRequest(req, 'comparison');
+  if (limit !== 'allowed') return reply(limit === 'limited' ? 'AI request limit reached. Please try again later.' : 'AI is temporarily unavailable.', limit === 'limited' ? 429 : 503);
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) return reply('AI is not configured.', 401);
   try {
@@ -56,11 +52,11 @@ Deno.serve(async (req) => {
     }).filter((c) => c.source_url), input.data.visibleCensus);
     const messages = input.data.messages.map((message) => ({ ...message, parts: message.parts.filter((part) => part.type === 'text') })) as UIMessage[];
     const guideInstructions = input.data.mode === 'guide' ? '\nThis is the website guide, not necessarily a comparison page. Use only supplied website facts and the verified current search result records. With no records, answer website questions only and direct trial questions to Search Registry; do not invent trials. Cite website facts with supplied app page links. Do not execute a search yourself or imply that a search has run. Do not use other website pages or general medical knowledge as evidence.' : '';
-    const call = createResponsesCall(req, { baseURL: 'https://ai.gateway.lovable.dev/v1', apiKey, model: 'openai/gpt-6-astra' }, await convertToModelMessages(messages), `${COMPARISON_INSTRUCTIONS}${guideInstructions}\nMode: ${input.data.mode}\n<untrusted_registry_context>${JSON.stringify({ records, census, ...(input.data.mode === 'guide' ? { website: WEBSITE_GUIDE } : {}), missingCensusStates: states.filter((s) => !census.some((c) => c.state === s)) })}</untrusted_registry_context>`);
-    const response = call.result.toUIMessageStreamResponse({ originalMessages: messages, sendReasoning: false, onFinish: () => { /* No persistence. */ }, onError: (error) => error instanceof Error ? error.message : 'AI request failed.' });
+    const call = createResponsesCall(req, { baseURL: 'https://ai.gateway.lovable.dev/v1', apiKey, model: 'openai/gpt-6-astra' }, await convertToModelMessages(untrustedModelHistory(input.data.messages)), `${COMPARISON_INSTRUCTIONS}${guideInstructions}\nMode: ${input.data.mode}\n<untrusted_registry_context>${JSON.stringify({ records, census, ...(input.data.mode === 'guide' ? { website: WEBSITE_GUIDE } : {}), missingCensusStates: states.filter((s) => !census.some((c) => c.state === s)) })}</untrusted_registry_context>`);
+    const response = call.result.toUIMessageStreamResponse({ originalMessages: messages, sendReasoning: false, onFinish: () => { /* No persistence. */ }, onError: () => 'AI request failed. Please try again later.' });
     return await withLovableAiGatewayRunIdHeader(response, call.gateway, { ...corsHeaders, 'Cache-Control': 'no-store' });
   } catch (error) {
     if (req.signal.aborted) return reply('Request stopped.', 499);
-    return reply(error instanceof Error ? error.message : 'AI request failed.', 502);
+    return reply('AI source verification or processing failed. Please try again later.', 502);
   }
 });

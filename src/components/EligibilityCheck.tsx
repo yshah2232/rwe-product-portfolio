@@ -11,7 +11,6 @@ import { useState, useRef } from 'react';
 import { FileCheck2, Upload, Loader2, ShieldCheck, AlertTriangle, HelpCircle, X, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { DocChecklistItem } from '@/lib/usePlainTrial';
-import { getSessionId } from '@/lib/searchSession';
 
 interface Props {
   nctId: string;
@@ -85,14 +84,15 @@ export default function EligibilityCheck({ nctId, checklist }: Props) {
     });
 
   const run = async () => {
-    if (!readAcceptance(window.localStorage)) return; // agreement gate
+    const acceptance = readAcceptance(window.localStorage);
+    if (!acceptance || !ack || running) return;
     setRunning(true);
     setError(null);
     setResult(null);
     try {
       const payload = {
         nctId,
-        sessionId: getSessionId(),
+        acceptance,
         files: await Promise.all(
           files.map(async (f) => ({
             name: f.name,
