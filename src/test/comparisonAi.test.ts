@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { compactTrial, validNcts } from '../../supabase/functions/_shared/comparisonAiContext';
+import { compactTrial, validNcts, visibleCensusRows } from '../../supabase/functions/_shared/comparisonAiContext';
 
 describe('comparison AI grounding', () => {
+  it('excludes cache rows that are not displayed on the current page', () => {
+    const rows = [{ state: 'Massachusetts', acs_year: 2022 }, { state: 'California', acs_year: 2022 }, { state: 'Massachusetts', acs_year: 2021 }];
+    expect(visibleCensusRows(rows, [{ state: 'Massachusetts', year: 2022 }])).toEqual([rows[0]]);
+    expect(visibleCensusRows(rows, [])).toEqual([]);
+  });
   it('accepts only 2 to 4 distinct registry identifiers', () => {
     expect(validNcts(['NCT00340600', 'NCT00247013'])).toBe(true);
     expect(validNcts(['NCT00340600'])).toBe(false);
