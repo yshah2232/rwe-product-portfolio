@@ -14,5 +14,6 @@ describe('audience status rules', () => {
     expect(parseQuery(`${label} diabetes trials`).status).toBe(status);
     expect(parseQuery(`${label} diabetes trials`).conditionTerms).toEqual(['diabetes']);
     expect(parseQuery(`${status} diabetes trials`).status).toBe(status);
+    expect(parseQuery(`${status} diabetes trials`).conditionTerms).toEqual(['diabetes']);
   });
 });

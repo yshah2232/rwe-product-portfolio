@@ -51,14 +51,13 @@ const FILLER = new Set([
 ]);
 
 export function parseQuery(raw: string): QueryIntent {
-  let q = ` ${raw.toLowerCase().replace(/[^\p{L}\p{N}\s\-,.;]/gu, " ").replace(/\s+/g, " ").trim()} `;
+  const parsedStatus = queryStatus(raw);
+  const status = parsedStatus.status;
+  let q = ` ${parsedStatus.remainder.toLowerCase().replace(/[^\p{L}\p{N}\s\-,.;]/gu, " ").replace(/\s+/g, " ").trim()} `;
   const subtype = q.match(/\b(?:type[ -]*([12])\s+diabetes|diabetes(?:\s+mellitus)?[ ,]*type[ -]*([12])|t([12])d(?:m)?)\b/i);
   const subtypeTerm = subtype ? `type ${subtype[1] ?? subtype[2] ?? subtype[3]} diabetes` : null;
   if (subtype) q = q.replace(subtype[0], ' ');
 
-  const parsedStatus = queryStatus(raw);
-  const status = parsedStatus.status;
-  if (status) q = queryStatus(q).remainder;
 
   let phase: string | null = null;
   const pm = q.match(/\bphase\s*(iii|ii|iv|i|[1-4])\b/i);
