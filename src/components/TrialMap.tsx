@@ -85,6 +85,9 @@ const TrialMap = ({ trials }: Props) => {
                     geography={geo}
                     onMouseEnter={() => setHovered(name)}
                     onMouseLeave={() => setHovered(null)}
+                    fill={active ? 'hsl(var(--primary) / 0.4)' : stateFill}
+                    stroke={active ? 'hsl(var(--primary))' : stateStroke}
+                    strokeWidth={active ? 0.8 : 0.6}
                     style={{
                       fill: active ? 'hsl(var(--primary) / 0.4)' : stateFill,
                       stroke: active ? 'hsl(var(--primary))' : stateStroke,
