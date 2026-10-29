@@ -196,7 +196,7 @@ const StudyDetailSheet = ({ nctId, open, onOpenChange }: Props) => {
               <Sparkles className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'hsl(var(--primary))' }} />
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-semibold" style={{ color: 'hsl(var(--primary))' }}>
-                  AI assisted Easy read · Not medical advice
+                  {plain?.source_wording ? 'Registry wording preserved for accuracy' : 'AI assisted Easy read'} · Not medical advice
                 </p>
                 <p className="text-[11.5px] text-foreground/75 leading-snug mt-0.5">
                   Numbers and eligibility paraphrased from the public registry by an AI model, so it can

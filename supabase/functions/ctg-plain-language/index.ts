@@ -16,7 +16,7 @@
 
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
-import { supportedNumbers, enrollmentStatement } from '../_shared/plainGrounding.ts';
+import { supportedNumbers, enrollmentStatement, sourceClinicalView } from '../_shared/plainGrounding.ts';
 
 const CTG_BASE = "https://clinicaltrials.gov/api/v2";
 const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -265,7 +265,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // 1. Cache lookup
+    // Cached generated clinical claims must also be replaced by current source wording.
+    let cachedRecord: Record<string, unknown> | null = null;
     if (!force) {
       const { data: cached } = await supabase
         .from("plain_language_trials")
@@ -273,7 +274,7 @@ Deno.serve(async (req) => {
         .eq("nct_id", nctId)
         .maybeSingle();
       if (cached) {
-        return json({ ...cached, cached: true });
+        cachedRecord = cached;
       }
     }
 
@@ -326,16 +327,13 @@ Deno.serve(async (req) => {
       },
     };
 
-    // 4. AI rewrite
-    const plain = await rewriteWithAI(trimmed);
-    // Participant counts always use the registry enrollment type, not generated prose.
-    const enrollment = enrollmentStatement(trimmed.enrollment_count, trimmed.enrollment_type);
-    plain.key_numbers = plain.key_numbers.filter((s) => !/\b(people|participants|subjects|women|men|sites?|locations?|clinics?|tubes?)\b/i.test(s));
-    if (trimmed.listed_site_count) plain.key_numbers.push(`${trimmed.listed_site_count} facility listings on the registry record`);
-    if (enrollment) plain.key_numbers.unshift(enrollment);
+    // Fail closed: generated clinical paraphrases failed semantic evaluation.
+    // Keep exact registry wording and typed counts, with no additional inference request.
+    const plain = sourceClinicalView(trimmed);
 
     // 4b. Real demographics — pulled directly from CTG results, no AI involved.
     const demographics = extractDemographics(study);
+    if (cachedRecord) return json({ ...cachedRecord, ...plain, demographics, is_recruiting: status === 'RECRUITING', cached: true });
 
     // 5. Persist (upsert)
     const { data: stored, error: insErr } = await supabase
@@ -371,7 +369,7 @@ Deno.serve(async (req) => {
       return json({ ...plain, demographics, nct_id: nctId, is_recruiting: isRecruiting, cached: false, persisted: false });
     }
 
-    return json({ ...stored, cached: false });
+    return json({ ...stored, source_wording: true, cached: false });
   } catch (err) {
     console.error("ctg-plain-language error", err);
     return json({ error: err instanceof Error ? err.message : "Unknown error" }, 500);
