@@ -12,6 +12,12 @@ describe('hybrid search constraints', () => {
   it('allows explicitly declared mixed type 1 and type 2 populations', () => {
     expect(subtypeTier('type 2 diabetes', fields(['Type 1 Diabetes', 'Type 2 Diabetes']))).toBe(2);
   });
+  it('excludes prevention trials that list type 2 but explicitly exclude current type 2 patients', () => {
+    const f = fields(['Type 2 Diabetes Mellitus']);
+    f.eligibility = 'Inclusion Criteria: Prediabetic\nExclusion Criteria: Currently type 2 diabetic';
+    expect(subtypeTier('type 2 diabetes', f)).toBe(-1);
+    expect(passesSubtype('type 2 diabetes', subtypeTier('type 2 diabetes', f))).toBe(false);
+  });
   it('preserves the 2 in type 2 diabetes retrieval', () => { expect(parseQuery('type 2 diabetes').conditionTerms).toContain('type 2 diabetes'); });
   it('recognises registry subtype order and aliases', () => { expect(diabetesSubtype('Diabetes Mellitus, Type 2')).toBe(2); expect(diabetesSubtype('T1D')).toBe(1); expect(diabetesSubtype('diabetes')).toBeNull(); });
   it('does not label type 1 fields as type 2 evidence when phrase order changes', () => { expect(groundConcepts(parseQuery('type 2 diabetes'), fields(['Diabetes Mellitus, Type 1'])).evidence).toHaveLength(0); });

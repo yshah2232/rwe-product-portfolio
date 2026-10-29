@@ -14,6 +14,9 @@ export function subtypeTier(query: string, fields: GroundFields): number {
   const declared = diabetesSubtype(fields.conditions.join(' '));
   const title = diabetesSubtype(`${fields.briefTitle} ${fields.officialTitle}`);
   const explicit = (text: string) => new RegExp(`\\b(?:type[\\s-]*${requested}\\s+(?:diabetes|diabetic)|diabetes(?:\\s+mellitus)?[\\s,]*type[\\s-]*${requested}|t${requested}d(?:m)?)\\b`, 'i').test(text);
+  const sections = fields.eligibility.split(/exclusion criteria:?/i);
+  // Prevention studies may list diabetes as a condition while excluding diagnosed patients.
+  if (sections.length > 1 && explicit(sections.slice(1).join(' ')) && !explicit(sections[0])) return -1;
   if (explicit(fields.conditions.join(' ')) || explicit(`${fields.briefTitle} ${fields.officialTitle}`)) return 2;
   const actual = declared ?? title;
   return actual === requested ? 2 : actual ? -1 : 0;
