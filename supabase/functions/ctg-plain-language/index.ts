@@ -330,7 +330,8 @@ Deno.serve(async (req) => {
     const plain = await rewriteWithAI(trimmed);
     // Participant counts always use the registry enrollment type, not generated prose.
     const enrollment = enrollmentStatement(trimmed.enrollment_count, trimmed.enrollment_type);
-    plain.key_numbers = plain.key_numbers.filter((s) => !/\b(people|participants|subjects|women|men)\b/i.test(s));
+    plain.key_numbers = plain.key_numbers.filter((s) => !/\b(people|participants|subjects|women|men|sites?|locations?|clinics?|tubes?)\b/i.test(s));
+    if (trimmed.listed_site_count) plain.key_numbers.push(`${trimmed.listed_site_count} facility listings on the registry record`);
     if (enrollment) plain.key_numbers.unshift(enrollment);
 
     // 4b. Real demographics — pulled directly from CTG results, no AI involved.
