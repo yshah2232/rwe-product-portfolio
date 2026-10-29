@@ -47,6 +47,20 @@ Both audiences are working assumptions. Neither has been confirmed as the primar
 | Deep-link every result to the source | In a medical context, trust comes from being checkable | Sends users off-site |
 | Retire the synthetic dashboards | Earlier versions showed made-up patient-journey data, which undermined a product whose pitch is "real registry data" | Lost some visually impressive screens |
 
+## AI design
+
+AI is used in three places, each with a model sized to the job and an output the UI can verify:
+
+| Feature | Model | Guardrail |
+|---|---|---|
+| Semantic re-ranking of search results | Gemini 2.5 Flash Lite | Falls back to registry order if the model is unavailable; score and reason shown on every result |
+| Plain-language trial summaries | Gemini 3 Flash (preview) | Rephrases the source only; missing facts become "Not specified"; cached per trial |
+| Eligibility self-check on uploaded documents | Gemini 2.5 Flash (multimodal) | Defaults to "unclear"; documents are never stored; always defers to the trial site |
+
+Name canonicalization, location cleanup and cohort refresh are deliberately rule-based, because they need to be repeatable and auditable.
+
+Full write-up of the decisions, guardrails, cost controls, quality signals and known risks: **[docs/AI_DESIGN.md](docs/AI_DESIGN.md)**.
+
 ## Analytics and instrumentation
 
 The app is instrumented so product questions can be answered from behaviour rather than opinion:
