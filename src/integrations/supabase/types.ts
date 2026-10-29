@@ -634,6 +634,33 @@ export type Database = {
         }
         Relationships: []
       }
+      public_ai_limits: {
+        Row: {
+          bucket_key: string
+          daily_attempts: number
+          expires_at: string
+          minute_attempts: number
+          minute_start: string
+          purpose: string
+        }
+        Insert: {
+          bucket_key: string
+          daily_attempts?: number
+          expires_at: string
+          minute_attempts?: number
+          minute_start: string
+          purpose: string
+        }
+        Update: {
+          bucket_key?: string
+          daily_attempts?: number
+          expires_at?: string
+          minute_attempts?: number
+          minute_start?: string
+          purpose?: string
+        }
+        Relationships: []
+      }
       report_feedback: {
         Row: {
           comment: string
@@ -1130,6 +1157,10 @@ export type Database = {
     Functions: {
       consume_admin_login_attempt: {
         Args: { p_key: string; p_limit: number }
+        Returns: boolean
+      }
+      consume_public_ai_attempt: {
+        Args: { p_key: string; p_purpose: string }
         Returns: boolean
       }
       search_registry_impact: {

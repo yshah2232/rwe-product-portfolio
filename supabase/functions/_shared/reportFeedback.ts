@@ -1,4 +1,4 @@
-import { z } from 'npm:zod@3';
+import { z } from 'npm:zod@4.6.6';
 
 // Strict allowlist: do not accept report contents or visitor identifiers.
 export const ReportFeedbackSchema = z.object({
