@@ -12,6 +12,7 @@ import DataMethod from "./pages/DataMethod";
 import SearchRegistry from "./pages/SearchRegistry";
 import CohortCompare from "./pages/CohortCompare";
 import { TrialComparisonProvider } from '@/contexts/TrialComparisonContext';
+import { RegistryPageProvider } from '@/contexts/RegistryPageContext';
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import MedicalDisclaimer from "./pages/MedicalDisclaimer";
@@ -36,6 +37,7 @@ const App = () => (
         <BrowserRouter>
           <AdminAccessProvider>
           <TrialComparisonProvider>
+          <RegistryPageProvider>
           <AudienceModal />
           <Routes>
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -69,6 +71,7 @@ const App = () => (
             <Route path="/methodology" element={<Navigate to="/data-method" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </RegistryPageProvider>
           </TrialComparisonProvider>
           </AdminAccessProvider>
         </BrowserRouter>

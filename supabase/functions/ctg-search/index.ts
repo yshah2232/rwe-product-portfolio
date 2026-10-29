@@ -2,6 +2,7 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { hybridScores, HybridError } from "../_shared/hybridSearch.ts";
 import { diabetesSubtype, subtypeTier } from "../_shared/hybridRanking.ts";
+import { isTrialStatus } from '../_shared/trialStatus.ts';
 import { isAllowedSearchOrigin } from '../_shared/searchOrigin.ts';
 import { cleanSponsor, cleanIndication, cleanAsset } from "../_shared/canonicalize.ts";
 import { parseQuery, groundConcepts, groundedReason, isWeak, RETRIEVAL_LIMITS, prefersUS, matchLocation, locationSentence, matchLabels, dedupeEvidence, type QueryIntent, type GroundFields } from "../_shared/queryIntent.ts";
@@ -77,6 +78,7 @@ Deno.serve(async (req) => {
     const query = (url.searchParams.get("q") ?? "").trim();
     const phase = url.searchParams.get("phase") ?? "";
     const status = url.searchParams.get("status") ?? "";
+    if (status && !isTrialStatus(status)) return json({ error: 'Unknown trial status.' }, 400);
     const countryUS = url.searchParams.get("countryUS") === "true";
     const browserRegionUS = url.searchParams.get("region") === "US";
     const sessionId = (url.searchParams.get("sid") ?? "").trim().slice(0, 64) || crypto.randomUUID();

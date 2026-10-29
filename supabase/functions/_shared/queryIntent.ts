@@ -3,6 +3,8 @@
 // Nothing here invents data: it only parses the user's words and checks
 // whether concepts literally appear in fields returned by ClinicalTrials.gov.
 
+import { queryStatus } from './trialStatus.ts';
+
 export interface QueryIntent {
   conditionTerms: string[];
   biomarkers: string[];
@@ -40,13 +42,6 @@ const US_STATES = [
 
 const PRIOR_TRIGGERS = /\b(?:prior|previously treated with|previously treated|pretreated with|after|already had|refractory to|resistant to|progressed on|progression on|failed|following)\s+([a-z0-9\- ]{3,40}?)(?=$|[,.;]| and | in | near | who | phase| recruiting)/gi;
 
-const STATUS_PATTERNS: [RegExp, string][] = [
-  [/\bnot yet recruiting\b/i, "NOT_YET_RECRUITING"],
-  [/\b(currently )?recruiting\b|\benrolling\b|\bopen trials?\b/i, "RECRUITING"],
-  [/\bcompleted\b/i, "COMPLETED"],
-  [/\bactive,? not recruiting\b/i, "ACTIVE_NOT_RECRUITING"],
-];
-
 const FILLER = new Set([
   "a","an","the","and","or","of","in","on","for","with","who","that","is","are","to","by","at","as","trial","trials",
   "study","studies","patients","patient","people","adults","near","me","my","phase","recruiting","currently","open",
@@ -61,8 +56,9 @@ export function parseQuery(raw: string): QueryIntent {
   const subtypeTerm = subtype ? `type ${subtype[1] ?? subtype[2] ?? subtype[3]} diabetes` : null;
   if (subtype) q = q.replace(subtype[0], ' ');
 
-  let status: string | null = null;
-  for (const [re, val] of STATUS_PATTERNS) if (re.test(q)) { status = val; break; }
+  const parsedStatus = queryStatus(raw);
+  const status = parsedStatus.status;
+  if (status) q = queryStatus(q).remainder;
 
   let phase: string | null = null;
   const pm = q.match(/\bphase\s*(iii|ii|iv|i|[1-4])\b/i);

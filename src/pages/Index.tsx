@@ -79,7 +79,7 @@ const users = [
 const Index = () => {
   const navigate = useNavigate();
   const { audience, plainMode, setPlainMode } = usePlainMode();
-  const showPatientEntry = plainMode || audience === 'patient';
+  const showPatientEntry = audience === 'patient';
   const [heroQuery, setHeroQuery] = useState('');
   useSeo({
     title: 'Clinical Trial Diversity Studio | Search ClinicalTrials.gov',
