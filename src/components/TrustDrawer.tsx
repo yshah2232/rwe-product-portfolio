@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { getSessionId } from '@/lib/searchSession';
+import { usePlainMode, TERMS_VERSION } from '@/contexts/PlainModeContext';
 import type { MappingHit } from '@/lib/canonicalize';
 
 const OVERRIDE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ctg-mapping-override`;
@@ -28,6 +28,7 @@ interface Props {
 }
 
 const TrustDrawer = ({ field, fieldType, hit, sourceField, refreshedAt, className }: Props) => {
+  const { termsAccepted, audience } = usePlainMode();
   const isPassthrough = hit.source === 'passthrough';
   const [editing, setEditing] = useState(false);
   const [suggestion, setSuggestion] = useState(hit.clean);
@@ -36,6 +37,7 @@ const TrustDrawer = ({ field, fieldType, hit, sourceField, refreshedAt, classNam
   const [submitted, setSubmitted] = useState(false);
 
   const submit = async () => {
+    if (!termsAccepted || submitting) return;
     const trimmed = suggestion.trim();
     if (trimmed.length < 2) {
       toast.error('Suggestion is too short.');
@@ -58,18 +60,14 @@ const TrustDrawer = ({ field, fieldType, hit, sourceField, refreshedAt, classNam
           rawValue: hit.raw,
           suggestedClean: trimmed,
           note: note.trim() || undefined,
-          sessionId: getSessionId(),
+          acceptance: { accepted: termsAccepted, termsVersion: TERMS_VERSION, audience },
         }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
       setSubmitted(true);
       setEditing(false);
-      toast.success(
-        body.deduped
-          ? `Thanks, your vote brings this suggestion to ${body.voteCount} support${body.voteCount === 1 ? '' : 's'}.`
-          : 'Thanks, submitted for review.',
-      );
+      toast.success(body.deduped ? 'This suggestion is already awaiting review.' : 'Thanks, submitted for review.');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Failed to submit suggestion.');
     } finally {
@@ -200,7 +198,7 @@ const TrustDrawer = ({ field, fieldType, hit, sourceField, refreshedAt, classNam
                     size="sm"
                     className="h-7 text-[11px]"
                     onClick={() => setEditing(false)}
-                    disabled={submitting}
+                    disabled={submitting || !termsAccepted}
                   >
                     Cancel
                   </Button>

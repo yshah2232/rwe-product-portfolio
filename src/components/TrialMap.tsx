@@ -78,27 +78,22 @@ const TrialMap = ({ trials }: Props) => {
             {({ geographies }) =>
               geographies.map((geo) => {
                 const name = geo.properties.name as string;
+                const active = hovered === name;
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
                     onMouseEnter={() => setHovered(name)}
                     onMouseLeave={() => setHovered(null)}
+                    fill={active ? 'hsl(var(--primary) / 0.4)' : stateFill}
+                    stroke={active ? 'hsl(var(--primary))' : stateStroke}
+                    strokeWidth={active ? 0.8 : 0.6}
                     style={{
-                      default: {
-                        fill: stateFill,
-                        stroke: stateStroke,
-                        strokeWidth: 0.6,
-                        outline: 'none',
-                      },
-                      hover: {
-                        fill: 'hsl(var(--primary) / 0.4)',
-                        stroke: 'hsl(var(--primary))',
-                        strokeWidth: 0.8,
-                        outline: 'none',
-                        cursor: 'pointer',
-                      },
-                      pressed: { outline: 'none', fill: 'hsl(var(--primary) / 0.5)' },
+                      fill: active ? 'hsl(var(--primary) / 0.4)' : stateFill,
+                      stroke: active ? 'hsl(var(--primary))' : stateStroke,
+                      strokeWidth: active ? 0.8 : 0.6,
+                      outline: 'none',
+                      cursor: 'pointer',
                     }}
                   />
                 );
