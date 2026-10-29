@@ -4,7 +4,7 @@ export const validGuideNcts = (ids: string[]) => ids.length <= 10 && new Set(ids
 export const WEBSITE_GUIDE = {
   name: 'Clinical Trial Diversity Studio',
   pages: [
-    { title: 'Search Registry', url: '/search-registry', facts: 'Search live ClinicalTrials.gov records, filter condition, phase, status and geography. Keyword BM25 and dense embeddings rank a bounded live candidate pool. Clinicians can filter all nine statuses even in Easy read. Patients and caregivers see recruiting studies only.' },
+    { title: 'Search Registry', url: '/search-registry', facts: 'Search live ClinicalTrials.gov records, filter condition, phase, status and geography. Keyword BM25 and dense embeddings rank a bounded live candidate pool. Clinicians can filter all nine statuses even in Easy read. Patients and caregivers see recruiting studies only. Easy read uses a patient oriented reading layout; clinical descriptions, eligibility and timing now preserve original registry wording for accuracy, with source linked criteria and typed enrollment counts instead of generated clinical paraphrases or timelines.' },
     { title: 'Compare trials', url: '/compare-trials', facts: 'Select two to four search results, compare registry fields and listed sites by state or region. Statewide Census context is not participant demographics. Summaries require a Summarize click. PDFs are generated locally with source based takeaways, without AI summaries or extra AI requests.' },
     { title: 'Data & Method', url: '/data-method' }, { title: 'About', url: '/about' },
     { title: 'Report a problem', url: '/report' },
