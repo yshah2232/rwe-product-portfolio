@@ -238,7 +238,7 @@ Deno.serve(async (req) => {
 
     try {
       // Pass 1: targeted for complex queries, broad (original behaviour) for simple ones.
-      await runPass((isComplex || diabetesSubtype(query)) && hasTargeted ? targeted : broad);
+      await runPass(hasTargeted ? targeted : broad);
       let cands = shapeAll();
       const weakNow = () => isWeak(cands.length, coverageOf(cands));
       if (weakNow()) adaptiveReasons.push(`first pass weak (${cands.length} candidates)`);
