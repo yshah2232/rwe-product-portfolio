@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useTrialComparison } from '@/contexts/TrialComparisonContext';
 import { buildComparisonReport, downloadReport } from '@/lib/comparisonReport';
 import { TrialGeographyPanel } from '@/components/compare/TrialGeographyPanel';
+import { EnrolledDemographicsPanel } from '@/components/compare/EnrolledDemographicsPanel';
 import { ReportFeedback } from '@/components/compare/ReportFeedback';
 import { ComparisonAssistant, ComparisonSummary } from '@/components/compare/ComparisonAssistant';
 import type { ReportPopulation } from '@/lib/reportContext';
@@ -196,6 +197,7 @@ const CohortCompare = () => {
               <p className="mt-2 rounded-sm border border-border bg-muted/50 p-3 text-[12px] leading-relaxed text-muted-foreground" data-testid="compare-disclaimer">
                 <strong className="text-foreground">Not medical advice.</strong> This comparison shows registry fields side by side as entered by each sponsor. It does not rank trials, recommend a trial, or say whether anyone is eligible. Records can be incomplete or out of date; confirm details on ClinicalTrials.gov and talk with a qualified clinician or the study team before making any decision. See the <a href="/medical-disclaimer" className="text-primary underline">medical disclaimer</a>.
               </p>
+              {loaded.length > 0 && <EnrolledDemographicsPanel trials={loaded} />}
               {loaded.length > 0 && <TrialGeographyPanel trials={loaded} onPopulation={setPopulation} />}
               {loaded.length >= MIN_COMPARE && <ComparisonSummary key={`summary:${ncts.join(',')}`} ncts={ncts} population={population} ready={!!population && !population.loading && loaded.length === ncts.length} />}
             </>
